@@ -1,0 +1,441 @@
+Calculation worksheets
+----------------------
+
+As a learner or teacher building pages, non-technical but computer-literate,
+I want an easy way of calculating values to use in the page
+
+Requirements
+------------
+- Easily create a table to be used as a hidden worksheet
+- Use a visible table as a worksheet
+- Cells can contain formulas, including literal values
+- Formulas resemble Excel formulas
+- Functions in formulas should be easy to add - just JavaScript functions added to certain object? or global?
+- Calculated cell values update named values that can be used in other formulas
+- Named values can be used in Spacebars template fields anywhere on the page
+- Calculations update automatically
+- Formulas can bring in values from outside worksheet with functions
+- Outside functions should include input values and time
+
+To do
+-----
+- Formula parser
+- Built-in functions
+    - Use named value in template
+- Add on function mechanism
+    - Input function
+- Timer function
+- Apply to variety of situations
+- Available in component script on any page - jQuery widget - like dataloader?
+
+
+
+Later
+-----
+- Use named value in template without val
+- Use with repeated rows
+- Use to manipulate imported data
+- Use with event streams
+- Component that can be used elsewhere even outside Meteor
+
+Formula language
+----------------
+    - Infix operators with precedence
+    - Numeric operators:  + - * /
+- Boolean operators:  and or not
+    - Bracketed expressions
+- if...then...else...
+    - Function calls
+
+Ideas
+-----
+- Table in page marked as worksheet
+- Col 1 is names, col 2 is formula, col 3 is current value
+- Values can be fixed values or formulas
+- Values need to be:
+  - reactive vars
+  - visible in the worksheet on the page in debug mode
+  - usable by name in template mustaches on the page
+  - maybe persisted to local storage
+  - maybe usable between pages
+- Useful to use mustache formula style so consistent with other formulas on the page
+- But Spacebars formulas are limited and unfamiliar
+- Excel-style formulas would be powerful and familiar
+- Poss: parse excel style expressions and translate to JS functions
+- Somehow link these to autoruns and deps so they update a reactive dict
+- Also work off input values directly - then parsing can be a formula in the worksheet
+- Even better if can update in place and save back to original page
+- peg.js parser for formula expressions
+- On load and on change of formula, parse and evaluate each formula directly to value
+- Done within autorun so picks up deps
+- Names resolved against a context object provided to parser
+- Context is a reactive dict
+- Value from formula is put into context reactive dict
+- Eval in place standard but can have relative cell refs and formula function
+- Event streams - everything in sheet is a property (Bacon) or a hot value (Rx)
+- Event streams - can be in sheet as as stream data type, with functions that act on streams and result in other streams or value types
+- Separate sheets make natural components
+- Simple text representation should be easy - name = formula, one per line
+- Good error reporting important
+- May have outbound event streams too
+- Unit Testing - it's just a big function, so table of inputs vs expected outputs
+- Testing with event stream inputs - just provide a list of events that have occurred vs an output state
+  - but need to allow for relative sequence of events, so maybe need a table of streams and slots
+- Testing outputs: expected state including a table of outgoing event streams and slots
+- For debugging, need to know the dependencies (maybe transitive) of each named value
+- Good to be able to highlight dependencies on worksheet
+- So need a version of the parser that identifies the named values that each named value depends on as well as actual value - an option?
+
+
+Problems
+--------
+- If helper not in template helpers when view rendered, can't be called, so no reactive dependency set up on that value, just get fixed null in view
+
+RxJs implementation
+-------------------
+
+- Model/engine object
+- Can add named "inputs" - cells or maybe streams
+- Inputs will change over time - that's the whole idea
+- OR inputs are just "grabbed" by provided functions
+- OR inputs are declared and can only use a specific set of input functions
+- Can add provided functions that can be called in formulas
+- Functions return cells or maybe streams
+- Can add named formulas that use inputs, external functions and other formulas
+- Named formulas are available as outputs - cells or maybe streams
+- Can add callback for value change
+- All cells/streams produced by functions should be cached
+- Can use all power of RxJS, but wrapped in easy to understand formulas
+- Consider stream composition syntax as alternative to functions - different order of operations, each clearer in different situations
+- Parser applied to whole worksheet produces a network of streams
+- Formulas in network can be replaced on the fly
+- Named values of formulas are all exposed as streams
+- Parser applied to one formula produces an object with a list of names of input streams it requires, and a function that produces an output stream from them
+- Parser result object always takes in and returns streams - may do ops on the streams like merge, or use map/combineLatest with a function acting on values
+- Can subscribe to all named values to show in display
+- Each named value must be a subject? So can show output immediately?  Wrap in BehaviorSubject null as default if not already a subject
+- Stitch formula output stream into network with another subscribe/update on named value subject so can (a) build in any order (b) replace formula
+-
+- Tests - need to step through event sequences and show/check state at each step
+- Tests - table of input events and expected/actual outputs after each one, time L-R inputs/outputs down each column - or time down the column?
+  - if sequence unimportant, just becomes a decision table
+- Debugging - step through table and see values change
+- Later - define own formulas
+- Later - private formulas or specific outputs
+- Possible - a 'compile' function that produced a version without the extra stitching streams, or JS (or other lang) source for it so can be used elsewhere
+- Possible - a graphical display of the network like the TP one
+- Possible - analyzer that found/checked/tested all the significant combinations of inputs
+- Technical - split parsing from implementation - just return AST or pass in callback
+
+Formula parsing for RxJS
+------------------------
+- Requirement is a stream that the named formula subject can subscribe to
+- Parser returns a stream which may be subscribed to some input streams, and the stream names it has used
+- OR could just return stream, worksheet notes which streams it has used
+- OR could return a function that creates the stream, with list of stream names it needs
+- Best if intermediate expressions do not create unnecessary streams BUT not that bad to start with
+- Expressions of stream types need to create intermediate streams
+- Expressions of value types need to produce functions to create the answer, not the actual answer
+- Each expression parsed could produce its own function, these call each other
+- Turn each expr into JS and eval inside a function body
+- Errors: need to handle well eg !REF#
+- Blanks/spaces/zeroes: need to handle well like Excel
+
+Function calls
+--------------
+- Function types: Stream -> Stream, Value->value, value->stream, NOT stream-> value
+- Input conversions: Stream, Value->value, value->stream, stream-> value
+- Function calls - arguments can each be stream or value(must be literal?), output can be stream or value
+    - input("nameField") -> stream: just call it and use the stream
+    - square(stream) -> value: map on incoming stream using this function
+    - square(number) -> value : effectively a constant, so just eval and use as a literal value
+    - avg(stream, stream) -> value: combineLatest on incoming streams using this function
+    - avg(stream, value) -> value: combineLatest on stream and just(value) using the function
+    - merge(stream, stream) -> stream: just call with argument streams and use the stream
+    - first(stream) -> value:
+- If function with no inputs returns stream, return call to function eg currentTime
+- If function with value inputs returns stream, call it and use the returned value eg input(fieldName)
+- If function with stream and value inputs returns stream, call it and use the returned value eg pluck(stream, fieldName)
+- If function with no inputs returns value, return call to function
+- If function with value inputs returns value, need to convert all inputs to streams and return call to map or combineLatest with function and converted inputs
+- If function with stream inputs returns stream, need to convert all inputs to streams, return call to function
+- SO if function with args returns value, convert all inputs to streams (if they are not already) and use function with map/combineLatest
+     otherwise use all args as they are and call the function
+     - possibly convert args to types expected and call the function
+- Can a subject be used as a stream?
+
+
+Named values
+------------
+- Can subscribe multiple times to a named value
+- Each subscription gets the current value (even if null) then changes
+- New subscriptions do not get a replay of all values
+- The named value can be reassigned to a new formula
+- The initial value of the new formula (or null) is sent to subscriptions
+
+Connection to page
+------------------
+- Init engine by adding built-in functions, including "input grabbers"
+- On load, read worksheet and add named formulas
+- Link outputs to page by setting their values in a ReactiveDict
+- Link references in page via val helper, or via hook into lookup
+- Show undefined formulas in worksheet on page
+
+Issues
+------
+- Should inputs be explicit or just allowed anywhere in worksheet?
+- Should outputs be explicit or just have any named value be an output?
+- Input functions are different because they transform non-cell/stream objects, or nothing, to cells/streams
+- Internal functions always act on cell/stream and produce cell/stream
+
+Rx Notes
+--------
+- A just observable ends after it has been subscribed to
+- If an input stream ends, the Subject connected to it also ends and is not restarted by another subscription
+- For a fixed value, use a BehaviorSubject
+
+Thoughts
+--------
+- Need to wire outputs into actions somehow, as well as just tracking and displaying
+- Maybe output event streams - which is what they are?
+- Output effects: call a function which has a side effect and may return a value
+- Output values: may be complex with much info about the output, generally all info that went in eg ajax url and payload
+- Testing outputs: really need to turn off side effects and check the returned value against expected
+- Output examples: play sound, make ajax call, change page, get/set local storage
+- Testing with mocks: could be necessary, substitute other functions called with mocks
+- Stubbing syntax: just list of functions to stub
+- Connector block worksheets could help to wire reused functions to a particular page
+- A worksheet is a function mapping a set of input event sequences to a set of outputs
+- Or maybe a single sequence of input event combinations to a single sequence of output event combinations
+- Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
+- Need to be able to use functions as first class objects - it is FP, after all
+- For dealing with lists (repeating data groups), need a foreach mechanism as well as aggregation
+- Lists can be treated similarly to streams in some ways - many operations apply to both
+- Functions applied to lists may be simpler than or different to those applied to sets of streams
+  - only one input stream and one output stream
+- Do functions have to be defined separately or can they be nested within another sheet?
+- Can list functions still pick up other values like inputs or times? - probably no
+- How do things like filtering on input or adding a value to a column
+- Should every worksheet have defined inputs and outputs, and input sources have to be wired in separately?  How define? How wire?
+- Or should this be optional - reusability vs convenience?
+- Should functions be allowed to pick up external values directly within formulas as well as their defined inputs - a bit like implicits
+- Worksheets are functions mapping zero or more event sequences to at least one output event sequence
+- If no aggregation over the input streams, always use latest value from inputs, could be equivalent to function mapping set of values to outputs
+- Easier if regard all functions as taking streams, even if the stream just has a single value in it
+- Values of input and output streams can be any simple or complex type
+- Sets of named inputs and outputs naturally form maps
+- Functions can be applied to and can return any simple or complex type
+- A function is defined by a named worksheet and can then be referenced in formulas
+- A function from one simple value to another might be cumbersome to define as a worksheet
+- Need notation to refer to elements of maps and lists in basic formula syntax
+- Need syntax to define inputs that must be provided
+- Functions used in foreach expressions - do they take stream of input values, and can they do aggregation as they go?
+- Definition and instance separation - named worksheets at top level like objects, what about when used in formulas in many places
+- How to implement reuse in different places
+- How to show reuse to user on work page
+- No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
+- As all functions have stream inputs and outputs, if you apply it to a single value, get a single value, to stream you get a stream
+- Changes in outputs due to changes in inputs are just new outputs in the stream due to new events in the input stream(s)
+- Data at rest needs to be converted to and from streams to go through functions
+- A data worksheet is just a function with no inputs that produces a stream with one output value
+- Output events can be connected to widget actions in some way - or just raise DOM events to link back into jQuery
+- Should be easy to drop back into jQuery
+- Output events will often be when a button and another stream happen together
+- Built-in action widgets to control browser eg go to page
+- May want worksheets to be visible as quick UI - or hide the formula columns
+- Data load should just be a function that returns an input stream, single complex value, include anywhere
+- May want to include function results as top-level definitions on the page - could just be named worksheet with one unnamed row
+- Re-use worksheet functions from any other page - just has to be a parseable table
+- Could publish pages of library functions - just put documentation and examples on the page with them
+- Consider saving all inputs in dev mode to replay when a formula changes
+- Some list operators need static lists eg sorting may need IxJS
+- Dot operator creates a stream with pluck for one item
+- Maybe all function streams should have distinct on them
+- Testing facilities important - eg table with input event rows at top and output events below, with columns at particular times
+- Must be easy to think *how* to test
+- Maybe record events and times to create the table
+- To test like this the inputs need to be explicitly named - another advantage
+- Could have functions that emit events over a period eg a sine wave for animation physics
+- 'Wire up' a worksheet by calling it as a function in another sheet and passing in input streams created by calling functions that create streams from environment
+- Need to unify functions, fixed datasheets and simple values and be able to substitute one for another
+- Function inputs specified differently to outputs
+- A function actually just has one output - may have several parts - may be an aggregate expressions
+- Calling a function (at least one with no args) should be substitutable for specifying it inline
+- A function with no inputs and just an output should look the same as a data value
+- A worksheet at top level of page with no inputs looks like a data value, but may still have formulas
+- Instantiation: top-level worksheets with no inputs will normally be objects on the page
+- Functions: how distinguish functions with no inputs from top-level value objects
+- Functions with no inputs can still reference implicit inputs, such as form fields or data retrieval
+- Function call in a cell may expand to a big multi-level table
+- In tables, a function with no inputs and just a simple output is represented by a single formula cell and its value
+- More flexible with values in the same cell as formula, like Excel, with styling to show one or other or both - could easily use CSS to look like two cells
+- Can use monitor table as simple display, fixed values don't look silly, more like Excel, can show formula in many different ways
+- One value, one cell, but may expand
+- At page level, named tables are like top-level defs - may be just a single cell with a fixed value or a single function call
+- How does this fit with templating like Blaze - just independent?
+- May need to choose how/which worksheet values are transmitted to other template mechanisms
+- So if you have a worksheet like the sheet1 price calculator, that is a no inputs function with a map output
+- Inputs to functions - are they a list, a list of names or a map?
+- May be useful to tailor the auto-display of a function, to hide/format certain values, but also may be best to treat as just a debugging aid
+- Toggle display button - framework could make any element with a certain class be a toggle
+- Table with 1/2 columns indicates list or map
+- How distinguish single value/list of 1, and null/empty list - do you need to?
+- Liveness - edit in page in both edit and display mode
+- Page with final user-editable formulas
+- Event history stored and can be displayed to help debugging
+- Compare xslt fp and sequence usage
+- Functions can return functions
+- To store program just store original source or Json representation
+- Can email source to people and they can cut and paste it elsewhere
+- Templating: just edit page wysiwyg and put tags in, including repeat tags
+- Parse to tree and construct stream net after
+- Generate Js to create stream net
+- Sep parts of formula and show in separate spans so can highlight
+- Expand to formula above
+- Can show values of any expr not just named values
+- Syntax - keep like Excel and have = before every formula, text taken as string literal OR JS-like syntax with quoted strings
+- If outputs of a function are just named values, have to 'wire them up' with another function
+- App - just a bundle of functions, of which you can run one main one, possibly more?
+- Running a function isn't a one off thing - it sits there continually waiting for input
+- You don't really run a function - you start it
+- Use as part of another program
+- Transform streams back to values and use as synchronous callable function in a conventional program
+- Use as a scripting language
+- Continuous pipeline command processor
+- Function params auto taken from CLI arguments
+- Return kind - can we just say everything takes and returns streams, and if provide a built-in that uses plain values, need to wrap it before adding?
+- Arg list - some functions need to take values as args, not streams eg for use in combineLatest
+- Can UserFunctions always use streams, built-in need to specify?
+- Can we/should we call no-arg functions without brackets - optional or not?
+- Recursive functions: allowed? how handle them?
+
+Programming environment
+-----------------------
+
+- Can run any function loaded
+- Can run any expression
+- Auto ask for arguments if run function with args
+- Auto find implicit inputs requested by input functions
+- Show evaluation sequences as input event streams and output values in columns with one event per line - vertical marble diagrams
+- Recording debugging shows state after each event
+- Testing uses exactly the same format
+- Save incorrect run as test
+- Can edit events at any point in stream and have the run re-evaluated
+- Edit expected values on output side when it is a test
+- BUT can also suppress the recording and just have the latest
+- Where only interested in sets of events, may have all input events on one line
+- Take care in order of events across line just in case a bug causes it to matter
+- Influence - expression evaluation in debugging functional programs
+
+
+Revision quiz
+-------------
+
+- How use worksheets to do a simple daily revision quiz, or a more complex SRS type
+- Need to access a web service and/or local storage data
+- Need to select words to show
+- Need to do something with each word
+- Need to do things with all the words - eg total answered, correct
+- Need to record results
+- Need to update the database via web service or local storage
+
+Invoice with line items
+-----------------------
+
+- Invoice has Account No, Date, Delivery address, Default Tax rate, line item list
+- Line item has description, units, unit price, optional tax rate
+- Want to show for each line item: input data and price, tax, total
+- Want to show for invoice: input data, no of items, item total, tax total, invoice total
+
+How would you do...
+-------------------
+- A space invaders game
+- A sequence of pages in an adventure game
+
+How can it be easy to...
+------------------------
+- Set up calculations in a page
+- Retrieve data from a web service or another page, and see it for debugging
+- Define data in a page - in a similar way to calculations?
+- Re-use data and/or calculation worksheets in other pages
+- Represent multi-level nested data structures
+- Keep a unified view of data and calculated data
+- Link page controls to calculations as inputs
+- Use calculated data in text
+- Use calculated data in other elements
+- Preview the page in action while working on it
+
+Use cases
+---------
+- Standalone calculation and understanding engine eg pricing
+- Run a worksheet as a server side API
+- Database read and update
+- Other web service access and filtering
+- Programmer uses to generate JS and use in another program
+- End user customises an application
+- Embedded rules eg posting wizards in accounting system
+
+
+Reusing functions
+-----------------
+
+- Create separate worksheet
+- Name the worksheet
+- Define expected inputs with names - even if just one
+- Maybe just put 'input' instead of a formula
+- Use it in a formula with the normal function call syntax
+- Need to copy the structure to each place it is used?
+- If do that, how can you modify it in place?
+- Possible: decouple each copy from its usage so that a new one can be wired in - aggregates would be wrong
+- Is there a way of sharing one instance with different streams?
+- If it had no aggregate functions, could just treat it as a single-value function and many streams could share
+  - might be an optimisation for simple value transforms like date formatters
+- Can ask the function for an instantiation of itself - if that is the same or different every time, doesn't matter
+- The function is responsible for updating its current instantiations if its definition changes
+- In user workbook, how know which input and output values to show on the display?
+- If only one usage, can show that one
+- If click on a formula that uses the function, show instance for that function
+- Import just by calling an import function and giving it a name - named values can also be functions
+- Functions may load dependencies transitively
+
+Parts needed
+------------
+- Language definition
+- AST data structure definition
+- Text syntax definition
+- Text to AST parser
+- AST to stream net builder
+- AST to JS code generator
+- Worksheet to AST converter
+- Worksheet to AST to stream net live update
+- AST to text converter
+- AST to worksheet converter
+- AST to worksheet live update
+- Page to AST converter
+- Stream net runner
+- Stream net to template updater
+- Error handling mechanism
+
+Next steps
+----------
+- Parse a whole worksheet as a function, not just individual formulas
+- Make the function available for use elsewhere
+- Make functions work on streams
+- Instantiate multiple copies of the function
+- Generate updating monitor display automatically
+- Nesting updating displays
+- Multiple updating displays for all usages of function
+- Data loading functions
+- Actions on output events
+
+Future steps
+------------
+- Modularize into library
+- Contributions mechanism
+- Safe third-party JS
+- Server side sheets for API
+- Open source but pay for hosting
+- Instant play and save
+- JSFiddle-like instant worksheet page
+
+

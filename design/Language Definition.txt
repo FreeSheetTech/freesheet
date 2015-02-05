@@ -1,0 +1,113 @@
+Language Description
+====================
+
+Frame runtime
+-------------
+
+Holds built-in named Functions added by the creating program
+Holds named Functions added from user programs
+Runs a named function and returns its value
+Manages instantiations of Functions so that each is isolated
+
+Function usage
+--------------
+
+An instantiation of a function with a set of input streams and a single output stream
+Knows its function definition and where it is used
+Constructs streams around functions that take or return normal values
+
+
+
+Parser
+------
+Reads one of the representations and constructs a map of named user Functions
+
+
+Function - built-in
+-------------------
+
+A Function implemented in the underlying language
+Knows whether each of its arguments and its return type are streams or normal values
+Does not have access to other functions by name in the runtime
+
+
+Function - user
+---------------
+- A set of named arguments, which may be empty
+- An expression
+- Knows where it is used
+
+
+Expression
+----------
+One of:
+ -literal value
+ - sequence
+ - aggregation of named items
+ - function call with other expressions as arguments
+Knows its parent expression?
+
+
+
+Inputs and Outputs
+==================
+
+
+Representations
+===============
+
+AST
+---
+Objects representing functions and expressions
+
+JSON
+----
+JSON representation of AST objects
+
+
+Text
+----
+
+function definition: functionName = expr
+
+function call: functionName([expr...])
+
+infix expressions: expr op expr [op expr]
+
+bracketed expressions: (expr)
+
+string literal: "<chars>"
+
+number literal: nn.nnn
+
+sequence: [expr, ...]
+
+aggregation: { name: expr, ... }
+
+select from aggregate: agg.item
+
+select from sequence: seq[index]
+
+
+
+HTML
+----
+
+function definition: element class=function-name + following expression element class= expression.  Could be any siblings - divs, tds
+
+sequence: ol + li - or maybe table with one column
+
+aggregation: table with two columns
+
+other expressions: as for text representation
+
+
+
+
+
+
+Issues
+======
+
+- What differences between Application and Function?  Does App just map set of input event sequences to set of output sequences ?
+- Can any function be used as an App? Any function with no args?

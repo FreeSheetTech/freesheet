@@ -1,0 +1,20 @@
+AST Definition
+==============
+
+class FunctionDefinition(@name, @argDefs, @returnKind)
+
+class UserFunction extends FunctionDefinition
+
+class BuiltInFunction extends FunctionDefinition
+
+class ArgumentDefinition(@name, @kind)
+
+class Expression
+
+class Literal extends Expression
+
+class Sequence extends Expression
+
+class Aggregation extends Expression
+
+class FunctionCall extends Expression
