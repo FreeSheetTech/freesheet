@@ -57,7 +57,7 @@ describe 'TextParser parses', ->
       expressionFor('10.5/ 22 ').should.eql new InfixExpression('10.5/ 22', '/', [aNumber, aNumber22])
 
 
-  describe 'function definitions', ->
+  describe 'function definition', ->
 
     it 'with no arguments', ->
       functionFor('myFunction = 10.5 / 22').should.eql new UserFunction('myFunction', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
@@ -65,13 +65,16 @@ describe 'TextParser parses', ->
     it 'with two arguments', ->
       functionFor('myFunction(a, bbb) = 10.5 / 22').should.eql new UserFunction('myFunction', ['a', 'bbb'], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
 
+    it 'on multiple lines', ->
+      functionFor('myFunction(a, bbb) = \n 10.5 / 22').should.eql new UserFunction('myFunction', ['a', 'bbb'], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
+
   describe 'a map of function definitions', ->
 
     it 'with one function', ->
       functionMapFor('myFunction = 10.5 / 22').should.eql { myFunction: new UserFunction('myFunction', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22])) }
 
-    it 'with many functions', ->
-      functionMapFor('fn1 = 10.5 / 22 \n fn2 (a, bbb) = 22/10.5').should.eql {
+    it 'with many functions separated by a semicolon', ->
+      functionMapFor('fn1 = 10.5 / 22; \n fn2 (a, bbb) = 22/10.5').should.eql {
         fn1: new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
         fn2: new UserFunction('fn2', ['a', 'bbb'], new InfixExpression('22/10.5', '/', [aNumber22, aNumber]))
       }

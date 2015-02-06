@@ -120,7 +120,7 @@ LineTerminatorSequence "end of line"
 
 __  = (WhiteSpace / LineTerminatorSequence)*
 
-_ = (WhiteSpace)*
+_ = (WhiteSpace / LineTerminatorSequence)*
 
 EOS = __ ";" / _ LineTerminatorSequence / __ EOF
 
