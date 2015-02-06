@@ -1,6 +1,7 @@
 {
     var exprs = require('../ast/Expressions'), Literal = exprs.Literal, Sequence = exprs.Sequence,
-                                                Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall;
+                                                Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall
+                                                InfixExpression = exprs.InfixExpression;
 
     function returnType(fn) { return fn.returnType || "value"; }
 
@@ -40,13 +41,13 @@ additiveList = items:(
 
 additive = add / subtract / multiplicative
 
-add = left:multiplicative _ "+" _ right:additive { return addOp(left, right); }
-subtract = left:multiplicative _ "-" _ right:additive { return subtractOp(left, right); }
+add = left:multiplicative _ "+" _ right:additive { return new InfixExpression(text().trim(), '+', left, right); }
+subtract = left:multiplicative _ "-" _ right:additive { return new InfixExpression(text().trim(), '-', left, right); }
 
 multiplicative = multiply / divide / primary
 
-multiply = left:primary _ "*" _ right:multiplicative { return multiplyOp(left, right); }
-divide = left:primary _ "/" _ right:multiplicative { return divideOp(left, right); }
+multiply = left:primary _ "*" _ right:multiplicative { return new InfixExpression(text().trim(), '*', left, right); }
+divide = left:primary _ "/" _ right:multiplicative { return new InfixExpression(text().trim(), '/', left, right); }
 
 primary = aggregation / sequence / number / string / functionCall / namedValue / bracketedExpression
 

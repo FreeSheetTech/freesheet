@@ -48,16 +48,16 @@ module.exports = (function() {
         peg$c13 = function(items) { return result = items !== null ? items : []; },
         peg$c14 = "+",
         peg$c15 = { type: "literal", value: "+", description: "\"+\"" },
-        peg$c16 = function(left, right) { return addOp(left, right); },
+        peg$c16 = function(left, right) { return new InfixExpression(text().trim(), '+', left, right); },
         peg$c17 = "-",
         peg$c18 = { type: "literal", value: "-", description: "\"-\"" },
-        peg$c19 = function(left, right) { return subtractOp(left, right); },
+        peg$c19 = function(left, right) { return new InfixExpression(text().trim(), '-', left, right); },
         peg$c20 = "*",
         peg$c21 = { type: "literal", value: "*", description: "\"*\"" },
-        peg$c22 = function(left, right) { return multiplyOp(left, right); },
+        peg$c22 = function(left, right) { return new InfixExpression(text().trim(), '*', left, right); },
         peg$c23 = "/",
         peg$c24 = { type: "literal", value: "/", description: "\"/\"" },
-        peg$c25 = function(left, right) { return divideOp(left, right); },
+        peg$c25 = function(left, right) { return new InfixExpression(text().trim(), '/', left, right); },
         peg$c26 = ".",
         peg$c27 = { type: "literal", value: ".", description: "\".\"" },
         peg$c28 = { type: "other", description: "number" },
@@ -1355,7 +1355,8 @@ module.exports = (function() {
 
 
         var exprs = require('../ast/Expressions'), Literal = exprs.Literal, Sequence = exprs.Sequence,
-                                                    Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall;
+                                                    Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall
+                                                    InfixExpression = exprs.InfixExpression;
 
         function returnType(fn) { return fn.returnType || "value"; }
 

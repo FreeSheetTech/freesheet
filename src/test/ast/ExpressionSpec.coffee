@@ -29,3 +29,10 @@ describe 'Expressions', ->
     fc.text.should.eql 'the function'
     fc.functionName.should.eql 'fn1'
     fc.children.should.eql ['a', 55]
+
+  it 'InfixExpression stores text, operator and children', ->
+    expr = new InfixExpression('a + 55', '+', ['a', 55])
+    expr.text.should.eql 'a + 55'
+    expr.operator.should.eql '+'
+    expr.children.should.eql ['a', 55]
+

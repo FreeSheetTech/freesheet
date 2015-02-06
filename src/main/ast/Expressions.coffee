@@ -18,4 +18,8 @@ class FunctionCall extends Expression
   constructor: (text, @functionName, argumentList) ->
     super text, argumentList
 
-module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall}
+class InfixExpression extends Expression
+  constructor: (text, @operator, argumentList) ->
+    super text, argumentList
+
+module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall, InfixExpression}
