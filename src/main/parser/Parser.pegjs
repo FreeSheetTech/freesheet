@@ -33,14 +33,17 @@
     function infixExpr(operator, args) { return new InfixExpression(text().trim(), operator, args); }
 }
 
+functionDefinitionList = functions:(functionDefinition __)+ { return functions.map(function(pair) { return pair[0]; }) ; }  / __ EOF { return []; }
+
 functionDefinition = noArgsFunction / argsFunction
-noArgsFunction = _ functionName:identifier _ "=" _ expr:expression { return new UserFunction(functionName, [], expr); }
-argsFunction = _ functionName:identifier  _ "(" _ argNames:identifierList _ ")"_ "=" expr:expression { return new UserFunction(functionName, argNames, expr); }
+noArgsFunction = _ functionName:identifier _ "=" _ expr:expression EOS { return new UserFunction(functionName, [], expr); }
+argsFunction = _ functionName:identifier  _ "(" _ argNames:identifierList _ ")"_ "=" expr:expression EOS { return new UserFunction(functionName, argNames, expr); }
 identifierList = items:(
                      first:identifier
                      rest:(_ "," _ a:identifier { return a; })*
                      { return [first].concat(rest); }
                    )? { return result = items !== null ? items : []; }
+
 
 
 expression = _ expr:additive _  { return expr; }
@@ -95,6 +98,30 @@ aggregateItem = _ name:identifier _ ":" _ expr:additive { return {name: name, ex
 
 digit = [0-9]
 alpha = [a-zA-Z_]
-space = " "+
-_ = space?
 doubleQuote "quote" = '"'
+
+WhiteSpace "whitespace"
+  = "\t"
+  / "\v"
+  / "\f"
+  / " "
+  / "\u00A0"
+  / "\uFEFF"
+
+LineTerminator
+  = [\n\r\u2028\u2029]
+
+LineTerminatorSequence "end of line"
+  = "\n"
+  / "\r\n"
+  / "\r"
+  / "\u2028"
+  / "\u2029"
+
+__  = (WhiteSpace / LineTerminatorSequence)*
+
+_ = (WhiteSpace)*
+
+EOS = __ ";" / _ LineTerminatorSequence / __ EOF
+
+EOF = !.

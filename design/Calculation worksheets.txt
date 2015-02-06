@@ -202,7 +202,10 @@ Thoughts
 - Multiple outputs: should we allow multiple named outputs as a shorthand for/alternative to an output map?
 - Multiple outputs: what people expect in a worksheet
 - Multiple outputs: they may not all change at once, could be separate streams
+- Defining named functions then combining them again into an output that just repeated the names would be confusing and non-DRY
 - Should you have reusable functions with just one output and worksheet object with multiple values?
+- Unified view: functions can have several named outputs, and internal functions, so overall program is one outer function with several named outputs
+- Maybe only top-level named outputs become separate streams - nowhere to refer to them as an aggregate anyway
 - Need to wire outputs into actions somehow, as well as just tracking and displaying
 - Maybe output event streams - which is what they are?
 - Output effects: call a function which has a side effect and may return a value
@@ -318,6 +321,9 @@ Thoughts
 - May want a non-reactive implementation of all functions
 - May want a non-reactive implementation of functions that are only used within other reactive functions BUT lose the debugging
 - You really need user testing to know if real non-technical users will find this easy
+- Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
+- Embedding: being able to add built-in functions to script your app is a big win
+- Smart Subject for web service result that uses cache headers to know whether to re-request each time it is asked
 
 Programming environment
 -----------------------

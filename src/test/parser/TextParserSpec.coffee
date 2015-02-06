@@ -8,6 +8,7 @@ describe 'TextParser parses', ->
 
   expressionFor = (text) -> new TextParser(text).expression()
   functionFor = (text) -> new TextParser(text).functionDefinition()
+  functionMapFor = (text) -> new TextParser(text).functionDefinitionMap()
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
@@ -58,8 +59,22 @@ describe 'TextParser parses', ->
 
   describe 'function definitions', ->
 
-    it 'defines a function with no arguments', ->
+    it 'with no arguments', ->
       functionFor('myFunction = 10.5 / 22').should.eql new UserFunction('myFunction', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
 
-    it 'defines a function with two arguments', ->
-      functionFor('myFunction(a, bbb) = 10.5 / 22').should.eql new UserFunction('myFunction', ['a', 'bbb'], 'stream', new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
+    it 'with two arguments', ->
+      functionFor('myFunction(a, bbb) = 10.5 / 22').should.eql new UserFunction('myFunction', ['a', 'bbb'], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
+
+  describe 'a map of function definitions', ->
+
+    it 'with one function', ->
+      functionMapFor('myFunction = 10.5 / 22').should.eql { myFunction: new UserFunction('myFunction', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22])) }
+
+    it 'with many functions', ->
+      functionMapFor('fn1 = 10.5 / 22 \n fn2 (a, bbb) = 22/10.5').should.eql {
+        fn1: new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
+        fn2: new UserFunction('fn2', ['a', 'bbb'], new InfixExpression('22/10.5', '/', [aNumber22, aNumber]))
+      }
+
+    it 'with zero functions', ->
+      functionMapFor('   ').should.eql {}
