@@ -1,5 +1,5 @@
 should = require 'should'
-{Literal, Sequence, Aggregation, FunctionCall} = require './Expressions'
+{Literal, Sequence, Aggregation, FunctionCall, InfixExpression} = require './Expressions'
 
 describe 'Expressions', ->
 

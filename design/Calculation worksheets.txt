@@ -196,6 +196,13 @@ Rx Notes
 
 Thoughts
 --------
+- Outputs: very useful to separate from private intermediate result expressions for (a) maintainability (b) uncluttered result to use elsewhere (c) testing
+- Separate outputs by naming convention or declaration
+- Output may be single value or sequence or aggregation - but there is only *one* per function - or is there?
+- Multiple outputs: should we allow multiple named outputs as a shorthand for/alternative to an output map?
+- Multiple outputs: what people expect in a worksheet
+- Multiple outputs: they may not all change at once, could be separate streams
+- Should you have reusable functions with just one output and worksheet object with multiple values?
 - Need to wire outputs into actions somehow, as well as just tracking and displaying
 - Maybe output event streams - which is what they are?
 - Output effects: call a function which has a side effect and may return a value
@@ -308,6 +315,9 @@ Thoughts
 - Can UserFunctions always use streams, built-in need to specify?
 - Can we/should we call no-arg functions without brackets - optional or not?
 - Recursive functions: allowed? how handle them?
+- May want a non-reactive implementation of all functions
+- May want a non-reactive implementation of functions that are only used within other reactive functions BUT lose the debugging
+- You really need user testing to know if real non-technical users will find this easy
 
 Programming environment
 -----------------------
@@ -374,6 +384,7 @@ Use cases
 - Programmer uses to generate JS and use in another program
 - End user customises an application
 - Embedded rules eg posting wizards in accounting system
+- ETL
 
 
 Reusing functions

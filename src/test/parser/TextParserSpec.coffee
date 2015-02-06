@@ -1,11 +1,13 @@
 should = require 'should'
 {TextParser} = require './TextParser'
 {Literal, Sequence, Aggregation, FunctionCall} = require '../ast/Expressions'
+{UserFunction, ArgumentDefinition} = require '../ast/FunctionDefinition'
 
 
 describe 'TextParser parses', ->
 
-  astFor = (text) -> new TextParser(text).ast()
+  expressionFor = (text) -> new TextParser(text).expression()
+  functionFor = (text) -> new TextParser(text).functionDefinition()
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
@@ -13,19 +15,19 @@ describe 'TextParser parses', ->
   describe 'expressions', ->
 
     it 'string to a Literal', ->
-      astFor('  "a string"  ').should.eql aString
+      expressionFor('  "a string"  ').should.eql aString
 
     it 'number to a Literal', ->
-      astFor(' 10.5 ').should.eql aNumber
+      expressionFor(' 10.5 ').should.eql aNumber
 
     it 'sequence to a Sequence', ->
-      astFor(' [  10.5, "a string"]').should.eql new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
+      expressionFor(' [  10.5, "a string"]').should.eql new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
 
     it 'empty sequence to a Sequence', ->
-      astFor('[ ] ').should.eql new Sequence('[ ]', [])
+      expressionFor('[ ] ').should.eql new Sequence('[ ]', [])
 
     it 'aggregation to an Aggregation', ->
-      astFor(' {abc1_: " a string ", _a_Num:10.5}  ').should.eql new Aggregation('{abc1_: " a string ", _a_Num:10.5}', {
+      expressionFor(' {abc1_: " a string ", _a_Num:10.5}  ').should.eql new Aggregation('{abc1_: " a string ", _a_Num:10.5}', {
         abc1_: new Literal('" a string "', ' a string '),
         _a_Num: new Literal('10.5', 10.5)
       })
@@ -33,24 +35,31 @@ describe 'TextParser parses', ->
   describe 'function calls', ->
 
     it 'with no arguments', ->
-      astFor('  theFn ( )  ').should.eql new FunctionCall('theFn ( )', 'theFn', [])
+      expressionFor('  theFn ( )  ').should.eql new FunctionCall('theFn ( )', 'theFn', [])
 
     it 'with literal arguments', ->
-      astFor('theFn(10.5,"a string")').should.eql new FunctionCall('theFn(10.5,"a string")', 'theFn', [aNumber, aString])
+      expressionFor('theFn(10.5,"a string")').should.eql new FunctionCall('theFn(10.5,"a string")', 'theFn', [aNumber, aString])
 
 
   describe 'infix operators', ->
 
     it 'plus with two operands', ->
-      astFor(' 10.5 + "a string"').should.eql new InfixExpression('10.5 + "a string"', '+', aNumber, aString)
+      expressionFor(' 10.5 + "a string"').should.eql new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
 
     it 'multiply with two operands', ->
-      astFor('10.5 * "a string" ').should.eql new InfixExpression('10.5 * "a string"', '*', aNumber, aString)
+      expressionFor('10.5 * "a string" ').should.eql new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
 
     it 'subtract with two operands', ->
-      astFor(' 10.5-22').should.eql new InfixExpression('10.5-22', '-', aNumber, aNumber22)
+      expressionFor(' 10.5-22').should.eql new InfixExpression('10.5-22', '-', [aNumber, aNumber22])
 
     it 'divide with two operands', ->
-      astFor('10.5/ 22 ').should.eql new InfixExpression('10.5/ 22', '/', aNumber, aNumber22)
+      expressionFor('10.5/ 22 ').should.eql new InfixExpression('10.5/ 22', '/', [aNumber, aNumber22])
 
 
+  describe 'function definitions', ->
+
+    it 'defines a function with no arguments', ->
+      functionFor('myFunction = 10.5 / 22').should.eql new UserFunction('myFunction', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
+
+    it 'defines a function with two arguments', ->
+      functionFor('myFunction(a, bbb) = 10.5 / 22').should.eql new UserFunction('myFunction', ['a', 'bbb'], 'stream', new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))

@@ -1,5 +1,5 @@
 should = require 'should'
-{BuiltInFunction, UserFunction} = require './FunctionDefinition'
+{BuiltInFunction, UserFunction, ArgumentDefinition} = require './FunctionDefinition'
 
 describe 'Function Definitions', ->
 
@@ -14,9 +14,9 @@ describe 'Function Definitions', ->
 
   it 'UserFunction stores types and expression', ->
     expr = 'an expr'
-    argList = ['x', 10]
-    fn = new UserFunction('fn1', argList, 'value', expr)
+    argNames = ['a', 'bbb']
+    fn = new UserFunction('fn1', argNames, expr)
     fn.name.should.eql 'fn1'
-    fn.argDefs.should.eql argList
-    fn.returnKind.should.eql 'value'
+    fn.argDefs.should.eql [new ArgumentDefinition('a', 'stream'), new ArgumentDefinition('bbb', 'stream')]
+    fn.returnKind.should.eql 'stream'
     fn.expr.should.equal expr

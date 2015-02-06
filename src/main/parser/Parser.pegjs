@@ -3,6 +3,8 @@
                                                 Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall
                                                 InfixExpression = exprs.InfixExpression;
 
+    var funcs = require('../ast/FunctionDefinition'), UserFunction = funcs.UserFunction;
+
     function returnType(fn) { return fn.returnType || "value"; }
 
     function getInputStream(name) {
@@ -27,9 +29,21 @@
             return fn.call(null, args);
         }
     }
+
+    function infixExpr(operator, args) { return new InfixExpression(text().trim(), operator, args); }
 }
 
-start = _ expr:additive _  { return expr; }
+functionDefinition = noArgsFunction / argsFunction
+noArgsFunction = _ functionName:identifier _ "=" _ expr:expression { return new UserFunction(functionName, [], expr); }
+argsFunction = _ functionName:identifier  _ "(" _ argNames:identifierList _ ")"_ "=" expr:expression { return new UserFunction(functionName, argNames, expr); }
+identifierList = items:(
+                     first:identifier
+                     rest:(_ "," _ a:identifier { return a; })*
+                     { return [first].concat(rest); }
+                   )? { return result = items !== null ? items : []; }
+
+
+expression = _ expr:additive _  { return expr; }
 
 functionCall = functionName:identifier _ "(" _ args:additiveList _ ")" { return new FunctionCall(text().trim(), functionName, args); }
 
@@ -41,13 +55,13 @@ additiveList = items:(
 
 additive = add / subtract / multiplicative
 
-add = left:multiplicative _ "+" _ right:additive { return new InfixExpression(text().trim(), '+', left, right); }
-subtract = left:multiplicative _ "-" _ right:additive { return new InfixExpression(text().trim(), '-', left, right); }
+add = left:multiplicative _ "+" _ right:additive { return infixExpr( '+', [left, right]); }
+subtract = left:multiplicative _ "-" _ right:additive { return infixExpr( '-', [left, right]); }
 
 multiplicative = multiply / divide / primary
 
-multiply = left:primary _ "*" _ right:multiplicative { return new InfixExpression(text().trim(), '*', left, right); }
-divide = left:primary _ "/" _ right:multiplicative { return new InfixExpression(text().trim(), '/', left, right); }
+multiply = left:primary _ "*" _ right:multiplicative { return infixExpr( '*', [left, right]); }
+divide = left:primary _ "/" _ right:multiplicative { return infixExpr( '/', [left, right]); }
 
 primary = aggregation / sequence / number / string / functionCall / namedValue / bracketedExpression
 
@@ -84,4 +98,3 @@ alpha = [a-zA-Z_]
 space = " "+
 _ = space?
 doubleQuote "quote" = '"'
-

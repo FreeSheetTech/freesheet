@@ -34,9 +34,10 @@ Does not have access to other functions by name in the runtime
 Function - user
 ---------------
 - A set of named arguments, which may be empty
-- An expression
 - Knows where it is used
-
+- A single output expression
+- Possible: a set of named internal expressions
+- Possible: a set of named output expressions
 
 Expression
 ----------
@@ -67,6 +68,8 @@ JSON representation of AST objects
 
 Text
 ----
+
+script: zero or more function definitions
 
 function definition: functionName = expr
 

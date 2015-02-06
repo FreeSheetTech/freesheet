@@ -3,8 +3,8 @@ Parser = require './Parser'
 class TextParser
   constructor: (@text) ->
 
-  ast: ->
-    Parser.parse @text
+  expression: -> Parser.parse @text, {startRule: 'expression'}
+  functionDefinition: -> Parser.parse @text, {startRule: 'functionDefinition'}
 
 
 module.exports = {TextParser}
