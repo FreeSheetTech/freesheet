@@ -59,6 +59,9 @@ describe 'TextParser parses', ->
 
   describe 'function definition', ->
 
+    it 'defining a constant', ->
+      functionFor('myFunction = "a string"').should.eql new UserFunction('myFunction', [], aString)
+
     it 'with no arguments', ->
       functionFor('myFunction = 10.5 / 22').should.eql new UserFunction('myFunction', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
 
