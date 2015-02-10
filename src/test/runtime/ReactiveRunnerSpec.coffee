@@ -7,16 +7,21 @@ Rx = require 'rx'
 describe 'ReactiveRunner runs', ->
 
   parse = (text) -> new TextParser(text).functionDefinitionMap()
+  valuesReceivedBySubject = (subject) ->
+    values = []
+    subject.subscribe (value) -> values.push value
+    values
+
 
   it 'function with no args returning constant', ->
     scriptFunctions = parse ''' theAs = "aaaAAA" '''
     runner = new ReactiveRunner({}, scriptFunctions)
 
-    subject = runner.output 'theAs'
-    valueReceived = null
-    subject.subscribe (value) -> valueReceived = value
+#    subject = runner.output 'theAs'
+#    valueReceived = null
+#    subject.subscribe (value) -> valueReceived = value
 
-    valueReceived.should.eql "aaaAAA"
+    valuesReceivedBySubject(runner.output('theAs')).should.eql ["aaaAAA"]
 
   it 'function with no args returning constant calculated addition expression', ->
     scriptFunctions = parse '''twelvePlusThree = 12 + 3 '''

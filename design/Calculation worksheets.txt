@@ -325,6 +325,7 @@ Thoughts
 - Embedding: being able to add built-in functions to script your app is a big win
 - Smart Subject for web service result that uses cache headers to know whether to re-request each time it is asked
 - Live tutorial that gets you to type in expressions and see result, and saves your answers to review
+- Sandboxed - when used as embedded scripting language, can run only the provided functions, so no danger, like with Groovy
 
 Programming environment
 -----------------------
