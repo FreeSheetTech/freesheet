@@ -1,4 +1,5 @@
 should = require 'should'
+Rx = require 'rx'
 {TextParser} = require '../parser/TextParser'
 {ReactiveRunner} = require './ReactiveRunner'
 
@@ -36,6 +37,18 @@ describe 'ReactiveRunner runs', ->
     subject.subscribe (value) -> valueReceived = value
 
     valueReceived.should.eql 5
+
+  it 'function using a built-in function', ->
+    builtInFunctions = { theInput: -> new Rx.BehaviorSubject(20) }
+    scriptFunctions = parse '''inputMinusTwo = theInput() - 2 '''
+    runner = new ReactiveRunner(builtInFunctions, scriptFunctions)
+
+    subject = runner.output 'inputMinusTwo'
+    valueReceived = null
+    subject.subscribe (value) -> valueReceived = value
+
+    valueReceived.should.eql 18
+
 
 #  it 'function with one arg which is a literal', ->
 #    scriptFunctions = parse '''addFive(n) = n + 5; total = addFive(14)'''

@@ -2,18 +2,22 @@ Rx = require 'rx'
 {Literal, InfixExpression, FunctionCall} = require '../ast/Expressions'
 
 class ReactiveRunner
-  constructor: (@builtInFunctions, @userFunctions) ->
+  constructor: (@providedFunctions, @userFunctions) ->
 
   output: (name) ->
     func = @userFunctions[name]
-    stream = @_instantiateFunctionStream func
+    stream = @_instantiateUserFunctionStream func
     stream
 
 
 #  private functions
 
-  _instantiateFunctionStream: (func) ->
+  _instantiateUserFunctionStream: (func) ->
     @_instantiateExprStream func.expr
+
+  _instantiateProvidedFunctionStream: (func) ->
+    result = func.call null, []
+    result
 
   _instantiateExprStream: (expr) ->
     switch
@@ -25,8 +29,11 @@ class ReactiveRunner
         Rx.Observable.combineLatest leftObs, rightObs, @_infixOperatorFunction(expr.operator)
 
       when expr instanceof FunctionCall
-        func = @userFunctions[expr.functionName]
-        @_instantiateFunctionStream func
+        name = expr.functionName
+        switch
+          when func = @userFunctions[name] then @_instantiateUserFunctionStream func
+          when provided = @providedFunctions[name] then @_instantiateProvidedFunctionStream provided
+          else throw new Error "Unknown function: " + name
 
       else
         throw new Error("Unknown expression: " + expr.constructor.name)
@@ -34,6 +41,7 @@ class ReactiveRunner
   _infixOperatorFunction: (operator) ->
     switch operator
       when '+' then (a, b) -> a + b
+      when '-' then (a, b) -> a - b
       when '/' then (a, b) -> a / b
       else throw new Error("Unknown operator: " + operator)
 
