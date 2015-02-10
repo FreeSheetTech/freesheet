@@ -38,6 +38,10 @@ describe 'TextParser parses', ->
     it 'with no arguments', ->
       expressionFor('  theFn ( )  ').should.eql new FunctionCall('theFn ( )', 'theFn', [])
 
+
+    it 'with no braces', ->
+      expressionFor('  theFn ').should.eql new FunctionCall('theFn', 'theFn', [])
+
     it 'with literal arguments', ->
       expressionFor('theFn(10.5,"a string")').should.eql new FunctionCall('theFn(10.5,"a string")', 'theFn', [aNumber, aString])
 

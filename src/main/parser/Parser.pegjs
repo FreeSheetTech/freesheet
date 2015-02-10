@@ -5,31 +5,6 @@
 
     var funcs = require('../ast/FunctionDefinition'), UserFunction = funcs.UserFunction;
 
-    function returnType(fn) { return fn.returnType || "value"; }
-
-    function getInputStream(name) {
-        return options.context.getNamedFormula(name);
-    }
-
-    function asObservable(x) { return x instanceof Rx.Observable ? x : new Rx.BehaviorSubject(x); }
-    function asObservables(xList) { return xList.map(asObservable); }
-    function binaryOp(left, right, fn) {
-        var leftObs = asObservable(left), rightObs = asObservable(right);
-        return Rx.Observable.combineLatest(leftObs, rightObs, fn);
-    }
-    function addOp(left, right) { return binaryOp(left, right, function(l, r) { return l + r; }); }
-    function subtractOp(left, right) { return binaryOp(left, right, function(l, r) { return l - r; }); }
-    function multiplyOp(left, right) { return binaryOp(left, right, function(l, r) { return l * r; }); }
-    function divideOp(left, right) { return binaryOp(left, right, function(l, r) { return l / r; }); }
-    function functionCallOp(functionName, args) {
-        var fn = functions[functionName];
-        if (returnType(fn) == "value"  && fn.length > 0) {
-            return Rx.Observable.combineLatest(asObservables(args), fn);
-        } else {
-            return fn.call(null, args);
-        }
-    }
-
     function infixExpr(operator, args) { return new InfixExpression(text().trim(), operator, args); }
 }
 
@@ -48,7 +23,9 @@ identifierList = items:(
 
 expression = _ expr:additive _  { return expr; }
 
-functionCall = functionName:identifier _ "(" _ args:additiveList _ ")" { return new FunctionCall(text().trim(), functionName, args); }
+functionCall = functionCallWithArgs / functionCallNoArgs
+functionCallWithArgs = functionName:identifier _ "(" _ args:additiveList _ ")" { return new FunctionCall(text().trim(), functionName, args); }
+functionCallNoArgs = functionName:identifier { return new FunctionCall(text().trim(), functionName, []); }
 
 additiveList = items:(
                      first:additive
@@ -66,7 +43,7 @@ multiplicative = multiply / divide / primary
 multiply = left:primary _ "*" _ right:multiplicative { return infixExpr( '*', [left, right]); }
 divide = left:primary _ "/" _ right:multiplicative { return infixExpr( '/', [left, right]); }
 
-primary = aggregation / sequence / number / string / functionCall / namedValue / bracketedExpression
+primary = aggregation / sequence / number / string / functionCall / bracketedExpression
 
 floatOrInt = $ (digit+ ("." digit*)? / "." digit+)
 
@@ -76,7 +53,6 @@ string "string" = doubleQuote chars:[^"]* doubleQuote { var val = chars.join("")
 
 identifier "identifier" = $(alpha (alpha/digit)*)
 
-namedValue = id:identifier { return getInputStream(id); }
 
 bracketedExpression = _ "(" _ additive:additive _ ")" _ { return additive; }
 

@@ -324,6 +324,7 @@ Thoughts
 - Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
 - Embedding: being able to add built-in functions to script your app is a big win
 - Smart Subject for web service result that uses cache headers to know whether to re-request each time it is asked
+- Live tutorial that gets you to type in expressions and see result, and saves your answers to review
 
 Programming environment
 -----------------------
