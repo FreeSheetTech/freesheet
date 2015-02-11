@@ -326,6 +326,8 @@ Thoughts
 - Smart Subject for web service result that uses cache headers to know whether to re-request each time it is asked
 - Live tutorial that gets you to type in expressions and see result, and saves your answers to review
 - Sandboxed - when used as embedded scripting language, can run only the provided functions, so no danger, like with Groovy
+- Specification language: process AST to translate into English-like description, or graphical form
+- Rules engine - way for users to change business rules in a system
 
 Programming environment
 -----------------------

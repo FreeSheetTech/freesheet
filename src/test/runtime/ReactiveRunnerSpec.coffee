@@ -6,22 +6,38 @@ Rx = require 'rx'
 
 describe 'ReactiveRunner runs', ->
 
+  runner = null
+  changes = null
+
   parse = (text) -> new TextParser(text).functionDefinitionMap()
+  parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
   valuesReceivedBySubject = (subject) ->
     values = []
     subject.subscribe (value) -> values.push value
     values
 
+  callback = (name, value) -> received = {}; received[name] = value; changes.push received
+
+  beforeEach ->
+    runner = new ReactiveRunner()
+    changes = []
+    runner.onChange callback
 
   it 'function with no args returning constant', ->
-    scriptFunctions = parse ''' theAs = "aaaAAA" '''
-    runner = new ReactiveRunner({}, scriptFunctions)
+    parseUserFunctions ''' theAs = "aaaAAA" '''
 
 #    subject = runner.output 'theAs'
 #    valueReceived = null
 #    subject.subscribe (value) -> valueReceived = value
 
     valuesReceivedBySubject(runner.output('theAs')).should.eql ["aaaAAA"]
+
+  it 'notifies a change to a constant value formula when it is set and changed', ->
+    parseUserFunctions 'price = 22.5; tax_rate = 0.2'
+    parseUserFunctions 'price = 33.5'
+
+    changes.should.eql [{price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
+
 
   it 'function with no args returning constant calculated addition expression', ->
     scriptFunctions = parse '''twelvePlusThree = 12 + 3 '''

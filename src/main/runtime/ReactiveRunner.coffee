@@ -2,15 +2,38 @@ Rx = require 'rx'
 {Literal, InfixExpression, FunctionCall} = require '../ast/Expressions'
 
 class ReactiveRunner
-  constructor: (@providedFunctions, @userFunctions) ->
+  constructor: (@providedFunctions = {}, @userFunctions = {}) ->
+    @allChanges = new Rx.Subject()
+    @userFunctionSubjects = {}
 
   output: (name) ->
     func = @userFunctions[name]
     stream = @_instantiateUserFunctionStream func
     stream
 
+  addUserFunction: (name, funcDef) ->
+    @userFunctions[name] = funcDef
+    source = @_instantiateUserFunctionStream funcDef
 
-#  private functions
+    if subj = @userFunctionSubjects[name]
+      subj.disp?.dispose()
+      subj.disp = source.subscribe subj
+    else
+      subj = @userFunctionSubjects[name] = new Rx.BehaviorSubject(null)
+      subj.disp = source.subscribe subj
+      subj.subscribe (value) => @allChanges.onNext [name, value]
+
+
+  addUserFunctions: (funcDefMap) -> @addUserFunction n, f for n, f of funcDefMap
+
+  onChange: (callback) -> @allChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
+
+  #  private functions
+
+  _userFunctionSubject: (name) -> @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name))
+  _newUserFunctionSubject: (name) ->
+    subj = new Rx.BehaviorSubject(null)
+    subj
 
   _instantiateUserFunctionStream: (func) ->
     @_instantiateExprStream func.expr
