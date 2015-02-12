@@ -29,13 +29,19 @@ class ReactiveRunner
 
   addUserFunctions: (funcDefMap) -> @addUserFunction n, f for n, f of funcDefMap
 
-  onChange: (callback) -> @allChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
+  onChange: (callback, name) ->
+    if name
+      subj = @_userFunctionSubject name
+      subj.subscribe (value) -> callback name, value
+    else
+      @allChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
   #  private functions
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name))
   _newUserFunctionSubject: (name) ->
     subj = new Rx.BehaviorSubject(null)
+    subj.subscribe (value) => @allChanges.onNext [name, value]
     subj
 
   _instantiateUserFunctionStream: (func) ->
