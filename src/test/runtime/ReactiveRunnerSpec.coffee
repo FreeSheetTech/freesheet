@@ -60,6 +60,27 @@ describe 'ReactiveRunner runs', ->
       namedChanges.should.eql [{price:null}, {price:22.5}, {price: 33.5}]
       changes.should.eql [{price:null}, {price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
 
+    it 'to a function that uses an event stream via a provided function', ->
+      inputSubj = new Rx.Subject()
+      providedFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'aliens = theInput()'
+      inputSubj.onNext 'Aarhon'
+      inputSubj.onNext 'Zorgon'
+
+      changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:'Zorgon'}]
+
+    it 'to a function that uses an event stream via a provided function with arguments', ->
+      inputSubj = new Rx.Subject()
+      providedFunctions inputValueWithSuffix: (suffixStream) ->
+        inputSubj.combineLatest suffixStream, (v, s) -> v + s
+
+      parseUserFunctions 'aliens = inputValueWithSuffix("stuff")'
+      inputSubj.onNext 'Aarhon'
+      observeNamedChanges 'aliens'
+
+      inputSubj.onNext 'Zorgon'
+
+      namedChanges.should.eql [{aliens: 'Aarhonstuff'}, {aliens: 'Zorgonstuff'}]
 
 
 #  it 'function with one arg which is a literal', ->

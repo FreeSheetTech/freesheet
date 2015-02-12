@@ -47,8 +47,9 @@ class ReactiveRunner
   _instantiateUserFunctionStream: (func) ->
     @_instantiateExprStream func.expr
 
-  _instantiateProvidedFunctionStream: (func) ->
-    result = func.call null, []
+  _instantiateProvidedFunctionStream: (func, argExprs) ->
+    argStreams = (@_instantiateExprStream(a) for a in argExprs)
+    result = func.call null, argStreams
     result
 
   _instantiateExprStream: (expr) ->
@@ -64,7 +65,7 @@ class ReactiveRunner
         name = expr.functionName
         switch
           when func = @userFunctions[name] then @_instantiateUserFunctionStream func
-          when provided = @providedFunctions[name] then @_instantiateProvidedFunctionStream provided
+          when func = @providedFunctions[name] then @_instantiateProvidedFunctionStream func, expr.children
           else throw new Error "Unknown function: " + name
 
       else
