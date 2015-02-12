@@ -11,6 +11,9 @@ class ReactiveRunner
     stream = @_instantiateUserFunctionStream func
     stream
 
+  addProvidedFunction: (name, fn) -> @providedFunctions[name] = fn
+  addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
+
   addUserFunction: (name, funcDef) ->
     @userFunctions[name] = funcDef
     source = @_instantiateUserFunctionStream funcDef
