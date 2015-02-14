@@ -40,10 +40,29 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions '''twelvePlusThree = 12 + 3; five = twelvePlusThree / 3 '''
       changesFor('five').should.eql [5]
 
-    it 'function using a built-in function', ->
+    it 'function using a provided function', ->
       providedFunctions { theInput: -> new Rx.BehaviorSubject(20) }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
+
+    it 'function using a user function with name overriding a built-in function', ->
+      providedFunctions { theInput: -> new Rx.BehaviorSubject(20) }
+      parseUserFunctions '''theInput = 30'''
+      parseUserFunctions '''inputMinusTwo = theInput - 2 '''
+      changesFor('inputMinusTwo').should.eql [28]
+
+
+  describe 'updates dependent expressions', ->
+    it 'of a function that uses an event stream via a provided function', ->
+      inputSubj = new Rx.Subject()
+      providedFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'number = theInput(); plusOne = number + 1'
+      inputSubj.onNext 10
+      inputSubj.onNext 20
+
+      changes.should.eql [{number:null}, {plusOne:1}, {number:10}, {plusOne:11}, {number:20}, {plusOne:21}]
+
+
 
   describe 'notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->
@@ -81,6 +100,18 @@ describe 'ReactiveRunner runs', ->
       inputSubj.onNext 'Zorgon'
 
       namedChanges.should.eql [{aliens: 'Aarhonstuff'}, {aliens: 'Zorgonstuff'}]
+
+    it 'when referenced functions defined before', ->
+      parseUserFunctions 'materials = 35; labour = 25'
+      parseUserFunctions 'total = materials + labour'
+
+      changes.should.eql [{materials: 35}, {labour:25}, {total: 60}]
+
+    it 'when referenced functions defined after', ->
+      parseUserFunctions 'total = materials + labour'
+      parseUserFunctions 'materials = 35; labour = 25'
+
+      changes.should.eql [{ materials: null }, {labour: null }, {total: 0 }, {materials: 35 }, {total: 35 }, {labour: 25 }, {total: 60 }]
 
 
 #  it 'function with one arg which is a literal', ->

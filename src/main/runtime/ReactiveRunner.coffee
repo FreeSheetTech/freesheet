@@ -64,9 +64,9 @@ class ReactiveRunner
       when expr instanceof FunctionCall
         name = expr.functionName
         switch
-          when func = @userFunctions[name] then @_instantiateUserFunctionStream func
+          when func = @userFunctions[name] then @_userFunctionSubject name
           when func = @providedFunctions[name] then @_instantiateProvidedFunctionStream func, expr.children
-          else throw new Error "Unknown function: " + name
+          else @_userFunctionSubject name
 
       else
         throw new Error("Unknown expression: " + expr.constructor.name)
