@@ -60,7 +60,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions '''twelvePlusThree = 12 + 3; five = twelvePlusThree / 3 '''
       changesFor('five').should.eql [5]
 
-    it 'function using a provided function', ->
+    it 'function using a provided stream function with no args', ->
       providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
@@ -71,6 +71,12 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions '''inputMinusTwo = theInput - 2 '''
       changesFor('inputMinusTwo').should.eql [28]
 
+    it 'function using a provided value function with no args', ->
+      providedFunctions { theInput: -> 20 }
+      parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
+      changesFor('inputMinusTwo').should.eql [18]
+
+
     it 'complex and bracketed expressions with correct precedence', ->
       parseUserFunctions 'a = 10'
       parseUserFunctions 'b = 20'
@@ -79,7 +85,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'q = a + c * 3 - (a + b) / 10'
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 22}]
 
-    it 'function calls with other expressions as arguments to provided functions', ->
+    it 'function calls with other expressions as arguments to provided value functions with arguments', ->
       parseUserFunctions 'a = 10'
       parseUserFunctions 'b = 20'
       parseUserFunctions 'c = 5'

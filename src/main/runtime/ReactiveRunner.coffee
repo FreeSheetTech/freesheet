@@ -54,7 +54,13 @@ class ReactiveRunner
 
   _instantiateProvidedFunctionStream: (func, argExprs) ->
     argStreams = (@_instantiateExprStream(a) for a in argExprs)
-    result = if func.kind == STREAM then func.call null, argStreams else Rx.Observable.combineLatest argStreams, func
+    result = if func.kind == STREAM
+               func.call null, argStreams
+             else
+                if argStreams.length
+                  Rx.Observable.combineLatest argStreams, func
+                else
+                  new Rx.BehaviorSubject func()
     result
 
   _instantiateExprStream: (expr) ->
