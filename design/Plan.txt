@@ -1,0 +1,44 @@
+Plan
+====
+
+Parts needed
+------------
+    - Language definition
+    - AST data structure definition
+    - Text syntax definition
+    - Text to AST parser
+- AST to stream net builder - different to runner?
+- AST to JS code generator
+- Worksheet to AST converter
+- Worksheet to AST to stream net live update
+- AST to text converter
+- AST to worksheet converter
+- AST to worksheet live update
+- Page to AST converter
+    - Stream net runner
+- Stream net to template updater
+- Error handling mechanism
+
+Next steps
+----------
+- Parse a whole worksheet as a function, not just individual formulas
+- Make the function available for use elsewhere
+- Make functions work on streams
+- Instantiate multiple copies of the function
+- Generate updating monitor display automatically
+- Nesting updating displays
+- Multiple updating displays for all usages of function
+- Data loading functions
+- Actions on output events
+
+Future steps
+------------
+- Modularize into library
+- Contributions mechanism
+- Safe third-party JS
+- Server side sheets for API
+- Open source but pay for hosting
+- Instant play and save
+- JSFiddle-like instant worksheet page
+
+
