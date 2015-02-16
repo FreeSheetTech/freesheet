@@ -13,6 +13,7 @@ describe 'ReactiveRunner runs', ->
 
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
+  providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   parse = (text) -> new TextParser(text).functionDefinitionMap()
   parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
 
@@ -60,30 +61,39 @@ describe 'ReactiveRunner runs', ->
       changesFor('five').should.eql [5]
 
     it 'function using a provided function', ->
-      providedFunctions { theInput: -> new Rx.BehaviorSubject(20) }
+      providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
 
     it 'function using a user function with name overriding a built-in function', ->
-      providedFunctions { theInput: -> new Rx.BehaviorSubject(20) }
+      providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
       parseUserFunctions '''theInput = 30'''
       parseUserFunctions '''inputMinusTwo = theInput - 2 '''
       changesFor('inputMinusTwo').should.eql [28]
 
+    it 'complex and bracketed expressions with correct precedence', ->
+      parseUserFunctions 'a = 10'
+      parseUserFunctions 'b = 20'
+      parseUserFunctions 'c = 5'
 
-  describe 'updates dependent expressions', ->
-    it 'of a function that uses an event stream via a provided function', ->
-      providedFunctions { theInput: -> inputSubj }
-      parseUserFunctions 'number = theInput(); plusOne = number + 1'
-      inputSubj.onNext 10
-      inputSubj.onNext 20
+      parseUserFunctions 'q = a + c * 3 - (a + b) / 10'
+      changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 22}]
 
-      changes.should.eql [{number:null}, {plusOne:1}, {number:10}, {plusOne:11}, {number:20}, {plusOne:21}]
+    it 'function calls with other expressions as arguments to provided functions', ->
+      parseUserFunctions 'a = 10'
+      parseUserFunctions 'b = 20'
+      parseUserFunctions 'c = 5'
+      providedFunctions
+        addOne: (a) -> a + 1
+        getTheAnswer: (a, b, c) -> a + b - c
+
+      parseUserFunctions 'q = getTheAnswer(100, b + addOne(a), getTheAnswer ( 4, 10, c)  )'
+
+      changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
 
 
 
-
-  describe 'notifies changes', ->
+  describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->
       parseUserFunctions 'price = 22.5; tax_rate = 0.2'
       parseUserFunctions 'price = 33.5'
@@ -99,15 +109,24 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{price:null}, {price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
 
     it 'to a function that uses an event stream via a provided function', ->
-      providedFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: -> inputSubj }
       parseUserFunctions 'aliens = theInput()'
       inputSubj.onNext 'Aarhon'
       inputSubj.onNext 'Zorgon'
 
       changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:'Zorgon'}]
 
+    it 'of a function that calls a function that uses an event stream via a provided function', ->
+      providedStreamFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'number = theInput(); plusOne = number + 1'
+      inputSubj.onNext 10
+      inputSubj.onNext 20
+
+      changes.should.eql [{number:null}, {plusOne:1}, {number:10}, {plusOne:11}, {number:20}, {plusOne:21}]
+
+
     it 'to a function that uses an event stream via a provided function with arguments', ->
-      providedFunctions inputValueWithSuffix: (suffixStream) ->
+      providedStreamFunctions inputValueWithSuffix: (suffixStream) ->
         inputSubj.combineLatest suffixStream, (v, s) -> v + s
 
       parseUserFunctions 'aliens = inputValueWithSuffix("stuff")'
@@ -131,7 +150,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{ materials: null }, {labour: null }, {total: 0 }, {materials: 35 }, {total: 35 }, {labour: 25 }, {total: 60 }]
 
     it 'adds two changing values in formula set afterwards', ->
-      providedFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: -> inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'labour = theInput()'
       parseUserFunctions 'total = materials + labour'
@@ -143,7 +162,7 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'adds two changing values in function set in between', ->
-      providedFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: -> inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'labour = theInput()'
@@ -154,7 +173,7 @@ describe 'ReactiveRunner runs', ->
 
     it 'on individual named value including initial value', ->
 
-      providedFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: -> inputSubj }
       parseUserFunctions 'aaa = 10'
 
       observeNamedChanges 'aaa'

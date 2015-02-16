@@ -2,6 +2,9 @@ Rx = require 'rx'
 {Literal, InfixExpression, FunctionCall} = require '../ast/Expressions'
 
 class ReactiveRunner
+  VALUE = 'value'
+  STREAM = 'stream'
+
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @allChanges = new Rx.Subject()
     @userFunctionSubjects = {}
@@ -11,8 +14,10 @@ class ReactiveRunner
     stream = @_instantiateUserFunctionStream func
     stream
 
-  addProvidedFunction: (name, fn) -> @providedFunctions[name] = fn
+  addProvidedFunction: (name, fn) -> fn.kind = VALUE; @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
+  addProvidedStreamFunction: (name, fn) -> fn.kind = STREAM; @providedFunctions[name] = fn
+  addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
 
   addUserFunction: (name, funcDef) ->
     @userFunctions[name] = funcDef
@@ -49,7 +54,7 @@ class ReactiveRunner
 
   _instantiateProvidedFunctionStream: (func, argExprs) ->
     argStreams = (@_instantiateExprStream(a) for a in argExprs)
-    result = func.call null, argStreams
+    result = if func.kind == STREAM then func.call null, argStreams else Rx.Observable.combineLatest argStreams, func
     result
 
   _instantiateExprStream: (expr) ->
