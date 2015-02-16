@@ -9,6 +9,8 @@ describe 'ReactiveRunner runs', ->
   runner = null
   changes = null
   namedChanges = null
+  inputSubj = null
+
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   parse = (text) -> new TextParser(text).functionDefinitionMap()
@@ -26,8 +28,25 @@ describe 'ReactiveRunner runs', ->
     changes = []
     namedChanges = []
     runner.onChange callback
+    inputSubj = new Rx.Subject()
 
   describe 'runs expressions', ->
+    it 'all arithmetic operations', ->
+      parseUserFunctions 'a=100'
+      parseUserFunctions '  p=a+2  '
+      parseUserFunctions 'q = 150   -  a  '
+      parseUserFunctions 'r =1200 / a'
+      parseUserFunctions 's= a * 5.2'
+
+      changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
+
+
+    it 'concatenates strings', ->
+      parseUserFunctions 'a = "The A"'
+      parseUserFunctions 'aa = a + 10 + " times"'
+
+      changes.should.eql [{a: 'The A'}, {aa: 'The A10 times'}]
+
     it 'function with no args returning constant', ->
       parseUserFunctions ''' theAs = "aaaAAA" '''
       changes.should.eql [{theAs: "aaaAAA"}]
@@ -54,13 +73,13 @@ describe 'ReactiveRunner runs', ->
 
   describe 'updates dependent expressions', ->
     it 'of a function that uses an event stream via a provided function', ->
-      inputSubj = new Rx.Subject()
       providedFunctions { theInput: -> inputSubj }
       parseUserFunctions 'number = theInput(); plusOne = number + 1'
       inputSubj.onNext 10
       inputSubj.onNext 20
 
       changes.should.eql [{number:null}, {plusOne:1}, {number:10}, {plusOne:11}, {number:20}, {plusOne:21}]
+
 
 
 
@@ -80,7 +99,6 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{price:null}, {price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
 
     it 'to a function that uses an event stream via a provided function', ->
-      inputSubj = new Rx.Subject()
       providedFunctions { theInput: -> inputSubj }
       parseUserFunctions 'aliens = theInput()'
       inputSubj.onNext 'Aarhon'
@@ -89,7 +107,6 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:'Zorgon'}]
 
     it 'to a function that uses an event stream via a provided function with arguments', ->
-      inputSubj = new Rx.Subject()
       providedFunctions inputValueWithSuffix: (suffixStream) ->
         inputSubj.combineLatest suffixStream, (v, s) -> v + s
 
@@ -112,6 +129,43 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'materials = 35; labour = 25'
 
       changes.should.eql [{ materials: null }, {labour: null }, {total: 0 }, {materials: 35 }, {total: 35 }, {labour: 25 }, {total: 60 }]
+
+    it 'adds two changing values in formula set afterwards', ->
+      providedFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'materials = 35'
+      parseUserFunctions 'labour = theInput()'
+      parseUserFunctions 'total = materials + labour'
+
+      inputSubj.onNext 25
+      parseUserFunctions 'materials = 50'
+
+      changes.should.eql [{materials: 35}, {labour:null}, {total: 35}, {labour:25}, {total: 60}, {materials: 50}, {total: 75}]
+
+
+    it 'adds two changing values in function set in between', ->
+      providedFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'materials = 35'
+      parseUserFunctions 'total = materials + labour'
+      parseUserFunctions 'labour = theInput()'
+
+      inputSubj.onNext 25
+
+      changes.should.eql [{materials: 35}, {labour:null}, {total: 35}, {labour:25}, {total: 60}]
+
+    it 'on individual named value including initial value', ->
+
+      providedFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'aaa = 10'
+
+      observeNamedChanges 'aaa'
+      observeNamedChanges 'xxx'
+      observeNamedChanges 'bbb'
+
+      parseUserFunctions 'bbb = theInput()'
+      inputSubj.onNext 'value of bbb'
+
+      namedChanges.should.eql [{aaa: 10}, {xxx: null}, {bbb: null}, {bbb: 'value of bbb'}]
+
 
 
 #  it 'function with one arg which is a literal', ->
