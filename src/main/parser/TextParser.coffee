@@ -1,6 +1,6 @@
 Parser = require './Parser'
 
-class TextParser
+module.exports = class TextParser
   constructor: (@text) ->
 
   expression: -> Parser.parse @text, {startRule: 'expression'}
@@ -12,5 +12,3 @@ class TextParser
     result[f.name] = f for f in functions
     result
 
-
-module.exports = {TextParser}

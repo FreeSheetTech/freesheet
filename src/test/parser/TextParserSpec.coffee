@@ -1,5 +1,5 @@
 should = require 'should'
-{TextParser} = require './TextParser'
+TextParser = require './TextParser'
 {Literal, Sequence, Aggregation, FunctionCall} = require '../ast/Expressions'
 {UserFunction, ArgumentDefinition} = require '../ast/FunctionDefinition'
 

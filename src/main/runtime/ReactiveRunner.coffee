@@ -1,7 +1,7 @@
 Rx = require 'rx'
 {Literal, InfixExpression, FunctionCall} = require '../ast/Expressions'
 
-class ReactiveRunner
+module.exports = class ReactiveRunner
   VALUE = 'value'
   STREAM = 'stream'
 
@@ -19,7 +19,8 @@ class ReactiveRunner
   addProvidedStreamFunction: (name, fn) -> fn.kind = STREAM; @providedFunctions[name] = fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
 
-  addUserFunction: (name, funcDef) ->
+  addUserFunction: (funcDef) ->
+    name = funcDef.name
     @userFunctions[name] = funcDef
     source = @_instantiateUserFunctionStream funcDef
 
@@ -32,7 +33,7 @@ class ReactiveRunner
       subj.subscribe (value) => @allChanges.onNext [name, value]
 
 
-  addUserFunctions: (funcDefMap) -> @addUserFunction n, f for n, f of funcDefMap
+  addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
   onChange: (callback, name) ->
     if name
@@ -55,7 +56,7 @@ class ReactiveRunner
   _instantiateProvidedFunctionStream: (func, argExprs) ->
     argStreams = (@_instantiateExprStream(a) for a in argExprs)
     result = switch func.kind
-              when STREAM then func.call null, argStreams
+              when STREAM then func.apply null, argStreams
               when VALUE
                 if argStreams.length then Rx.Observable.combineLatest argStreams, func
                 else new Rx.BehaviorSubject func()
@@ -87,5 +88,3 @@ class ReactiveRunner
       when '*' then (a, b) -> a * b
       when '/' then (a, b) -> a / b
       else throw new Error("Unknown operator: " + operator)
-
-module.exports = {ReactiveRunner}

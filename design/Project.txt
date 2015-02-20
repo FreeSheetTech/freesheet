@@ -1,0 +1,20 @@
+Project Stuff
+=============
+
+- Licence
+- Readme
+- package.json
+- npm build
+- npm packaging
+- npm publishing
+- versioning
+- link npm registry and git repo
+- website and docs
+- changelog and/or release notes
+- npm coding style
+
+
+Useful stuff
+------------
+
+- npm link to dev folder

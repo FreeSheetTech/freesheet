@@ -1,7 +1,7 @@
 should = require 'should'
 Rx = require 'rx'
-{TextParser} = require '../parser/TextParser'
-{ReactiveRunner} = require './ReactiveRunner'
+TextParser = require '../parser/TextParser'
+ReactiveRunner = require './ReactiveRunner'
 
 
 describe 'ReactiveRunner runs', ->
@@ -14,7 +14,9 @@ describe 'ReactiveRunner runs', ->
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
-  parse = (text) -> new TextParser(text).functionDefinitionMap()
+  parse = (text) ->
+    map = new TextParser(text).functionDefinitionMap()
+    (v for k, v of map)
   parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
 
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
@@ -61,6 +63,11 @@ describe 'ReactiveRunner runs', ->
       changesFor('five').should.eql [5]
 
     it 'function using a provided stream function with no args', ->
+      providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
+      parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
+      changesFor('inputMinusTwo').should.eql [18]
+
+    it 'function using a provided stream function with some args', ->
       providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
@@ -132,16 +139,16 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'to a function that uses an event stream via a provided function with arguments', ->
-      providedStreamFunctions inputValueWithSuffix: (suffixStream) ->
-        inputSubj.combineLatest suffixStream, (v, s) -> v + s
+      providedStreamFunctions inputValueWithSuffix: (prefixStream, suffixStream) ->
+        inputSubj.combineLatest prefixStream, suffixStream, (v, p, s) -> p + v + s
 
-      parseUserFunctions 'aliens = inputValueWithSuffix("stuff")'
+      parseUserFunctions 'aliens = inputValueWithSuffix("some ", " stuff")'
       inputSubj.onNext 'Aarhon'
       observeNamedChanges 'aliens'
 
       inputSubj.onNext 'Zorgon'
 
-      namedChanges.should.eql [{aliens: 'Aarhonstuff'}, {aliens: 'Zorgonstuff'}]
+      namedChanges.should.eql [{aliens: 'some Aarhon stuff'}, {aliens: 'some Zorgon stuff'}]
 
     it 'when referenced functions defined before', ->
       parseUserFunctions 'materials = 35; labour = 25'

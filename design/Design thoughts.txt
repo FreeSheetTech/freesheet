@@ -29,6 +29,8 @@ Thoughts
 - Defining named functions then combining them again into an output that just repeated the names would be confusing and non-DRY
 - Should you have reusable functions with just one output and worksheet object with multiple values?
 - Unified view: functions can have several named outputs, and internal functions, so overall program is one outer function with several named outputs
+- Named values are defined as functions, anyway
+- Maybe worksheets are more like namespaces, and functions are just at top-level, and are different
 - Maybe only top-level named outputs become separate streams - nowhere to refer to them as an aggregate anyway
 - Need to wire outputs into actions somehow, as well as just tracking and displaying
 - Maybe output event streams - which is what they are?
