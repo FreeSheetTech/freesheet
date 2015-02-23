@@ -45,12 +45,7 @@ Thoughts
 - Or maybe a single sequence of input event combinations to a single sequence of output event combinations
 - Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
 - Need to be able to use functions as first class objects - it is FP, after all
-- For dealing with lists (repeating data groups), need a foreach mechanism as well as aggregation
-- Lists can be treated similarly to streams in some ways - many operations apply to both
-- Functions applied to lists may be simpler than or different to those applied to sets of streams
-  - only one input stream and one output stream
 - Do functions have to be defined separately or can they be nested within another sheet?
-- Can list functions still pick up other values like inputs or times? - probably no
 - How do things like filtering on input or adding a value to a column
 - Should every worksheet have defined inputs and outputs, and input sources have to be wired in separately?  How define? How wire?
 - Or should this be optional - reusability vs convenience?
@@ -63,14 +58,11 @@ Thoughts
 - Functions can be applied to and can return any simple or complex type
 - A function is defined by a named worksheet and can then be referenced in formulas
 - A function from one simple value to another might be cumbersome to define as a worksheet
-- Need notation to refer to elements of maps and lists in basic formula syntax
 - Need syntax to define inputs that must be provided
 - Functions used in foreach expressions - do they take stream of input values, and can they do aggregation as they go?
 - Definition and instance separation - named worksheets at top level like objects, what about when used in formulas in many places
 - How to implement reuse in different places
 - How to show reuse to user on work page
-- No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
-- As all functions have stream inputs and outputs, if you apply it to a single value, get a single value, to stream you get a stream
 - Changes in outputs due to changes in inputs are just new outputs in the stream due to new events in the input stream(s)
 - Data at rest needs to be converted to and from streams to go through functions
 - A data worksheet is just a function with no inputs that produces a stream with one output value
@@ -84,8 +76,6 @@ Thoughts
 - Re-use worksheet functions from any other page - just has to be a parseable table
 - Could publish pages of library functions - just put documentation and examples on the page with them
 - Consider saving all inputs in dev mode to replay when a formula changes
-- Some list operators need static lists eg sorting may need IxJS
-- Dot operator creates a stream with pluck for one item
 - Maybe all function streams should have distinct on them
 - Testing facilities important - eg table with input event rows at top and output events below, with columns at particular times
 - Must be easy to think *how* to test
@@ -147,13 +137,42 @@ Thoughts
 - May want a non-reactive implementation of all functions
 - May want a non-reactive implementation of functions that are only used within other reactive functions BUT lose the debugging
 - You really need user testing to know if real non-technical users will find this easy
-- Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
 - Embedding: being able to add built-in functions to script your app is a big win
 - Smart Subject for web service result that uses cache headers to know whether to re-request each time it is asked
 - Live tutorial that gets you to type in expressions and see result, and saves your answers to review
 - Sandboxed - when used as embedded scripting language, can run only the provided functions, so no danger, like with Groovy
 - Specification language: process AST to translate into English-like description, or graphical form
 - Rules engine - way for users to change business rules in a system
+
+Sequences and objects
+---------------------
+- Need notation to refer to elements of maps and lists in basic formula syntax
+- Some list operators need static lists eg sorting may need IxJS
+- Dot operator creates a stream with pluck for one item
+- Need object expressions
+- Need to filter as well as transform
+- BUT for simple case, non-reusable, can you just refer to the input value by name?
+- Sequences automatically have expression applied to every element
+- As all functions have stream inputs and outputs, if you apply it to a single value, get a single value, to stream you get a stream
+- BUT need to be have aggregate expressions applied to the whole list
+- Danger - if have stream that supplies a list for each value, what are you iterating over/aggregating on
+- If want a short name, just define it!
+- For dealing with lists (repeating data groups), need a foreach mechanism as well as aggregation
+- Lists can be treated similarly to streams in some ways - many operations apply to both
+- Functions applied to lists may be simpler than or different to those applied to sets of streams
+  - only one input stream and one output stream
+- Can list functions/expressions still pick up other values like inputs or times?
+- Poss: No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
+
+
+Transform functions for sequences and objects
+---------------------------------------------
+- Easily pass through individual parts or all input values so can add properties
+- Need to apply object expression to an input
+- Input is the current scope of the expression
+- Need a way to refer to this OR to name it in the expression
+- Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
+- Must work for an 'add one' case as well as transforming a data structure
 
 Programming environment
 -----------------------
@@ -188,6 +207,11 @@ Connection to page
 - Link outputs to page by setting their values in a ReactiveDict
 - Link references in page via val helper, or via hook into lookup
 - Show undefined formulas in worksheet on page
+
+Worksheets
+----------
+- For large arrays of objects, show as table if seem to have "similar" keys in each object
+- Display headings and 2-3 rows, with expansion options to see all, maybe paginated
 
 Issues
 ------

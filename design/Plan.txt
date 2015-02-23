@@ -31,6 +31,14 @@ Next steps
 - Data loading functions
 - Actions on output events
 
+Immediate to do
+---------------
+- Comparative operators in correct precedence
+- Dummy getData
+- Scoping rules
+- Filter function
+- Object expressions
+
 Future steps
 ------------
 - Modularize into library

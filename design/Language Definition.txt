@@ -83,6 +83,10 @@ string literal: "<chars>"
 
 number literal: nn.nnn
 
+date literal:
+
+date-time literal:
+
 sequence: [expr, ...]
 
 aggregation: { name: expr, ... }

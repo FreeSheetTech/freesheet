@@ -1,3 +1,5 @@
+Rx = require 'rx'
+
 input = (inputName) ->
   isNumeric = (s) -> s and s.match(/^\d*\.?\d+$|^\d+.?\d*$/)
   convertValue = (s)  -> if isNumeric(s) then parseFloat(s) else s
