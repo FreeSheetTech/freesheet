@@ -12,6 +12,7 @@ describe 'TextParser parses', ->
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
+  aFunctionCall = new FunctionCall('a', 'a', [])
 
   describe 'expressions', ->
 
@@ -76,6 +77,23 @@ describe 'TextParser parses', ->
       it 'greater than or equal with two operands', ->
         expressionFor('10.5>= 22 ').should.eql new InfixExpression('10.5>= 22', '>=', [aNumber, aNumber22])
 
+
+    describe 'precedence', ->
+
+      it 'multiplication higher than addition', ->
+        expressionFor('10.5 + a * 22').should.eql new InfixExpression('10.5 + a * 22', '+', [
+                                                   aNumber,
+                                                   new InfixExpression('a * 22', '*', [aFunctionCall, aNumber22])
+        ])
+
+      it 'multiplication and division both higher than addition and subtraction', ->
+        expressionFor('22 / 10.5 + a * 22 - 10.5').should.eql new InfixExpression('22 / 10.5 + a * 22 - 10.5', '+', [
+                                                   new InfixExpression('22 / 10.5', '/', [aNumber22, aNumber]),
+                                                   new InfixExpression('a * 22 - 10.5', '-', [
+                                                     new InfixExpression('a * 22', '*', [aFunctionCall, aNumber22]),
+                                                     aNumber
+                                                   ])
+        ])
 
   describe 'function definition', ->
 
