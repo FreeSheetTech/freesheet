@@ -48,17 +48,33 @@ describe 'TextParser parses', ->
 
   describe 'infix operators', ->
 
-    it 'plus with two operands', ->
-      expressionFor(' 10.5 + "a string"').should.eql new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
+    describe 'arithmetic', ->
 
-    it 'multiply with two operands', ->
-      expressionFor('10.5 * "a string" ').should.eql new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
+      it 'plus with two operands', ->
+        expressionFor(' 10.5 + "a string"').should.eql new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
 
-    it 'subtract with two operands', ->
-      expressionFor(' 10.5-22').should.eql new InfixExpression('10.5-22', '-', [aNumber, aNumber22])
+      it 'multiply with two operands', ->
+        expressionFor('10.5 * "a string" ').should.eql new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
 
-    it 'divide with two operands', ->
-      expressionFor('10.5/ 22 ').should.eql new InfixExpression('10.5/ 22', '/', [aNumber, aNumber22])
+      it 'subtract with two operands', ->
+        expressionFor(' 10.5-22').should.eql new InfixExpression('10.5-22', '-', [aNumber, aNumber22])
+
+      it 'divide with two operands', ->
+        expressionFor('10.5/ 22 ').should.eql new InfixExpression('10.5/ 22', '/', [aNumber, aNumber22])
+
+    describe 'comparative', ->
+
+      it 'less than with two operands', ->
+        expressionFor(' 10.5 < 22').should.eql new InfixExpression('10.5 < 22', '<', [aNumber, aNumber22])
+
+      it 'greater than with two operands', ->
+        expressionFor('10.5 > 22 ').should.eql new InfixExpression('10.5 > 22', '>', [aNumber, aNumber22])
+
+      it 'less than or equal with two operands', ->
+        expressionFor(' 10.5<=22').should.eql new InfixExpression('10.5<=22', '<=', [aNumber, aNumber22])
+
+      it 'greater than or equal with two operands', ->
+        expressionFor('10.5>= 22 ').should.eql new InfixExpression('10.5>= 22', '>=', [aNumber, aNumber22])
 
 
   describe 'function definition', ->

@@ -21,17 +21,26 @@ identifierList = items:(
 
 
 
-expression = _ expr:additive _  { return expr; }
+expression = _ expr:anyExpression _  { return expr; }
+
+anyExpression = expr:comparative { return expr; }
 
 functionCall = functionCallWithArgs / functionCallNoArgs
-functionCallWithArgs = functionName:identifier _ "(" _ args:additiveList _ ")" { return new FunctionCall(text().trim(), functionName, args); }
+functionCallWithArgs = functionName:identifier _ "(" _ args:anyExpressionList _ ")" { return new FunctionCall(text().trim(), functionName, args); }
 functionCallNoArgs = functionName:identifier { return new FunctionCall(text().trim(), functionName, []); }
 
-additiveList = items:(
-                     first:additive
-                     rest:(_ "," _ a:additive { return a; })*
+anyExpressionList = items:(
+                     first:anyExpression
+                     rest:(_ "," _ a:anyExpression { return a; })*
                      { return [first].concat(rest); }
                    )? { return result = items !== null ? items : []; }
+
+comparative = lessThanOrEqual / greaterThanOrEqual / lessThan / greaterThan / additive
+
+lessThanOrEqual = left:additive _ "<=" _ right:comparative { return infixExpr( '<=', [left, right]); }
+lessThan = left:additive _ "<" _ right:comparative { return infixExpr( '<', [left, right]); }
+greaterThanOrEqual = left:additive _ ">=" _ right:comparative { return infixExpr( '>=', [left, right]); }
+greaterThan = left:additive _ ">" _ right:comparative { return infixExpr( '>', [left, right]); }
 
 additive = add / subtract / multiplicative
 
@@ -54,9 +63,9 @@ string "string" = doubleQuote chars:[^"]* doubleQuote { var val = chars.join("")
 identifier "identifier" = $(alpha (alpha/digit)*)
 
 
-bracketedExpression = _ "(" _ additive:additive _ ")" _ { return additive; }
+bracketedExpression = _ "(" _ expr:anyExpression _ ")" _ { return expr; }
 
-sequence = _ "[" _ items:additiveList _ "]" { return new Sequence(text().trim(), items); }
+sequence = _ "[" _ items:anyExpressionList _ "]" { return new Sequence(text().trim(), items); }
 
 aggregation = _ "{" _ items:aggregateItemList _ "}" { var childMap = {};
                                                         items.forEach(function(it) { childMap[it.name] = it.expr; });
@@ -69,7 +78,7 @@ aggregateItemList = items:(
                      { return [first].concat(rest); }
                    )? { return result = items !== null ? items : []; }
 
-aggregateItem = _ name:identifier _ ":" _ expr:additive { return {name: name, expr: expr}; }
+aggregateItem = _ name:identifier _ ":" _ expr:anyExpression { return {name: name, expr: expr}; }
 
 
 digit = [0-9]
