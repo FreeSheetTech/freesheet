@@ -35,8 +35,10 @@ anyExpressionList = items:(
                      { return [first].concat(rest); }
                    )? { return result = items !== null ? items : []; }
 
-comparative = lessThanOrEqual / greaterThanOrEqual / lessThan / greaterThan / additive
+comparative = equal / notEqual / lessThanOrEqual / greaterThanOrEqual / lessThan / greaterThan / additive
 
+equal = left:additive _ "==" _ right:comparative { return infixExpr( '==', [left, right]); }
+notEqual = left:additive _ "<>" _ right:comparative { return infixExpr( '<>', [left, right]); }
 lessThanOrEqual = left:additive _ "<=" _ right:comparative { return infixExpr( '<=', [left, right]); }
 lessThan = left:additive _ "<" _ right:comparative { return infixExpr( '<', [left, right]); }
 greaterThanOrEqual = left:additive _ ">=" _ right:comparative { return infixExpr( '>=', [left, right]); }

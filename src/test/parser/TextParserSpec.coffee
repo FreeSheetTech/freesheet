@@ -77,6 +77,12 @@ describe 'TextParser parses', ->
       it 'greater than or equal with two operands', ->
         expressionFor('10.5>= 22 ').should.eql new InfixExpression('10.5>= 22', '>=', [aNumber, aNumber22])
 
+      it 'equal with two operands', ->
+        expressionFor('a == 22 ').should.eql new InfixExpression('a == 22', '==', [aFunctionCall, aNumber22])
+
+      it 'not equal with two operands', ->
+        expressionFor('a <> 22 ').should.eql new InfixExpression('a <> 22', '<>', [aFunctionCall, aNumber22])
+
 
     describe 'precedence', ->
 
@@ -94,6 +100,13 @@ describe 'TextParser parses', ->
                                                      aNumber
                                                    ])
         ])
+
+        it 'addition higher than comparison', ->
+        expressionFor('22 - 10.5 > a + 22').should.eql new InfixExpression('22 - 10.5 > a + 22', '>', [
+          new InfixExpression('22 - 10.5', '-', [aNumber22, aNumber]),
+          new InfixExpression('a + 22', '+', [aFunctionCall, aNumber22])
+        ])
+
 
   describe 'function definition', ->
 
