@@ -87,4 +87,10 @@ module.exports = class ReactiveRunner
       when '-' then (a, b) -> a - b
       when '*' then (a, b) -> a * b
       when '/' then (a, b) -> a / b
+      when '>' then (a, b) -> a > b
+      when '>=' then (a, b) -> a >= b
+      when '<' then (a, b) -> a < b
+      when '<=' then (a, b) -> a <= b
+      when '==' then (a, b) -> a == b
+      when '<>' then (a, b) -> a != b
       else throw new Error("Unknown operator: " + operator)

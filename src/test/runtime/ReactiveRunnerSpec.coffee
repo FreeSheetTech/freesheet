@@ -6,6 +6,8 @@ ReactiveRunner = require './ReactiveRunner'
 
 describe 'ReactiveRunner runs', ->
 
+  @timeout 5000
+
   runner = null
   changes = null
   namedChanges = null
@@ -42,6 +44,15 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 's= a * 5.2'
 
       changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
+
+    it 'all comparison operations on numbers', ->
+      parseUserFunctions 'a = 100 > 100'
+      parseUserFunctions 'b = 100 < 101'
+      parseUserFunctions 'c = 101 >= 100'
+      parseUserFunctions 'd = 101 <= 100'
+      parseUserFunctions 'e = 101 == 100'
+      parseUserFunctions 'f = 101 <> 100'
+      changes.should.eql [{a: false}, {b: true}, {c: true}, {d: false}, {e: false}, {f:true}]
 
 
     it 'concatenates strings', ->

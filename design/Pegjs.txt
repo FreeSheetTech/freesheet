@@ -1,0 +1,4 @@
+Pegjs Notes
+===========
+
+- In function call parsing, each argument parsed adds 300ms - even if just numbers!
