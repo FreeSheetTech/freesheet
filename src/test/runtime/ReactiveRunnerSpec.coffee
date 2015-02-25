@@ -54,12 +54,15 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'f = 101 <> 100'
       changes.should.eql [{a: false}, {b: true}, {c: true}, {d: false}, {e: false}, {f:true}]
 
-
     it 'concatenates strings', ->
       parseUserFunctions 'a = "The A"'
       parseUserFunctions 'aa = a + 10 + " times"'
 
       changes.should.eql [{a: 'The A'}, {aa: 'The A10 times'}]
+
+    it 'creates objects for aggregation expressions using constants, function calls and operations', ->
+      parseUserFunctions 'x = 20; obj = {a: 10, b: "Fred", c: x, d: x + 30}'
+      changes.should.eql [{x: 20}, {obj: {a: 10, b: "Fred", c: 20, d: 50}}]
 
     it 'function with no args returning constant', ->
       parseUserFunctions ''' theAs = "aaaAAA" '''

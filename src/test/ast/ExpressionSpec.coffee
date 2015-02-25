@@ -22,7 +22,7 @@ describe 'Expressions', ->
     agg = new Aggregation('an agg', {aaa: 10, bbb: 'yy'})
     agg.text.should.eql 'an agg'
     agg.children.should.eql [10, 'yy']
-    agg.childMap.should.eql {aaa: 10, bbb: 'yy'}
+    agg.childNames.should.eql ['aaa', 'bbb']
 
   it 'FunctionCall stores text, function name and children', ->
     fc = new FunctionCall('the function', 'fn1', ['a', 55])

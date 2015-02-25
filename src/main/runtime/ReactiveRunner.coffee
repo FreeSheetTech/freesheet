@@ -1,5 +1,25 @@
 Rx = require 'rx'
-{Literal, InfixExpression, FunctionCall} = require '../ast/Expressions'
+{Literal, InfixExpression, Aggregation, FunctionCall} = require '../ast/Expressions'
+
+infixOperatorFunction = (operator) ->
+    switch operator
+      when '+' then (a, b) -> a + b
+      when '-' then (a, b) -> a - b
+      when '*' then (a, b) -> a * b
+      when '/' then (a, b) -> a / b
+      when '>' then (a, b) -> a > b
+      when '>=' then (a, b) -> a >= b
+      when '<' then (a, b) -> a < b
+      when '<=' then (a, b) -> a <= b
+      when '==' then (a, b) -> a == b
+      when '<>' then (a, b) -> a != b
+      else throw new Error("Unknown operator: " + operator)
+
+aggregateFunction = (childNames) ->
+  () ->
+    result = {}  #TODO use lodash zip etc
+    result[childNames[i]] = arguments[i] for i in [0...childNames.length]
+    result
 
 module.exports = class ReactiveRunner
   VALUE = 'value'
@@ -51,10 +71,10 @@ module.exports = class ReactiveRunner
     subj
 
   _instantiateUserFunctionStream: (func) ->
-    @_instantiateExprStream func.expr
+    @_exprStream func.expr
 
   _instantiateProvidedFunctionStream: (func, argExprs) ->
-    argStreams = (@_instantiateExprStream(a) for a in argExprs)
+    argStreams = (@_exprStream(a) for a in argExprs)
     result = switch func.kind
               when STREAM then func.apply null, argStreams
               when VALUE
@@ -62,14 +82,16 @@ module.exports = class ReactiveRunner
                 else new Rx.BehaviorSubject func()
     result
 
-  _instantiateExprStream: (expr) ->
+  _exprStream: (expr) ->
     switch
       when expr instanceof Literal
         new Rx.BehaviorSubject(expr.value)
+
       when expr instanceof InfixExpression
-        leftObs = @_instantiateExprStream expr.children[0]
-        rightObs = @_instantiateExprStream expr.children[1]
-        Rx.Observable.combineLatest leftObs, rightObs, @_infixOperatorFunction(expr.operator)
+        Rx.Observable.combineLatest @_exprStreams(expr.children), infixOperatorFunction(expr.operator)
+
+      when expr instanceof Aggregation
+        Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
 
       when expr instanceof FunctionCall
         name = expr.functionName
@@ -81,16 +103,4 @@ module.exports = class ReactiveRunner
       else
         throw new Error("Unknown expression: " + expr.constructor.name)
 
-  _infixOperatorFunction: (operator) ->
-    switch operator
-      when '+' then (a, b) -> a + b
-      when '-' then (a, b) -> a - b
-      when '*' then (a, b) -> a * b
-      when '/' then (a, b) -> a / b
-      when '>' then (a, b) -> a > b
-      when '>=' then (a, b) -> a >= b
-      when '<' then (a, b) -> a < b
-      when '<=' then (a, b) -> a <= b
-      when '==' then (a, b) -> a == b
-      when '<>' then (a, b) -> a != b
-      else throw new Error("Unknown operator: " + operator)
+  _exprStreams: (exprs) -> (@_exprStream(e) for e in exprs)

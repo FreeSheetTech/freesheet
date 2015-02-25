@@ -10,7 +10,8 @@ class Sequence extends Expression
     super text, children
 
 class Aggregation extends Expression
-  constructor: (text, @childMap) ->
+  constructor: (text, childMap) ->
+    @childNames = (name for name, expr of childMap)
     childExprs = (expr for name, expr of childMap)
     super text, childExprs
 
