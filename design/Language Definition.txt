@@ -112,7 +112,12 @@ other expressions: as for text representation
 
 
 
+Name scope
+----------
 
+- Top-level function definitions - anywhere
+- current input to function - when transforming a stream or sequence of aggregation objects
+- current aggregation expression - when constructing an aggregation
 
 
 Issues

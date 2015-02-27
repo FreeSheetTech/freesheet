@@ -1,5 +1,5 @@
 Rx = require 'rx'
-{Literal, InfixExpression, Aggregation, FunctionCall} = require '../ast/Expressions'
+{Literal, InfixExpression, Aggregation, Sequence, FunctionCall} = require '../ast/Expressions'
 
 infixOperatorFunction = (operator) ->
     switch operator
@@ -21,9 +21,13 @@ aggregateFunction = (childNames) ->
     result[childNames[i]] = arguments[i] for i in [0...childNames.length]
     result
 
+sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
+
+
 module.exports = class ReactiveRunner
   VALUE = 'value'
   STREAM = 'stream'
+  TRANSFORM = 'transform'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @allChanges = new Rx.Subject()
@@ -31,18 +35,20 @@ module.exports = class ReactiveRunner
 
   output: (name) ->
     func = @userFunctions[name]
-    stream = @_instantiateUserFunctionStream func
+    stream = @_userFunctionStream func
     stream
 
   addProvidedFunction: (name, fn) -> fn.kind = VALUE; @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedStreamFunction: (name, fn) -> fn.kind = STREAM; @providedFunctions[name] = fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
+  addProvidedTransformFunction: (name, fn) -> fn.kind = TRANSFORM; @providedFunctions[name] = fn
+  addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    source = @_instantiateUserFunctionStream funcDef
+    source = @_userFunctionStream funcDef
 
     if subj = @userFunctionSubjects[name]
       subj.disp?.dispose()
@@ -70,16 +76,25 @@ module.exports = class ReactiveRunner
     subj.subscribe (value) => @allChanges.onNext [name, value]
     subj
 
-  _instantiateUserFunctionStream: (func) ->
+  _userFunctionStream: (func) ->
     @_exprStream func.expr
 
-  _instantiateProvidedFunctionStream: (func, argExprs) ->
-    argStreams = (@_exprStream(a) for a in argExprs)
+  _providedFunctionStream: (func, argExprs) ->
+    argStreams = null
+    if func.kind == TRANSFORM
+      argStreams =  [@_exprStream(argExprs[0]), @_functionStream(argExprs[1])]
+    else
+      argStreams = (@_exprStream(a) for a in argExprs)
+
     result = switch func.kind
               when STREAM then func.apply null, argStreams
+              when TRANSFORM
+                Rx.Observable.combineLatest argStreams, func
               when VALUE
                 if argStreams.length then Rx.Observable.combineLatest argStreams, func
                 else new Rx.BehaviorSubject func()
+              else throw new Error("Unknown function kind:" + func.kind)
+
     result
 
   _exprStream: (expr) ->
@@ -93,14 +108,29 @@ module.exports = class ReactiveRunner
       when expr instanceof Aggregation
         Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
 
+      when expr instanceof Sequence
+        Rx.Observable.combineLatest @_exprStreams(expr.children), sequenceFunction
+
       when expr instanceof FunctionCall
         name = expr.functionName
         switch
           when func = @userFunctions[name] then @_userFunctionSubject name
-          when func = @providedFunctions[name] then @_instantiateProvidedFunctionStream func, expr.children
+          when func = @providedFunctions[name] then @_providedFunctionStream func, expr.children
           else @_userFunctionSubject name
 
       else
         throw new Error("Unknown expression: " + expr.constructor.name)
 
   _exprStreams: (exprs) -> (@_exprStream(e) for e in exprs)
+
+  _functionStream: (expr) ->
+    switch
+      when expr instanceof Literal
+        f = new Function("return #{expr.value};")
+        new Rx.BehaviorSubject(f)
+
+
+      else
+        throw new Error("Unknown expression: " + expr.constructor.name)
+
+

@@ -173,6 +173,18 @@ Transform functions for sequences and objects
 - Need a way to refer to this OR to name it in the expression
 - Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
 - Must work for an 'add one' case as well as transforming a data structure
+- Implementation:
+- Output must change if any of the values affecting the transform function change
+- So need to combine the input stream with a stream delivering the transform function
+- So need to create a JS function from an expr
+- Seems similar to allowing user-defined functions - and the expr is actually a special case of a user-defined function with one arg
+- So need a mechanism to combine a set of streams to create a function - is this the best way of implementing?
+- Need to consider the special requirements of name scoping from input value and output value
+- Output value names will apply to any aggregation expression, so handle that there - and not in first cut
+- Poss: generated function has input as a parameter, and so can be used its values
+- Poss: generated function has internal function that looks through result, input and external values fro a named value
+- Will need to generate correct JavaScript for literals, at least - quotes on string values, etc
+
 
 Programming environment
 -----------------------

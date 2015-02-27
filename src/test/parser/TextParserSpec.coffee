@@ -14,7 +14,8 @@ describe 'TextParser parses', ->
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
-  aFunctionCall = new FunctionCall('a', 'a', [])
+  namedValueCall = (name) -> new FunctionCall(name, name, [])
+  aFunctionCall = namedValueCall('a')
 
   describe 'expressions', ->
 
@@ -47,6 +48,16 @@ describe 'TextParser parses', ->
 
     it 'with literal arguments', ->
       expressionFor('theFn(10.5,"a string")').should.eql new FunctionCall('theFn(10.5,"a string")', 'theFn', [aNumber, aString])
+
+    it 'with aggregate expression arguments', ->
+      expressionFor('fromEach(dataItems,{a:x, b: 10.5, c: y})').should.eql new FunctionCall('fromEach(dataItems,{a:x, b: 10.5, c: y})', 'fromEach', [
+        new FunctionCall('dataItems', 'dataItems', [])
+        new Aggregation('{a:x, b: 10.5, c: y}', {
+          a: namedValueCall 'x'
+          b: aNumber
+          c: namedValueCall 'y'
+        })
+      ])
 
 
   describe 'infix operators', ->

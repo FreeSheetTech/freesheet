@@ -13,9 +13,11 @@ describe 'ReactiveRunner runs', ->
   namedChanges = null
   inputSubj = null
 
+  fromEachFunction = (seq, func) -> (func(x) for x in seq)
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
+  providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
     (v for k, v of map)
@@ -63,6 +65,10 @@ describe 'ReactiveRunner runs', ->
     it 'creates objects for aggregation expressions using constants, function calls and operations', ->
       parseUserFunctions 'x = 20; obj = {a: 10, b: "Fred", c: x, d: x + 30}'
       changes.should.eql [{x: 20}, {obj: {a: 10, b: "Fred", c: 20, d: 50}}]
+
+    it 'creates arrays for sequence expressions using constants, function calls and operations', ->
+      parseUserFunctions 'x = 20; seq = [10, "Fred", x, x + 30]'
+      changes.should.eql [{x: 20}, {seq: [10, "Fred", 20, 50] }]
 
     it 'function with no args returning constant', ->
       parseUserFunctions ''' theAs = "aaaAAA" '''
@@ -118,7 +124,14 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
 
+  describe 'expressions as function arguments', ->
+    it 'transforms all elements of a sequence to a literal', ->
+      providedTransformFunctions
+        fromEach: fromEachFunction
+      parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
+      parseUserFunctions 'points = fromEach( games, 10 )'
 
+      changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {points: [10, 10]}]
 
   describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->

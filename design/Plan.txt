@@ -33,11 +33,11 @@ Next steps
 
 Immediate to do
 ---------------
-- Comparative operators in correct precedence
+    - Comparative operators in correct precedence
 - Dummy getData
-- Scoping rules
 - Filter function
-- Object expressions
+    - Object expressions
+- Scoping rules - including object expressions
 
 Future steps
 ------------
