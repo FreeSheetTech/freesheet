@@ -124,17 +124,6 @@ module.exports = class ReactiveRunner
   _exprStreams: (exprs) -> (@_exprStream(e) for e in exprs)
 
   _functionStream: (expr) ->
-    switch
-      when expr instanceof Literal
-        f = new Function("return #{expr.value};")
-        new Rx.BehaviorSubject(f)
-
-      when expr instanceof FunctionCall
-        stream = @_exprStream expr
-        stream.map (val) -> new Function("return #{val};")
-
-
-      else
-        throw new Error("Unknown expression for function stream: " + expr.constructor.name)
-
+    stream = @_exprStream expr
+    stream.map (val) -> new Function("return #{val};")
 

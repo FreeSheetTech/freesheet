@@ -36,6 +36,9 @@ describe 'ReactiveRunner runs', ->
     namedChanges = []
     runner.onChange callback
     inputSubj = new Rx.Subject()
+    providedTransformFunctions
+      fromEach: fromEachFunction
+
 
   describe 'runs expressions', ->
     it 'all arithmetic operations', ->
@@ -126,24 +129,29 @@ describe 'ReactiveRunner runs', ->
 
   describe 'expressions as function arguments', ->
     it 'transforms all elements of a sequence to a literal', ->
-      providedTransformFunctions
-        fromEach: fromEachFunction
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
       parseUserFunctions 'points = fromEach( games, 10 )'
 
       changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {points: [10, 10]}]
 
     it 'transforms all elements of a sequence to a named value even when value changes', ->
-      providedTransformFunctions
-        fromEach: fromEachFunction
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
       parseUserFunctions 'pointsFactor = 15'
       parseUserFunctions 'points = fromEach( games, pointsFactor )'
       parseUserFunctions 'pointsFactor = 17'
 
-
       changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {pointsFactor: 15}, {points: [15, 15]},
                             {pointsFactor: 17}, {points: [17, 17]}]
+
+    it 'transforms all elements of a sequence to a formula including two named values', ->
+      parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
+      parseUserFunctions 'pointsFactor = 15; wowFactor = 5'
+      parseUserFunctions 'points = fromEach( games, pointsFactor * wowFactor + 50 )'
+      parseUserFunctions 'wowFactor = 10'
+
+      changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]},
+                            {pointsFactor: 15}, {wowFactor: 5}, {points: [125, 125]},
+                            {wowFactor: 10}, {points: [200, 200]}]
 
   describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->
