@@ -133,6 +133,18 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {points: [10, 10]}]
 
+    it 'transforms all elements of a sequence to a named value even when value changes', ->
+      providedTransformFunctions
+        fromEach: fromEachFunction
+      parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
+      parseUserFunctions 'pointsFactor = 15'
+      parseUserFunctions 'points = fromEach( games, pointsFactor )'
+      parseUserFunctions 'pointsFactor = 17'
+
+
+      changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {pointsFactor: 15}, {points: [15, 15]},
+                            {pointsFactor: 17}, {points: [17, 17]}]
+
   describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->
       parseUserFunctions 'price = 22.5; tax_rate = 0.2'

@@ -129,8 +129,12 @@ module.exports = class ReactiveRunner
         f = new Function("return #{expr.value};")
         new Rx.BehaviorSubject(f)
 
+      when expr instanceof FunctionCall
+        stream = @_exprStream expr
+        stream.map (val) -> new Function("return #{val};")
+
 
       else
-        throw new Error("Unknown expression: " + expr.constructor.name)
+        throw new Error("Unknown expression for function stream: " + expr.constructor.name)
 
 
