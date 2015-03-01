@@ -1,12 +1,12 @@
 should = require 'should'
 TextParser = require './TextParser'
-{Literal, Sequence, Aggregation, FunctionCall} = require '../ast/Expressions'
+{Literal, Sequence, Aggregation, FunctionCall, AggregationSelector} = require '../ast/Expressions'
 {UserFunction, ArgumentDefinition} = require '../ast/FunctionDefinition'
 
 
 describe 'TextParser parses', ->
 
-  @timeout 5000
+  @timeout 10000
 
   expressionFor = (text) -> new TextParser(text).expression()
   functionFor = (text) -> new TextParser(text).functionDefinition()
@@ -114,11 +114,16 @@ describe 'TextParser parses', ->
                                                    ])
         ])
 
-        it 'addition higher than comparison', ->
+      it 'addition higher than comparison', ->
         expressionFor('22 - 10.5 > a + 22').should.eql new InfixExpression('22 - 10.5 > a + 22', '>', [
           new InfixExpression('22 - 10.5', '-', [aNumber22, aNumber]),
           new InfixExpression('a + 22', '+', [aFunctionCall, aNumber22])
         ])
+
+  describe 'select from structures', ->
+
+    it 'dot operator for element of aggregation', ->
+      expressionFor('abc.def').should.eql new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
 
 
   describe 'function definition', ->

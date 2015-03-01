@@ -1,7 +1,7 @@
 {
     var exprs = require('../ast/Expressions'), Literal = exprs.Literal, Sequence = exprs.Sequence,
                                                 Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall
-                                                InfixExpression = exprs.InfixExpression;
+                                                InfixExpression = exprs.InfixExpression, AggregationSelector = exprs.AggregationSelector;
 
     var funcs = require('../ast/FunctionDefinition'), UserFunction = funcs.UserFunction;
 
@@ -49,10 +49,15 @@ additive = add / subtract / multiplicative
 add = left:multiplicative _ "+" _ right:additive { return infixExpr( '+', [left, right]); }
 subtract = left:multiplicative _ "-" _ right:additive { return infixExpr( '-', [left, right]); }
 
-multiplicative = multiply / divide / primary
+multiplicative = multiply / divide / selectorOrPrimary
 
 multiply = left:primary _ "*" _ right:multiplicative { return infixExpr( '*', [left, right]); }
 divide = left:primary _ "/" _ right:multiplicative { return infixExpr( '/', [left, right]); }
+
+selectorOrPrimary = aggregationSelector / primary
+
+aggregationSelector = _ aggExpr:(aggregation / functionCall / bracketedExpression) _ "." _ name:identifier _
+                            { return new AggregationSelector(text().trim(), aggExpr, name)}
 
 primary = aggregation / sequence / number / string / functionCall / bracketedExpression
 

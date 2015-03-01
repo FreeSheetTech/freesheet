@@ -23,4 +23,8 @@ class InfixExpression extends Expression
   constructor: (text, @operator, argumentList) ->
     super text, argumentList
 
-module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall, InfixExpression}
+class AggregationSelector extends Expression
+  constructor: (text, @aggregation, @elementName) ->
+    super text, [aggregation]
+
+module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector}
