@@ -25,11 +25,8 @@ module.exports = class JsCodeGenerator
         Rx.Observable.combineLatest @_exprStreams(expr.children), sequenceFunction
 
       when expr instanceof FunctionCall
-        name = expr.functionName
-        switch
-          when func = @userFunctions[name] then @_userFunctionSubject name
-          when func = @providedFunctions[name] then @_providedFunctionStream func, expr.children
-          else @_userFunctionSubject name
+        @functionCalls.push expr if expr not in @functionCalls
+        expr.functionName
 
       when expr instanceof AggregationSelector
         @_exprStream(expr.aggregation).map (x) -> el = expr.elementName; x?[el]
