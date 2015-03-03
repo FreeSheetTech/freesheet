@@ -184,6 +184,13 @@ Transform functions for sequences and objects
 - Poss: generated function has input as a parameter, and so can be used its values
 - Poss: generated function has internal function that looks through result, input and external values fro a named value
 - Will need to generate correct JavaScript for literals, at least - quotes on string values, etc
+- Transform function needs to use current values from the streams that affect it, but have only the 'current input' as a parameter
+
+Code generator
+--------------
+- Recursive expansion of AST elements
+- Function calls get stored as they are encountered
+- Need to recreate precedence of bracketed expressions as they are lost in parsing
 
 
 Programming environment

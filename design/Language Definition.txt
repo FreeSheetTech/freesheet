@@ -118,6 +118,10 @@ Name scope
 - Top-level function definitions - anywhere
 - current input to function - when transforming a stream or sequence of aggregation objects - prefixed in
 - current aggregation expression - when constructing an aggregation - prefixed out
+- Poss: automatically take most local scope: current expr, current input, top-level - convenient and intuitive
+- Poss: always take top-level scope, need to prefix others
+- If take most local, could use items for different scopes for different elements if some elements didn't contain the name - v confusing
+- Prefix names: in/out, current/this
 
 
 Issues
