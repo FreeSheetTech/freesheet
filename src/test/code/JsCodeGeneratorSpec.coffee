@@ -1,5 +1,5 @@
 should = require 'should'
-{Literal, Sequence, Aggregation, FunctionCall, InfixExpression} = require '../ast/Expressions'
+{Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector} = require '../ast/Expressions'
 JsCodeGenerator = require './JsCodeGenerator'
 
 describe 'JsCodeGenerator', ->
@@ -42,6 +42,11 @@ describe 'JsCodeGenerator', ->
 
       codeGen = genFor expr
       codeGen.code.should.eql '{abc1_: " a string ", _a_Num: 10.5}'
+
+    it 'aggregation selector', ->
+      codeGen = genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
+      codeGen.code.should.eql 'abc.def'
+
 
   describe 'stores function calls', ->
 

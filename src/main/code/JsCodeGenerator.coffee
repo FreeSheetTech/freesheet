@@ -34,7 +34,8 @@ module.exports = class JsCodeGenerator
         expr.functionName
 
       when expr instanceof AggregationSelector
-        @_exprStream(expr.aggregation).map (x) -> el = expr.elementName; x?[el]
+        aggCode = @_generate expr.aggregation
+        "#{aggCode}.#{expr.elementName}"
 
       else
         throw new Error("JsCodeGenerator: Unknown expression: " + expr.constructor.name)
