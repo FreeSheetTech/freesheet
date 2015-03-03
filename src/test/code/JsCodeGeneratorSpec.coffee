@@ -1,8 +1,11 @@
 should = require 'should'
 {Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector} = require '../ast/Expressions'
+TextParser = require '../parser/TextParser'
 JsCodeGenerator = require './JsCodeGenerator'
 
 describe 'JsCodeGenerator', ->
+
+  @timeout 5000
 
   genFor = (expr) -> new JsCodeGenerator expr
   aString = new Literal('"a string"', 'a string')
@@ -47,6 +50,12 @@ describe 'JsCodeGenerator', ->
       codeGen = genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
       codeGen.code.should.eql 'abc.def'
 
+    it 'a complex expression', ->
+      originalCode = '  { a:10, b : x +y, c: [d + 10 - z* 4, "Hi!"]  } '
+      expr = new TextParser(originalCode).expression()
+      codeGen = genFor expr
+
+      codeGen.code.should.eql '{a: 10, b: x + y, c: [d + 10 - z * 4, "Hi!"]}'
 
   describe 'stores function calls', ->
 
