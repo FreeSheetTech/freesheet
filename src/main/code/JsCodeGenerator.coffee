@@ -19,10 +19,15 @@ module.exports = class JsCodeGenerator
         "#{left} #{expr.operator} #{right}"
 
       when expr instanceof Aggregation
-        Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
+        items = []
+        for i in [0...expr.children.length]
+          items.push "#{expr.childNames[i]}: #{@_generate expr.children[i] }"
+
+        '{' + items.join(', ') + '}'
 
       when expr instanceof Sequence
-        Rx.Observable.combineLatest @_exprStreams(expr.children), sequenceFunction
+        items = (@_generate(e) for e in expr.children)
+        '[' + items.join(', ') + ']'
 
       when expr instanceof FunctionCall
         @functionCalls.push expr if expr not in @functionCalls

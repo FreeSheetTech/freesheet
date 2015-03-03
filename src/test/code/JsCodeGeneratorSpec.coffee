@@ -30,6 +30,19 @@ describe 'JsCodeGenerator', ->
       codeGen.code.should.eql 'theFn'
       codeGen.functionCalls.should.eql [expr]
 
+    it 'sequence', ->
+      codeGen = genFor new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
+      codeGen.code.should.eql '[10.5, "a string"]'
+
+    it 'aggregation', ->
+      expr = new Aggregation('{abc1_: " a string ", _a_Num:10.5}', {
+        abc1_: new Literal('" a string "', ' a string '),
+        _a_Num: new Literal('10.5', 10.5)
+      })
+
+      codeGen = genFor expr
+      codeGen.code.should.eql '{abc1_: " a string ", _a_Num: 10.5}'
+
   describe 'stores function calls', ->
 
     it 'only the first time found', ->
