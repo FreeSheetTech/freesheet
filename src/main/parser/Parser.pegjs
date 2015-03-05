@@ -69,7 +69,6 @@ string "string" = doubleQuote chars:[^"]* doubleQuote { var val = chars.join("")
 
 identifier "identifier" = $(alpha (alpha/digit)*)
 
-
 bracketedExpression = _ "(" _ expr:anyExpression _ ")" _ { return expr; }
 
 sequence = _ "[" _ items:anyExpressionList _ "]" { return new Sequence(text().trim(), items); }
@@ -86,7 +85,6 @@ aggregateItemList = items:(
                    )? { return result = items !== null ? items : []; }
 
 aggregateItem = _ name:identifier _ ":" _ expr:anyExpression { return {name: name, expr: expr}; }
-
 
 digit = [0-9]
 alpha = [a-zA-Z_]

@@ -48,5 +48,8 @@ Use cases
 - End user customises an application
 - Embedded rules eg posting wizards in accounting system
 - ETL
+- Daemon that can be set up with rules and accept input messages, pub/sub outputs
+- Public service like lambda
+- View what going on in daemon as a worksheet
 
 

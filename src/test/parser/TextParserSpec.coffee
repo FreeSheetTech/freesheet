@@ -141,22 +141,12 @@ describe 'TextParser parses', ->
       functionFor('myFunction(a, bbb) = \n 10.5 / 22').should.eql new UserFunction('myFunction', ['a', 'bbb'], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
 
     it 'with medium complex expression', ->
-      startTime = Date.now()
       functionQ = functionFor('q = getTheAnswer(100, b+a, getTheAnswer ( 4, 10, 12, 14)  )')
       functionQ.constructor.name.should.eql 'UserFunction'
-      elapsedTime = Date.now - startTime
-      console.log 'Elapsed', elapsedTime
 
     it 'with complex expression', ->
-      console.log Date.now()
       functionQ = functionFor('q = getTheAnswer(100, b + addOne(a), getTheAnswer ( 4, 10, c)  )')
-      console.log Date.now()
-
-      console.log 'functionQ', functionQ.constructor.name
-      console.log Date.now()
-
       functionQ.constructor.name.should.eql 'UserFunction'
-      console.log Date.now()
 
 
   describe 'a map of function definitions', ->
@@ -175,5 +165,4 @@ describe 'TextParser parses', ->
 
     it 'with complex expression', ->
       functionQ = functionMapFor('q() = getTheAnswer(100, b + addOne(a), getTheAnswer ( 4, 10, c)  )')['q']
-      console.log 'functionQ', functionQ
       functionQ.should.be.instanceof UserFunction
