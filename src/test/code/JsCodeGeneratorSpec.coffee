@@ -33,6 +33,12 @@ describe 'JsCodeGenerator', ->
       codeGen.code.should.eql 'theFn'
       codeGen.functionCalls.should.eql [expr]
 
+    it 'function call to special name in changed to _in and not added to function calls', ->
+      expr = new FunctionCall('in', 'in', [])
+      codeGen = genFor expr
+      codeGen.code.should.eql '_in'
+      codeGen.functionCalls.should.eql []
+
     it 'sequence', ->
       codeGen = genFor new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
       codeGen.code.should.eql '[10.5, "a string"]'

@@ -6,14 +6,16 @@ ReactiveRunner = require './ReactiveRunner'
 
 describe 'ReactiveRunner runs', ->
 
-  @timeout 5000
+  @timeout 10000
 
   runner = null
   changes = null
   namedChanges = null
   inputSubj = null
 
-  fromEachFunction = (seq, func) -> (func(x) for x in seq)
+  fromEachFunction = (seq, func) ->
+#    console.log 'fromEachFunction', seq, func
+    (func(x) for x in seq)
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
@@ -72,6 +74,12 @@ describe 'ReactiveRunner runs', ->
     it 'creates arrays for sequence expressions using constants, function calls and operations', ->
       parseUserFunctions 'x = 20; seq = [10, "Fred", x, x + 30]'
       changes.should.eql [{x: 20}, {seq: [10, "Fred", 20, 50] }]
+
+    it 'selects from aggregations', ->
+      parseUserFunctions 'x = 20; obj = {a: 10, d: x + 30}'
+      parseUserFunctions 'aa = obj.a; dd = obj . d '
+      changes.should.eql [{x: 20}, {obj: {a: 10, d: 50}}, {aa: 10}, {dd: 50}]
+
 
     it 'function with no args returning constant', ->
       parseUserFunctions ''' theAs = "aaaAAA" '''
@@ -152,6 +160,14 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]},
                             {pointsFactor: 15}, {wowFactor: 5}, {points: [125, 125]},
                             {wowFactor: 10}, {points: [200, 200]}]
+
+    it 'transforms all elements of a sequence to a value from the input', ->
+      parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
+      parseUserFunctions 'scores = fromEach( games, in.score )'
+
+      changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {scores: [70, 130]}]
+
+
 
   describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->

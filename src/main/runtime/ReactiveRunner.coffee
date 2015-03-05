@@ -1,5 +1,6 @@
 Rx = require 'rx'
-{Literal, InfixExpression, Aggregation, Sequence, FunctionCall} = require '../ast/Expressions'
+{Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
+JsCodeGenerator = require '../code/JsCodeGenerator'
 
 infixOperatorFunction = (operator) ->
     switch operator
@@ -22,7 +23,6 @@ aggregateFunction = (childNames) ->
     result
 
 sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
-
 
 module.exports = class ReactiveRunner
   VALUE = 'value'
@@ -118,12 +118,34 @@ module.exports = class ReactiveRunner
           when func = @providedFunctions[name] then @_providedFunctionStream func, expr.children
           else @_userFunctionSubject name
 
+      when expr instanceof AggregationSelector
+        @_exprStream(expr.aggregation).map (x) -> el = expr.elementName; x?[el]
+
       else
         throw new Error("Unknown expression: " + expr.constructor.name)
 
   _exprStreams: (exprs) -> (@_exprStream(e) for e in exprs)
 
   _functionStream: (expr) ->
-    stream = @_exprStream expr
-    stream.map (val) -> new Function("return #{val};")
+    codeGen = new JsCodeGenerator(expr)
 
+    functionGenerator = functionGeneratorFunction(codeGen.code, codeGen.functionCalls)
+    if codeGen.functionCalls.length
+      Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), functionGenerator
+    else
+      new Rx.BehaviorSubject functionGenerator()
+
+  functionGeneratorFunction = (functionBody, functionCalls) ->
+    () ->
+      args = arguments
+      varDecl = (functionCall) ->
+        argPos = functionCalls.indexOf(functionCall)
+        argValue = args[argPos]
+        "#{asVarName functionCall} = #{asLiteral argValue}"
+
+      functionVars = if functionCalls.length then 'var ' + (varDecl(f) for f in functionCalls).join(', ') + ';\n' else ''
+      new Function('_in', functionVars + 'return ' + functionBody)
+
+  asVarName = (functionCall) -> functionCall.functionName
+
+  asLiteral = (value) -> JSON.stringify value

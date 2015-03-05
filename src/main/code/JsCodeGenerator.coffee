@@ -30,8 +30,12 @@ module.exports = class JsCodeGenerator
         '[' + items.join(', ') + ']'
 
       when expr instanceof FunctionCall
-        @functionCalls.push expr if expr not in @functionCalls
-        expr.functionName
+        name = expr.functionName
+        if name == 'in'
+          '_in'
+        else
+          @functionCalls.push expr if expr not in @functionCalls
+          expr.functionName
 
       when expr instanceof AggregationSelector
         aggCode = @_generate expr.aggregation
