@@ -186,6 +186,15 @@ Transform functions for sequences and objects
 - Will need to generate correct JavaScript for literals, at least - quotes on string values, etc
 - Transform function needs to use current values from the streams that affect it, but have only the 'current input' as a parameter
 
+Transform functions that use provided functions
+-----------------------------------------------
+- Will pass values from input to the functions
+- If provided function is value, then need to make it available to transform function code - inject a var
+- If provided function is stream, eg input(id), need the stream that comes from calling it with that value
+- (Probably) want to cache streams from each separate set of args passed to that function, so save  input('name'), input ('age'), etc streams
+- Need the external functions available in the generated function somehow - pass in a context object as an extra argument?
+- Seems really simple, but this is a very tricky bit
+
 Code generator
 --------------
 - Recursive expansion of AST elements
