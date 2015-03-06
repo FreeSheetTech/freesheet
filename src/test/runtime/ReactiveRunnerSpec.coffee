@@ -167,6 +167,13 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {scores: [70, 130]}]
 
+    it 'transforms all elements of a sequence to a formula including a value from the input and named values', ->
+      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+      parseUserFunctions 'pointsFactor = 15; fudgeFactor = 4'
+      parseUserFunctions 'scores = fromEach( games, fudgeFactor + in.score * pointsFactor )'
+
+      changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
+
 
 
   describe 'updates dependent expressions and notifies changes', ->

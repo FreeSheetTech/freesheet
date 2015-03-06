@@ -1555,7 +1555,7 @@ module.exports = (function() {
       }
 
       s0 = peg$currPos;
-      s1 = peg$parseprimary();
+      s1 = peg$parseselectorOrPrimary();
       if (s1 !== peg$FAILED) {
         s2 = peg$parse_();
         if (s2 !== peg$FAILED) {
@@ -1612,7 +1612,7 @@ module.exports = (function() {
       }
 
       s0 = peg$currPos;
-      s1 = peg$parseprimary();
+      s1 = peg$parseselectorOrPrimary();
       if (s1 !== peg$FAILED) {
         s2 = peg$parse_();
         if (s2 !== peg$FAILED) {

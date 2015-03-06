@@ -51,8 +51,8 @@ subtract = left:multiplicative _ "-" _ right:additive { return infixExpr( '-', [
 
 multiplicative = multiply / divide / selectorOrPrimary
 
-multiply = left:primary _ "*" _ right:multiplicative { return infixExpr( '*', [left, right]); }
-divide = left:primary _ "/" _ right:multiplicative { return infixExpr( '/', [left, right]); }
+multiply = left:selectorOrPrimary _ "*" _ right:multiplicative { return infixExpr( '*', [left, right]); }
+divide = left:selectorOrPrimary _ "/" _ right:multiplicative { return infixExpr( '/', [left, right]); }
 
 selectorOrPrimary = aggregationSelector / primary
 

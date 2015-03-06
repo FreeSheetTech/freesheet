@@ -120,6 +120,18 @@ describe 'TextParser parses', ->
           new InfixExpression('a + 22', '+', [aFunctionCall, aNumber22])
         ])
 
+      it 'dot operator higher than addition', ->
+        expressionFor('abc.def + 10.5').should.eql new InfixExpression('abc.def + 10.5', '+', [
+          new AggregationSelector('abc.def', namedValueCall('abc'), 'def'),
+          aNumber
+        ])
+
+      it 'dot operator higher than multiplication', ->
+        expressionFor('abc.def * 10.5').should.eql new InfixExpression('abc.def * 10.5', '*', [
+          new AggregationSelector('abc.def', namedValueCall('abc'), 'def'),
+          aNumber
+        ])
+
   describe 'select from structures', ->
 
     it 'dot operator for element of aggregation', ->
