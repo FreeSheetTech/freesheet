@@ -13,9 +13,8 @@ describe 'ReactiveRunner runs', ->
   namedChanges = null
   inputSubj = null
 
-  fromEachFunction = (seq, func) ->
-#    console.log 'fromEachFunction', seq, func
-    (func(x) for x in seq)
+  fromEachFunction = (seq, func) -> (func(x) for x in seq)
+  selectFunction = (seq, func) -> (x for x in seq when func(x))
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
@@ -40,6 +39,7 @@ describe 'ReactiveRunner runs', ->
     inputSubj = new Rx.Subject()
     providedTransformFunctions
       fromEach: fromEachFunction
+      select: selectFunction
 
 
   describe 'runs expressions', ->
@@ -173,6 +173,15 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'scores = fromEach( games, fudgeFactor + in.score * pointsFactor )'
 
       changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
+
+    it 'filters elements of a sequence using a formula including a value from the input and named values', ->
+      parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'
+      parseUserFunctions 'pointsFactor = 6; fudgeFactor = 4'
+      parseUserFunctions 'highScores = select( games, in.score >= pointsFactor + fudgeFactor )'
+
+      changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]},
+                          {pointsFactor: 6}, {fudgeFactor: 4},
+                          {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
 
 
 

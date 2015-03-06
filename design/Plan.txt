@@ -8,7 +8,7 @@ Parts needed
     - Text syntax definition
     - Text to AST parser
 - AST to stream net builder - different to runner?
-- AST to JS code generator
+    - AST to JS code generator
 - Worksheet to AST converter
 - Worksheet to AST to stream net live update
 - AST to text converter
@@ -35,9 +35,9 @@ Immediate to do
 ---------------
     - Comparative operators in correct precedence
 - Dummy getData
-- Filter function
+    - Filter function
     - Object expressions
-- Scoping rules - including object expressions
+    - Scoping rules - including object expressions
 
 Future steps
 ------------
