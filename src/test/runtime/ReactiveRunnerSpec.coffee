@@ -6,8 +6,6 @@ ReactiveRunner = require './ReactiveRunner'
 
 describe 'ReactiveRunner runs', ->
 
-  @timeout 10000
-
   runner = null
   changes = null
   namedChanges = null

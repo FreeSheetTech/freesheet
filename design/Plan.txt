@@ -38,6 +38,7 @@ Immediate to do
     - Filter function
     - Object expressions
     - Scoping rules - including object expressions
+- Core functions
 
 Future steps
 ------------
