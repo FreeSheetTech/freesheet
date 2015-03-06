@@ -25,9 +25,9 @@ aggregateFunction = (childNames) ->
 sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
 
 module.exports = class ReactiveRunner
-  VALUE = 'value'
-  STREAM = 'stream'
-  TRANSFORM = 'transform'
+  @VALUE = 'value'
+  @STREAM = 'stream'
+  @TRANSFORM = 'transform'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @allChanges = new Rx.Subject()
@@ -38,11 +38,13 @@ module.exports = class ReactiveRunner
     stream = @_userFunctionStream func
     stream
 
-  addProvidedFunction: (name, fn) -> fn.kind = VALUE; @providedFunctions[name] = fn
+  addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
-  addProvidedStreamFunction: (name, fn) -> fn.kind = STREAM; @providedFunctions[name] = fn
+  addProvidedValueFunction: (name, fn) -> fn.kind = ReactiveRunner.VALUE; @providedFunctions[name] = fn
+  addProvidedValueFunctions: (functionMap) -> @addProvidedValueFunction n, f for n, f of functionMap
+  addProvidedStreamFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM; @providedFunctions[name] = fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
-  addProvidedTransformFunction: (name, fn) -> fn.kind = TRANSFORM; @providedFunctions[name] = fn
+  addProvidedTransformFunction: (name, fn) -> fn.kind = ReactiveRunner.TRANSFORM; @providedFunctions[name] = fn
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
@@ -81,16 +83,16 @@ module.exports = class ReactiveRunner
 
   _providedFunctionStream: (func, argExprs) ->
     argStreams = null
-    if func.kind == TRANSFORM
+    if func.kind == ReactiveRunner.TRANSFORM
       argStreams =  [@_exprStream(argExprs[0]), @_functionStream(argExprs[1])]
     else
       argStreams = (@_exprStream(a) for a in argExprs)
 
     result = switch func.kind
-              when STREAM then func.apply null, argStreams
-              when TRANSFORM
+              when ReactiveRunner.STREAM then func.apply null, argStreams
+              when ReactiveRunner.TRANSFORM
                 Rx.Observable.combineLatest argStreams, func
-              when VALUE
+              when ReactiveRunner.VALUE
                 if argStreams.length then Rx.Observable.combineLatest argStreams, func
                 else new Rx.BehaviorSubject func()
               else throw new Error("Unknown function kind:" + func.kind)

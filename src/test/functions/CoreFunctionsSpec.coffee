@@ -22,27 +22,36 @@ describe 'CoreFunctions includes', ->
 
   beforeEach ->
     runner = new ReactiveRunner()
-    runner.addProvidedTransformFunctions CoreFunctions
+    runner.addProvidedFunctions CoreFunctions
     changes = []
     runner.onChange callback
 
   it 'fromEach - transform input to output simple value', ->
-      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
-      parseUserFunctions 'pointsFactor = 15; fudgeFactor = 4'
-      parseUserFunctions 'scores = fromEach( games, fudgeFactor + in.score * pointsFactor )'
+    parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+    parseUserFunctions 'pointsFactor = 15; fudgeFactor = 4'
+    parseUserFunctions 'scores = fromEach( games, fudgeFactor + in.score * pointsFactor )'
 
-      changesFor('scores').should.eql [[109, 154]]
+    changesFor('scores').should.eql [[109, 154]]
 
   it 'fromEach - transform input to output aggregation', ->
-      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
-      parseUserFunctions 'fudgeFactor = 4'
-      parseUserFunctions 'scores = fromEach( games, {time: in.time, originalScore: in.score, adjustedScore: in.score + fudgeFactor} )'
+    parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+    parseUserFunctions 'fudgeFactor = 4'
+    parseUserFunctions 'scores = fromEach( games, {time: in.time, originalScore: in.score, adjustedScore: in.score + fudgeFactor} )'
 
-      changesFor('scores').should.eql [[{ time: 21, originalScore: 7, adjustedScore: 11 }, { time: 25, originalScore: 10, adjustedScore: 14}]]
+    changesFor('scores').should.eql [[{ time: 21, originalScore: 7, adjustedScore: 11 }, { time: 25, originalScore: 10, adjustedScore: 14}]]
 
   it 'select - pick inputs where condition is true', ->
-      parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'
-      parseUserFunctions 'limit = 10'
-      parseUserFunctions 'highScores = select( games, in.score >= limit )'
+    parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'
+    parseUserFunctions 'limit = 10'
+    parseUserFunctions 'highScores = select( games, in.score >= limit )'
 
-      changesFor('highScores').should.eql [[ { time: 21, score: 10 }, { time: 28, score: 11} ]]
+    changesFor('highScores').should.eql [[ { time: 21, score: 10 }, { time: 28, score: 11} ]]
+
+  it 'shuffle - list in random order', ->
+    parseUserFunctions 'items = [ 1,2,3,4,5,6,7,8,9,10 ]'
+    parseUserFunctions 'shuffledItems = shuffle( items )'
+
+    result = changesFor('shuffledItems')[0]
+
+    result.length.should.eql 10
+    result.should.not.eql [ 1,2,3,4,5,6,7,8,9,10 ]

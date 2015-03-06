@@ -14,7 +14,7 @@ describe 'ReactiveRunner runs', ->
   fromEachFunction = (seq, func) -> (func(x) for x in seq)
   selectFunction = (seq, func) -> (x for x in seq when func(x))
 
-  providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
+  providedValueFunctions = (functionMap) -> runner.addProvidedValueFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
@@ -108,7 +108,7 @@ describe 'ReactiveRunner runs', ->
       changesFor('inputMinusTwo').should.eql [28]
 
     it 'function using a provided value function with no args', ->
-      providedFunctions { theInput: -> 20 }
+      providedValueFunctions { theInput: -> 20 }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
 
@@ -125,7 +125,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'a = 10'
       parseUserFunctions 'b = 20'
       parseUserFunctions 'c = 5'
-      providedFunctions
+      providedValueFunctions
         addOne: (a) -> a + 1
         getTheAnswer: (a, b, c) -> a + b - c
 
