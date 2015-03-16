@@ -97,6 +97,8 @@ select from sequence: seq[index]
 
 infix operations: + - * / and or not == != > >= < <=
 
+Possible changes: xxxOf(anAggregate) where xxx is the name of any item in the aggregate
+
 
 
 HTML
