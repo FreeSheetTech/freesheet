@@ -10,4 +10,5 @@ module.exports = {
   fromEach: transform (seq, func) -> (func(x) for x in seq)
   select: transform (seq, func) -> (x for x in seq when func(x))
   shuffle: value (seq) -> _.shuffle seq
+  count: value (seq) -> seq.length
 }

@@ -55,3 +55,8 @@ describe 'CoreFunctions includes', ->
 
     result.length.should.eql 10
     result.should.not.eql [ 1,2,3,4,5,6,7,8,9,10 ]
+
+  it 'count - items in a list', ->
+    parseUserFunctions 'items = [ 1,2,3,4,5,6 ]'
+    parseUserFunctions 'itemCount = count( items )'
+    changesFor('itemCount').should.eql [6]
