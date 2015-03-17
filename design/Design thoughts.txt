@@ -201,6 +201,14 @@ Code generator
 - Function calls get stored as they are encountered
 - Need to recreate precedence of bracketed expressions as they are lost in parsing
 
+Time
+----
+- now() function represents current time
+- now() has to be a stream that updates so that formulas that use it update
+- if it changed every millisecond, would be too much computation
+- now() updates every second
+- Later: have different resolutions of now() eg now(100) to update every 100 ms
+
 
 Programming environment
 -----------------------
@@ -219,6 +227,7 @@ Programming environment
 - Where only interested in sets of events, may have all input events on one line
 - Take care in order of events across line just in case a bug causes it to matter
 - Influence - expression evaluation in debugging functional programs
+- Error eg type mismatch results in Error, display message in cell
 
 Named values
 ------------

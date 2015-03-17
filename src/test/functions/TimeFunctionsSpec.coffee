@@ -7,6 +7,8 @@ TimeFunctions = require './TimeFunctions'
 
 describe 'TimeFunctions includes', ->
 
+  @timeout 5000
+
   runner = null
   changes = null
 
@@ -26,8 +28,12 @@ describe 'TimeFunctions includes', ->
     changes = []
     runner.onChange callback
 
-  it 'timeNow - current time as a Date', ->
-    parseUserFunctions 'theTime = timeNow()'
-    result = changesFor('theTime')[0]
-    resultMillis = result.getTime()
-    (Date.now() - resultMillis).should.be.lessThan(500)
+  it 'timeNow - stream of current time as a Date updating every second', (done) ->
+    parseUserFunctions 'theTime = now()'
+    setTimeout (->
+      ticks = changesFor('theTime')
+      ticks.length.should.eql(3)
+      latestTickMillis = ticks[2].getTime()
+      (Date.now() - latestTickMillis).should.be.lessThan(1000)
+      done()
+    ), 3000
