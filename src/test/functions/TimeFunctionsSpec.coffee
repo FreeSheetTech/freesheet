@@ -3,6 +3,7 @@ Rx = require 'rx'
 TextParser = require '../parser/TextParser'
 ReactiveRunner = require '../runtime/ReactiveRunner'
 TimeFunctions = require './TimeFunctions'
+Period = require './Period'
 
 
 describe 'TimeFunctions includes', ->
@@ -30,10 +31,16 @@ describe 'TimeFunctions includes', ->
 
   it 'timeNow - stream of current time as a Date updating every second', (done) ->
     parseUserFunctions 'theTime = now()'
-    setTimeout (->
+    checkResults = ->
       ticks = changesFor('theTime')
       ticks.length.should.eql(3)
       latestTickMillis = ticks[2].getTime()
       (Date.now() - latestTickMillis).should.be.lessThan(1000)
       done()
-    ), 3000
+    setTimeout checkResults, 3000
+
+  it 'seconds - produces Period', ->
+    parseUserFunctions 'gameLength = seconds(30)'
+    result = changesFor('gameLength')[0]
+    result.should.be.instanceOf(Period)
+    result.millis.should.eql(30000)
