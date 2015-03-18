@@ -48,3 +48,8 @@ describe 'TimeFunctions includes', ->
     result = changesFor('gameLength')[0]
     result.should.be.instanceOf(Period)
     result.millis.should.eql(30000)
+
+  it 'asSeconds - Period expressed as seconds', ->
+    parseUserFunctions 'gameLength = seconds(30)'
+    parseUserFunctions 'secondsRemaining = asSeconds(gameLength)'
+    changesFor('secondsRemaining').should.eql([30])

@@ -4,3 +4,5 @@ module.exports = class Period
 
   constructor: (@millis) ->
 
+  asSeconds: -> @millis / 1000
+

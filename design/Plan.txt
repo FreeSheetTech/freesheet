@@ -40,7 +40,7 @@ Immediate to do
     - Scoping rules - including object expressions
 - Core functions
 - Error handling
-- Date and time period arithmetic
+    - Date and time period arithmetic
 
 Future steps
 ------------
