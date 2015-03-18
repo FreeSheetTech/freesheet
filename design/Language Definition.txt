@@ -120,9 +120,10 @@ Time
 - Addition and subtraction with DateTime and Period
 - Addition and subtraction with Period and Period
 - Subtraction with DateTime and DateTime
+- Comparison with DateTime and DateTime
 - Functions to create Periods: seconds(), minutes(), ...weeks()
 - Periods stored as number of millis
-- Later: Periods with months and years, held and calculated separately
+- Later: Periods with months and years, held and calculated separately - probably CalendarPeriod, different to Period
 - Functions to express Periods in different ways - secondsOf, asSeconds
 - now() is the current time
 

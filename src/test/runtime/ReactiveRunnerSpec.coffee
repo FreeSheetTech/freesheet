@@ -41,12 +41,18 @@ describe 'ReactiveRunner runs', ->
 
 
   describe 'runs expressions', ->
-    it 'all arithmetic operations', ->
+    it 'all arithmetic operations on numbers', ->
       parseUserFunctions 'a=100'
       parseUserFunctions '  p=a+2  '
       parseUserFunctions 'q = 150   -  a  '
       parseUserFunctions 'r =1200 / a'
       parseUserFunctions 's= a * 5.2'
+
+      changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
+
+    it 'subtraction of Dates', ->
+      parseUserFunctions 'a=100'
+
 
       changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
 

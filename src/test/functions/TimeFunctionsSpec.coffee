@@ -39,6 +39,10 @@ describe 'TimeFunctions includes', ->
       done()
     setTimeout checkResults, 3000
 
+  it 'dateValue - produces Date from ISO format', ->
+    parseUserFunctions 'gameEnd = dateValue("2010-03-04 15:16:17")'
+    changesFor('gameEnd')[0].should.eql(new Date("2010-03-04 15:16:17"))
+
   it 'seconds - produces Period', ->
     parseUserFunctions 'gameLength = seconds(30)'
     result = changesFor('gameLength')[0]

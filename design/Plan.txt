@@ -39,6 +39,8 @@ Immediate to do
     - Object expressions
     - Scoping rules - including object expressions
 - Core functions
+- Error handling
+- Date and time period arithmetic
 
 Future steps
 ------------
