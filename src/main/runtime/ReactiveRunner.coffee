@@ -1,11 +1,32 @@
 Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
 JsCodeGenerator = require '../code/JsCodeGenerator'
+Period = require '../functions/Period'
+
+additionFunction = (a, b) ->
+  switch
+    when a instanceof Period and b instanceof Period
+      new Period(a.millis + b.millis)
+    when a instanceof Date and b instanceof Period
+      new Date(a.getTime() + b.millis)
+    else
+      a + b
+
+subtractionFunction = (a, b) ->
+  switch
+    when a instanceof Period and b instanceof Period
+      new Period(a.millis - b.millis)
+    when a instanceof Date and b instanceof Date
+      new Period(a.getTime() - b.getTime())
+    when a instanceof Date and b instanceof Period
+      new Date(a.getTime() - b.millis)
+    else
+      a - b
 
 infixOperatorFunction = (operator) ->
     switch operator
-      when '+' then (a, b) -> a + b
-      when '-' then (a, b) -> a - b
+      when '+' then additionFunction
+      when '-' then subtractionFunction
       when '*' then (a, b) -> a * b
       when '/' then (a, b) -> a / b
       when '>' then (a, b) -> a > b

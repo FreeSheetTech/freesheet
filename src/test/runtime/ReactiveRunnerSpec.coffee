@@ -2,7 +2,8 @@ should = require 'should'
 Rx = require 'rx'
 TextParser = require '../parser/TextParser'
 ReactiveRunner = require './ReactiveRunner'
-
+TimeFunctions = require '../functions/TimeFunctions'
+Period = require '../functions/Period'
 
 describe 'ReactiveRunner runs', ->
 
@@ -14,6 +15,7 @@ describe 'ReactiveRunner runs', ->
   fromEachFunction = (seq, func) -> (func(x) for x in seq)
   selectFunction = (seq, func) -> (x for x in seq when func(x))
 
+  providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedValueFunctions = (functionMap) -> runner.addProvidedValueFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
@@ -35,6 +37,7 @@ describe 'ReactiveRunner runs', ->
     namedChanges = []
     runner.onChange callback
     inputSubj = new Rx.Subject()
+    providedFunctions TimeFunctions
     providedTransformFunctions
       fromEach: fromEachFunction
       select: selectFunction
@@ -50,11 +53,30 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
 
-    it 'subtraction of Dates', ->
-      parseUserFunctions 'a=100'
+    it 'subtraction of two Dates', ->
+      parseUserFunctions 'd1=dateValue("2014-02-03 12:00:20")'
+      parseUserFunctions 'd2=dateValue("2014-02-03 12:00:30")'
+      parseUserFunctions 'diff = d2 - d1'
 
+      changesFor('diff').should.eql [Period.seconds(10)]
 
-      changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
+    it 'addition and subtraction of Date and time period', ->
+      parseUserFunctions 'd1=dateValue("2014-02-03 12:00:20")'
+      parseUserFunctions 'p10 = seconds(10)'
+      parseUserFunctions 'timeLater = d1 + p10'
+      parseUserFunctions 'timeEarlier = d1 - p10'
+
+      changesFor('timeLater').should.eql [new Date("2014-02-03 12:00:30")]
+      changesFor('timeEarlier').should.eql [new Date("2014-02-03 12:00:10")]
+
+    it 'addition and subtraction of period and period', ->
+      parseUserFunctions 'p15 = seconds(15)'
+      parseUserFunctions 'p25 = seconds(25)'
+      parseUserFunctions 'totalPeriod = p25 + p15'
+      parseUserFunctions 'diff = p25 - p15'
+
+      changesFor('totalPeriod').should.eql [Period.seconds 40]
+      changesFor('diff').should.eql [Period.seconds 10]
 
     it 'all comparison operations on numbers', ->
       parseUserFunctions 'a = 100 > 100'
