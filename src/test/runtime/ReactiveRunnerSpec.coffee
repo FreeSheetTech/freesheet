@@ -87,6 +87,17 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'f = 101 <> 100'
       changes.should.eql [{a: false}, {b: true}, {c: true}, {d: false}, {e: false}, {f:true}]
 
+    it 'all comparison operations on dates', ->
+      parseUserFunctions 'd1=dateValue("2014-02-03 12:00:20")'
+      parseUserFunctions 'd2=dateValue("2014-02-03 12:00:30")'
+      parseUserFunctions 'a = d1 > d1'
+      parseUserFunctions 'b = d1 < d2'
+      parseUserFunctions 'c = d2 >= d1'
+      parseUserFunctions 'd = d2 <= d1'
+      parseUserFunctions 'e = d2 == d1'
+      parseUserFunctions 'f = d2 <> d1'
+      changes[2..].should.eql [{a: false}, {b: true}, {c: true}, {d: false}, {e: false}, {f:true}]
+
     it 'concatenates strings', ->
       parseUserFunctions 'a = "The A"'
       parseUserFunctions 'aa = a + 10 + " times"'
