@@ -1,4 +1,4 @@
-# franji
+# freesheet
 Enable end users to extend applications with an Excel-like functional programming language.
 
 This JavaScript library provides a toolkit for parsing function definitions and expressions 
