@@ -4,6 +4,8 @@ module.exports = class JsCodeGenerator
 
   asLiteral = (value) -> JSON.stringify value
 
+  jsOperator = (op) -> if op == '<>' then '!=' else op
+
   constructor: (@expr) ->
     @functionCalls = []
     @code = @_generate expr
@@ -16,7 +18,7 @@ module.exports = class JsCodeGenerator
       when expr instanceof InfixExpression
         left = @_generate(expr.children[0])
         right = @_generate(expr.children[1])
-        "#{left} #{expr.operator} #{right}"
+        "(#{left} #{jsOperator(expr.operator)} #{right})"
 
       when expr instanceof Aggregation
         items = []
@@ -39,7 +41,7 @@ module.exports = class JsCodeGenerator
 
       when expr instanceof AggregationSelector
         aggCode = @_generate expr.aggregation
-        "#{aggCode}.#{expr.elementName}"
+        "(#{aggCode}).#{expr.elementName}"
 
       else
         throw new Error("JsCodeGenerator: Unknown expression: " + expr.constructor.name)

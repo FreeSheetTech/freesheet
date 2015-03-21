@@ -25,7 +25,11 @@ describe 'JsCodeGenerator', ->
 
     it 'infix expression with two literals', ->
       codeGen = genFor new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
-      codeGen.code.should.eql '10.5 + "a string"'
+      codeGen.code.should.eql '(10.5 + "a string")'
+
+    it 'not equal expression with two literals', ->
+      codeGen = genFor new InfixExpression('10.5 <> "a string"', '<>', [aNumber, aString])
+      codeGen.code.should.eql '(10.5 != "a string")'
 
     it 'function call with no arguments', ->
       expr = new FunctionCall('theFn ( )', 'theFn', [])
@@ -54,14 +58,14 @@ describe 'JsCodeGenerator', ->
 
     it 'aggregation selector', ->
       codeGen = genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
-      codeGen.code.should.eql 'abc.def'
+      codeGen.code.should.eql '(abc).def'
 
     it 'a complex expression', ->
       originalCode = '  { a:10, b : x +y, c: [d + 10 - z* 4, "Hi!"]  } '
       expr = new TextParser(originalCode).expression()
       codeGen = genFor expr
 
-      codeGen.code.should.eql '{a: 10, b: x + y, c: [d + 10 - z * 4, "Hi!"]}'
+      codeGen.code.should.eql '{a: 10, b: (x + y), c: [(d + (10 - (z * 4))), "Hi!"]}'
 
   describe 'stores function calls', ->
 

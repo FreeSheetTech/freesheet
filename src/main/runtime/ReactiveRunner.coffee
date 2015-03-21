@@ -126,7 +126,16 @@ module.exports = class ReactiveRunner
         new Rx.BehaviorSubject(expr.value)
 
       when expr instanceof InfixExpression
-        Rx.Observable.combineLatest @_exprStreams(expr.children), infixOperatorFunction(expr.operator)
+        codeGen = new JsCodeGenerator(expr)
+        functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
+        functionBody = "return " + codeGen.code
+        functionCreateArgs = [null].concat(functionCallNames, functionBody)
+        combineFunction = new (Function.bind.apply(Function, functionCreateArgs));
+        if codeGen.functionCalls.length
+          Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
+        else
+          new Rx.BehaviorSubject combineFunction()
+
 
       when expr instanceof Aggregation
         Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
