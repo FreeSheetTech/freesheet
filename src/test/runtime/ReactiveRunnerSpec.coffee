@@ -172,7 +172,7 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
 
-  describe 'expressions as function arguments', ->
+  describe 'expressions as function arguments with sequences', ->
     it 'transforms all elements of a sequence to a literal', ->
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
       parseUserFunctions 'points = fromEach( games, 10 )'
@@ -210,6 +210,42 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'scores = fromEach( games, fudgeFactor + in.score * pointsFactor )'
 
       changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
+
+    it 'transforms all elements of a sequence to a formula including a provided stream function and values change for each value in the stream', ->
+      providedStreamFunctions { theInput: -> inputSubj }
+      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+      parseUserFunctions 'scores = fromEach( games, in.score + theInput() )'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+
+      changesFor("scores").should.eql [null, [27, 30], [37, 40]]
+
+    it.skip 'transforms all elements of a sequence to a formula using a provided stream function with literal arguments and values change for each value in the stream', ->
+      providedStreamFunctions adjust: (fixFactor) ->
+        adjustFn = (adjustment) ->
+          fixFactor + adjustment
+        inputSubj.map adjustFn
+      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+      parseUserFunctions 'scores = fromEach( games, in.score + adjust(5) )'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+
+      changesFor("scores").should.eql [[7, 10], [32, 35], [42, 45]]
+
+    it.skip 'transforms all elements of a sequence to a formula using a provided stream function with arguments from input and values change for each value in the stream', ->
+      providedStreamFunctions adjust: (score) ->
+        adjustFn = (adjustment) ->
+          score + adjustment
+        inputSubj.map adjustFn
+      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+      parseUserFunctions 'scores = fromEach( games, adjust(in.score) )'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+
+      changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]
 
     it 'filters elements of a sequence using a formula including a value from the input and named values', ->
       parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'

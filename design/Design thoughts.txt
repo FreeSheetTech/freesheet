@@ -194,6 +194,75 @@ Transform functions that use provided functions
 - (Probably) want to cache streams from each separate set of args passed to that function, so save  input('name'), input ('age'), etc streams
 - Need the external functions available in the generated function somehow - pass in a context object as an extra argument?
 - Seems really simple, but this is a very tricky bit
+- When value from transformed item is used as a parameter to a provided function call, can't completely precompile the function eg input(id)
+- When transform function calls a provided stream function, needs to turn that into a plain value to use in the expression eg input(id)
+- Is this a sign that functions without RT are bad?
+- Functions should not have context - just inputs and outputs - so how does that work with exprs passed to other functions?
+- The expr for a transform function is actually a shorthand for an expr that produces a function with one argument, or a stream of functions with one argument
+- The expr function actually has an input for each named value of function it uses, but they are curried to produce a function with a single argument
+- What names mean in the text syntax is separate from the context of the runtime values they become
+
+Functions with arguments, expressions producing functions
+---------------------------------------------------------
+- Don't have to convert the expr to a native function - could evaluate
+- Native JS functions may lead to better performance
+- Producing functions should be just like producing any data value
+- Using a function should be just like using a data value - sequences and aggregates are functions really, literal values just () => value
+- But the functions need to be pure functions with RT - so context is a non-starter, but closures could be useful
+- Functions all the way down - a literal can be a function with no args that always produces the same value
+- Have kept away from functions with args, but may need to introduce them now
+- All functions have arguments - no args is a special case
+- Using inputs from outside within exprs will just lead to trouble - must be input parameters
+- Don't pass an 'unfinished' function that needs to pull values in from outside when evaluated - get the values and produce a pure function
+- Already have exprs that evaluate to functions with no args - need to have exprs that evaluate to functions with arguments
+- Actually already producing sequences and aggregations, which are effectively functions with arguments
+- If can insert vars in a generated function, can insert function code
+- User-defined function with args leads to a stream of functions
+- Could see (or implement) a user-defined function with no args as leading to a stream of no-args functions
+- A function with arguments can have all the arguments supplied and therefore be "curried" to a function with no arguments (or one arg for a transform function)
+- So rather than looking at "evaluation instances" of a function, are we looking at just producing a different function, with no args?
+- Why do functions need to be separate worksheets? Just define as you do named values
+- Collect inputs used in an expression as vars for its generated function - may need to do this recursively
+- Choice between introducing extra streams for sub-exprs of a definition or just generating a JS function for the whole thing - have done both in different places
+- If all JS, could we possibly remove the distinction between different kinds of functions?
+- Or should we make the distinction even clearer - there are input streams and provided value functions?
+- Generated functions could have source expression attached to them to help debugging
+- Generated functions could have the values of each named value in the expression at the time of generation attached to them
+
+Functions with arguments - examples
+-----------------------------------
+- Does not use values from elsewhere in the worksheet:
+    totalPrice(base, markup, taxRate) = (base + markup) * (1 + taxRate)
+    widgetBase = basePrice("widget")
+    widgetMarkup = widgetBase * (1 + markupRate(widgetBase))
+    taxRate = 0.2
+    widgetPrice = totalPrice(widgetBase, widgetMarkup, taxRate)
+
+- Uses values from elsewhere in the worksheet:
+    taxRate = 0.2
+    markupRate = 0.5
+    totalPrice(base) = base * (1 + markup) * (1 + taxRate)
+    widgetBase = basePrice("widget")
+    widgetPrice = totalPrice(widgetBase)
+
+
+Local values within expressions
+-------------------------------
+- Or local functions
+- Syntax is an issue
+- Implementation is an issue
+- Poss syntax:
+  - _items in aggregation are ignored - but what if result is not an aggregation
+  - nested name = expr definitions within an expr that is surrounded by delimiters - maybe round brackets
+- Expressions used as transform functions will also have local values
+
+Input functions that take expressions to identify the item
+----------------------------------------------------------
+- Does it help to look at these as being a map containing a collection of named inputs to the functions
+- In word quiz example, page inputs can't be set up as separate streams because don't even know what they are until runtime, because generated from same expr that uses them
+- So have to regard page inputs as a single stream with named elements
+- Or regard page inputs as a function - everything can be a function
+- Individual page inputs may not be there when ask for them - eg if generated by outputs of function
 
 Code generator
 --------------
@@ -228,6 +297,9 @@ Programming environment
 - Take care in order of events across line just in case a bug causes it to matter
 - Influence - expression evaluation in debugging functional programs
 - Error eg type mismatch results in Error, display message in cell
+- Can use own styling in an HTML worksheet table eg for comments/headings
+- Separate streams might lead to better debugging, but maybe better to use tools to evaluate highlighted exprs on the fly
+- Can add any expression to worksheet at any time, so can have a tool where highlight an expr and it shows value in a popup
 
 Named values
 ------------

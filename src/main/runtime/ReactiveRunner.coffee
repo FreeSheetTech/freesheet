@@ -152,13 +152,13 @@ module.exports = class ReactiveRunner
   _functionStream: (expr) ->
     codeGen = new JsCodeGenerator(expr)
 
-    functionGenerator = functionGeneratorFunction(codeGen.code, codeGen.functionCalls)
+    functionGenerator = createFunctionGenerator(codeGen.code, codeGen.functionCalls)
     if codeGen.functionCalls.length
       Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), functionGenerator
     else
       new Rx.BehaviorSubject functionGenerator()
 
-  functionGeneratorFunction = (functionBody, functionCalls) ->
+  createFunctionGenerator = (expressionCode, functionCalls) ->
     () ->
       args = arguments
       varDecl = (functionCall) ->
@@ -167,7 +167,9 @@ module.exports = class ReactiveRunner
         "#{asVarName functionCall} = #{asLiteral argValue}"
 
       functionVars = if functionCalls.length then 'var ' + (varDecl(f) for f in functionCalls).join(', ') + ';\n' else ''
-      new Function('_in', functionVars + 'return ' + functionBody)
+      functionBody = functionVars + '\nreturn ' + expressionCode
+      console.log "Generated function", functionBody
+      new Function('_in', functionBody)
 
   asVarName = (functionCall) -> functionCall.functionName
 

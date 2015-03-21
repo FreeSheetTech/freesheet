@@ -73,6 +73,8 @@ script: zero or more function definitions
 
 function definition: functionName = expr
 
+function definition with args: functionName([argName...]) = expr
+
 function call: functionName([expr...])
 
 infix expressions: expr op expr [op expr]
@@ -91,9 +93,10 @@ sequence: [expr, ...]
 
 aggregation: { name: expr, ... }
 
-select from aggregate: agg.item
+select from aggregate: agg.itemNameLiteral
+select from aggregate: agg[itemExpr]
 
-select from sequence: seq[index]
+select from sequence: seq[indexExpr]
 
 infix operations: + - * / and or not == != > >= < <=
 
