@@ -18,7 +18,10 @@ module.exports = class JsCodeGenerator
       when expr instanceof InfixExpression
         left = @_generate(expr.children[0])
         right = @_generate(expr.children[1])
-        "(#{left} #{jsOperator(expr.operator)} #{right})"
+        switch expr.operator
+          when '+' then "operations.add(#{left}, #{right})"
+          when '-' then "operations.subtract(#{left}, #{right})"
+          else "(#{left} #{jsOperator(expr.operator)} #{right})"
 
       when expr instanceof Aggregation
         items = []

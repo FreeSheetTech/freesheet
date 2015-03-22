@@ -2,6 +2,7 @@ Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
 JsCodeGenerator = require '../code/JsCodeGenerator'
 Period = require '../functions/Period'
+Operations = require './Operations'
 
 additionFunction = (a, b) ->
   switch
@@ -128,9 +129,14 @@ module.exports = class ReactiveRunner
       when expr instanceof InfixExpression
         codeGen = new JsCodeGenerator(expr)
         functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
+#        console.log 'codeGen.code', codeGen.code
         functionBody = "return " + codeGen.code
-        functionCreateArgs = [null].concat(functionCallNames, functionBody)
-        combineFunction = new (Function.bind.apply(Function, functionCreateArgs));
+        functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
+        innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
+        combineFunction = () ->
+          argArray = (arguments[i] for i in [0..arguments.length])
+          args = [Operations].concat(argArray)
+          innerCombineFunction.apply(null, args)
         if codeGen.functionCalls.length
           Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
         else
