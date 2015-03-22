@@ -23,9 +23,17 @@ describe 'JsCodeGenerator', ->
       codeGen = genFor new Literal('10.5', 10.5)
       codeGen.code.should.eql '10.5'
 
-    it 'infix expression with two literals', ->
+    it 'add expression with two literals', ->
       codeGen = genFor new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
-      codeGen.code.should.eql '(10.5 + "a string")'
+      codeGen.code.should.eql 'operations.add(10.5, "a string")'
+
+    it 'subtract expression with two literals', ->
+      codeGen = genFor new InfixExpression('10.5 - "a string"', '-', [aNumber, aString])
+      codeGen.code.should.eql 'operations.subtract(10.5, "a string")'
+
+    it 'infix expression with two literals', ->
+      codeGen = genFor new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
+      codeGen.code.should.eql '(10.5 * "a string")'
 
     it 'not equal expression with two literals', ->
       codeGen = genFor new InfixExpression('10.5 <> "a string"', '<>', [aNumber, aString])
@@ -65,7 +73,7 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       codeGen = genFor expr
 
-      codeGen.code.should.eql '{a: 10, b: (x + y), c: [(d + (10 - (z * 4))), "Hi!"]}'
+      codeGen.code.should.eql '{a: 10, b: operations.add(x, y), c: [operations.add(d, operations.subtract(10, (z * 4))), "Hi!"]}'
 
   describe 'stores function calls', ->
 

@@ -183,8 +183,10 @@ module.exports = class ReactiveRunner
 
       functionVars = if functionCalls.length then 'var ' + (varDecl(f) for f in functionCalls).join(', ') + ';\n' else ''
       functionBody = functionVars + '\nreturn ' + expressionCode
-      console.log "Generated function", functionBody
-      new Function('_in', functionBody)
+#      console.log "Generated function:\n", functionBody, "\n\n"
+      innerFunction = new Function('_in', 'operations', functionBody)
+      transformFunction = (_in) -> innerFunction _in, Operations
+      transformFunction
 
   asVarName = (functionCall) -> functionCall.functionName
 
