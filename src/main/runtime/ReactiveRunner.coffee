@@ -4,40 +4,6 @@ JsCodeGenerator = require '../code/JsCodeGenerator'
 Period = require '../functions/Period'
 Operations = require './Operations'
 
-additionFunction = (a, b) ->
-  switch
-    when a instanceof Period and b instanceof Period
-      new Period(a.millis + b.millis)
-    when a instanceof Date and b instanceof Period
-      new Date(a.getTime() + b.millis)
-    else
-      a + b
-
-subtractionFunction = (a, b) ->
-  switch
-    when a instanceof Period and b instanceof Period
-      new Period(a.millis - b.millis)
-    when a instanceof Date and b instanceof Date
-      new Period(a.getTime() - b.getTime())
-    when a instanceof Date and b instanceof Period
-      new Date(a.getTime() - b.millis)
-    else
-      a - b
-
-infixOperatorFunction = (operator) ->
-    switch operator
-      when '+' then additionFunction
-      when '-' then subtractionFunction
-      when '*' then (a, b) -> a * b
-      when '/' then (a, b) -> a / b
-      when '>' then (a, b) -> a > b
-      when '>=' then (a, b) -> a >= b
-      when '<' then (a, b) -> a < b
-      when '<=' then (a, b) -> a <= b
-      when '==' then (a, b) -> a == b
-      when '<>' then (a, b) -> a != b
-      else throw new Error("Unknown operator: " + operator)
-
 aggregateFunction = (childNames) ->
   () ->
     result = {}  #TODO use lodash zip etc
@@ -129,7 +95,7 @@ module.exports = class ReactiveRunner
       when expr instanceof InfixExpression
         codeGen = new JsCodeGenerator(expr)
         functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
-#        console.log 'codeGen.code', codeGen.code
+        console.log 'codeGen.code', codeGen.code
         functionBody = "return " + codeGen.code
         functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
         innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
@@ -165,7 +131,7 @@ module.exports = class ReactiveRunner
   _exprStreams: (exprs) -> (@_exprStream(e) for e in exprs)
 
   _functionStream: (expr) ->
-    codeGen = new JsCodeGenerator(expr)
+    codeGen = new JsCodeGenerator(expr, 'context')
 
     functionGenerator = createFunctionGenerator(codeGen.code, codeGen.functionCalls)
     if codeGen.functionCalls.length
@@ -176,16 +142,17 @@ module.exports = class ReactiveRunner
   createFunctionGenerator = (expressionCode, functionCalls) ->
     () ->
       args = arguments
-      varDecl = (functionCall) ->
+      argValue = (functionCall) ->
         argPos = functionCalls.indexOf(functionCall)
-        argValue = args[argPos]
-        "#{asVarName functionCall} = #{asLiteral argValue}"
+        args[argPos]
 
-      functionVars = if functionCalls.length then 'var ' + (varDecl(f) for f in functionCalls).join(', ') + ';\n' else ''
-      functionBody = functionVars + '\nreturn ' + expressionCode
-#      console.log "Generated function:\n", functionBody, "\n\n"
-      innerFunction = new Function('_in', 'operations', functionBody)
-      transformFunction = (_in) -> innerFunction _in, Operations
+      context = {}
+      context[f.functionName] = argValue(f) for f in functionCalls  #TODO use lodash?
+      functionBody = "return #{expressionCode};"
+      console.log "Generated function:\n", functionBody, "\n"
+      console.log "Context:", context, "\n\n"
+      innerFunction = new Function('_in', 'operations', 'context', functionBody)
+      transformFunction = (_in) -> innerFunction _in, Operations, context
       transformFunction
 
   asVarName = (functionCall) -> functionCall.functionName

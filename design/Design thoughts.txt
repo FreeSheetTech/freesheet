@@ -199,8 +199,12 @@ Transform functions that use provided functions
 - Is this a sign that functions without RT are bad?
 - Functions should not have context - just inputs and outputs - so how does that work with exprs passed to other functions?
 - The expr for a transform function is actually a shorthand for an expr that produces a function with one argument, or a stream of functions with one argument
-- The expr function actually has an input for each named value of function it uses, but they are curried to produce a function with a single argument
+- The expr function actually has an input for each named value or function it uses, but they are curried to produce a function with a single argument
 - What names mean in the text syntax is separate from the context of the runtime values they become
+- A provided stream function with no arguments produces a stream of values, which could be a stream of functions with no arguments
+- A provided stream function with arguments actually needs to produce a stream of functions taking those arguments
+- Generated transform function needs to be able to access that function and call it normally
+- Generated transform function cannot have function baked in as a literal.  Pass in via operations/context object?
 
 Functions with arguments, expressions producing functions
 ---------------------------------------------------------
@@ -217,7 +221,7 @@ Functions with arguments, expressions producing functions
 - Already have exprs that evaluate to functions with no args - need to have exprs that evaluate to functions with arguments
 - Actually already producing sequences and aggregations, which are effectively functions with arguments
 - If can insert vars in a generated function, can insert function code
-- User-defined function with args leads to a stream of functions
+- User-defined function with args leads to a stream of functions which change as the other streams used in the expr change
 - Could see (or implement) a user-defined function with no args as leading to a stream of no-args functions
 - A function with arguments can have all the arguments supplied and therefore be "curried" to a function with no arguments (or one arg for a transform function)
 - So rather than looking at "evaluation instances" of a function, are we looking at just producing a different function, with no args?
@@ -228,6 +232,8 @@ Functions with arguments, expressions producing functions
 - Or should we make the distinction even clearer - there are input streams and provided value functions?
 - Generated functions could have source expression attached to them to help debugging
 - Generated functions could have the values of each named value in the expression at the time of generation attached to them
+- To allow generated functions to use both values and functions, need to pass in a context object
+- Produce a curried function that fixes the context object at the point it is used
 
 Functions with arguments - examples
 -----------------------------------

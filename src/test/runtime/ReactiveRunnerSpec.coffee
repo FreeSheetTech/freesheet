@@ -146,7 +146,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions '''inputMinusTwo = theInput - 2 '''
       changesFor('inputMinusTwo').should.eql [28]
 
-    it 'function using a provided value function with no args', ->
+    it.only 'function using a provided value function with no args', ->
       providedValueFunctions { theInput: -> 20 }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
@@ -221,31 +221,31 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("scores").should.eql [null, [27, 30], [37, 40]]
 
-    it.skip 'transforms all elements of a sequence to a formula using a provided stream function with literal arguments and values change for each value in the stream', ->
-      providedStreamFunctions adjust: (fixFactor) ->
-        adjustFn = (adjustment) ->
-          fixFactor + adjustment
-        inputSubj.map adjustFn
+    it 'transforms all elements of a sequence to a formula using a provided stream function with literal arguments and values change for each value in the stream', ->
+      providedStreamFunctions adjust:  ->
+        adjustFnGenerator = (ff) ->
+          (adjustment) -> ff + adjustment
+        inputSubj.map adjustFnGenerator
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + adjust(5) )'
 
       inputSubj.onNext 20
       inputSubj.onNext 30
 
-      changesFor("scores").should.eql [[7, 10], [32, 35], [42, 45]]
+      changesFor("scores").should.eql [null, [32, 35], [42, 45]]    #first result is zero because adjust function not generated until first inputSubj value
 
-    it.skip 'transforms all elements of a sequence to a formula using a provided stream function with arguments from input and values change for each value in the stream', ->
-      providedStreamFunctions adjust: (score) ->
-        adjustFn = (adjustment) ->
-          score + adjustment
-        inputSubj.map adjustFn
+    it 'transforms all elements of a sequence to a formula using a provided stream function with arguments from input and values change for each value in the stream', ->
+      providedStreamFunctions adjust:  ->
+        adjustFnGenerator = (ff) ->
+          (adjustment) -> ff + adjustment
+        inputSubj.startWith(0).map adjustFnGenerator
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, adjust(in.score) )'
 
       inputSubj.onNext 20
       inputSubj.onNext 30
 
-      changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]
+      changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]  #first result is unadjusted values because adjust function starts with 0
 
     it 'filters elements of a sequence using a formula including a value from the input and named values', ->
       parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'

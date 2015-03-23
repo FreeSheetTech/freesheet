@@ -6,8 +6,9 @@ module.exports = class JsCodeGenerator
 
   jsOperator = (op) -> if op == '<>' then '!=' else op
 
-  constructor: (@expr) ->
+  constructor: (@expr, contextName) ->
     @functionCalls = []
+    @contextPrefix = if contextName then contextName + '.' else ''
     @code = @_generate expr
 
   _generate: (expr) ->
@@ -40,7 +41,13 @@ module.exports = class JsCodeGenerator
           '_in'
         else
           @functionCalls.push expr if expr not in @functionCalls
-          expr.functionName
+          fnName = @contextPrefix + name
+          argList = if expr.children.length
+                      args = (@_generate(e) for e in expr.children)
+                      '(' + args.join(', ') + ')'
+                    else ''
+          fnName + argList
+
 
       when expr instanceof AggregationSelector
         aggCode = @_generate expr.aggregation
