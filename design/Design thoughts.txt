@@ -234,6 +234,7 @@ Functions with arguments, expressions producing functions
 - Generated functions could have the values of each named value in the expression at the time of generation attached to them
 - To allow generated functions to use both values and functions, need to pass in a context object
 - Produce a curried function that fixes the context object at the point it is used
+- If going to generate code, might as well generate whole expr as one function
 
 Functions with arguments - examples
 -----------------------------------

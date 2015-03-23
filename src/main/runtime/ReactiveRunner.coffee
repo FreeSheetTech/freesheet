@@ -67,21 +67,29 @@ module.exports = class ReactiveRunner
     subj
 
   _userFunctionStream: (func) ->
-    @_exprStream func.expr
-
-  _providedFunctionStream: (func, argExprs) ->
-    argStreams = null
-    if func.kind == ReactiveRunner.TRANSFORM
-      argStreams =  [@_exprStream(argExprs[0]), @_functionStream(argExprs[1])]
+    codeGen = new JsCodeGenerator(func.expr)
+    functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
+    console.log 'codeGen.code', codeGen.code
+    functionBody = "return " + codeGen.code
+    functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
+    innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
+    combineFunction = () ->
+      argArray = (arguments[i] for i in [0..arguments.length])
+      args = [Operations].concat(argArray)
+      innerCombineFunction.apply(null, args)
+    if codeGen.functionCalls.length
+      Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
     else
-      argStreams = (@_exprStream(a) for a in argExprs)
+      new Rx.BehaviorSubject combineFunction()
+
+
+  _providedFunctionStream: (func) ->
 
     result = switch func.kind
-              when ReactiveRunner.STREAM then func.apply null, argStreams
-              when ReactiveRunner.TRANSFORM
-                Rx.Observable.combineLatest argStreams, func
+              when ReactiveRunner.STREAM then func
+              when ReactiveRunner.TRANSFORM then func
               when ReactiveRunner.VALUE
-                if argStreams.length then Rx.Observable.combineLatest argStreams, func
+                if func.length then new Rx.BehaviorSubject func
                 else new Rx.BehaviorSubject func()
               else throw new Error("Unknown function kind:" + func.kind)
 
@@ -89,41 +97,41 @@ module.exports = class ReactiveRunner
 
   _exprStream: (expr) ->
     switch
-      when expr instanceof Literal
-        new Rx.BehaviorSubject(expr.value)
-
-      when expr instanceof InfixExpression
-        codeGen = new JsCodeGenerator(expr)
-        functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
-        console.log 'codeGen.code', codeGen.code
-        functionBody = "return " + codeGen.code
-        functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
-        innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
-        combineFunction = () ->
-          argArray = (arguments[i] for i in [0..arguments.length])
-          args = [Operations].concat(argArray)
-          innerCombineFunction.apply(null, args)
-        if codeGen.functionCalls.length
-          Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
-        else
-          new Rx.BehaviorSubject combineFunction()
-
-
-      when expr instanceof Aggregation
-        Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
-
-      when expr instanceof Sequence
-        Rx.Observable.combineLatest @_exprStreams(expr.children), sequenceFunction
+#      when expr instanceof Literal
+#        new Rx.BehaviorSubject(expr.value)
+#
+#      when expr instanceof InfixExpression
+#        codeGen = new JsCodeGenerator(expr)
+#        functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
+#        console.log 'codeGen.code', codeGen.code
+#        functionBody = "return " + codeGen.code
+#        functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
+#        innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
+#        combineFunction = () ->
+#          argArray = (arguments[i] for i in [0..arguments.length])
+#          args = [Operations].concat(argArray)
+#          innerCombineFunction.apply(null, args)
+#        if codeGen.functionCalls.length
+#          Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
+#        else
+#          new Rx.BehaviorSubject combineFunction()
+#
+#
+#      when expr instanceof Aggregation
+#        Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
+#
+#      when expr instanceof Sequence
+#        Rx.Observable.combineLatest @_exprStreams(expr.children), sequenceFunction
+#
+#      when expr instanceof AggregationSelector
+#        @_exprStream(expr.aggregation).map (x) -> el = expr.elementName; x?[el]
 
       when expr instanceof FunctionCall
         name = expr.functionName
         switch
           when func = @userFunctions[name] then @_userFunctionSubject name
-          when func = @providedFunctions[name] then @_providedFunctionStream func, expr.children
+          when func = @providedFunctions[name] then @_providedFunctionStream func
           else @_userFunctionSubject name
-
-      when expr instanceof AggregationSelector
-        @_exprStream(expr.aggregation).map (x) -> el = expr.elementName; x?[el]
 
       else
         throw new Error("Unknown expression: " + expr.constructor.name)

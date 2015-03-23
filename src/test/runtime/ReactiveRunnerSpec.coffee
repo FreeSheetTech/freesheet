@@ -131,14 +131,14 @@ describe 'ReactiveRunner runs', ->
       changesFor('five').should.eql [5]
 
     it 'function using a provided stream function with no args', ->
-      providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
+      providedStreamFunctions { theInput: new Rx.BehaviorSubject(20) }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
 
     it 'function using a provided stream function with some args', ->
-      providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
-      parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
-      changesFor('inputMinusTwo').should.eql [18]
+      providedStreamFunctions { theInput: new Rx.BehaviorSubject((x) -> x) }
+      parseUserFunctions '''inputMinusTwo = theInput(15) - 2 '''
+      changesFor('inputMinusTwo').should.eql [13]
 
     it 'function using a user function with name overriding a built-in function', ->
       providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
@@ -146,7 +146,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions '''inputMinusTwo = theInput - 2 '''
       changesFor('inputMinusTwo').should.eql [28]
 
-    it.only 'function using a provided value function with no args', ->
+    it 'function using a provided value function with no args', ->
       providedValueFunctions { theInput: -> 20 }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
@@ -274,7 +274,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{price:null}, {price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
 
     it 'to a function that uses an event stream via a provided function', ->
-      providedStreamFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       inputSubj.onNext 'Aarhon'
       inputSubj.onNext 'Zorgon'
@@ -282,7 +282,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:'Zorgon'}]
 
     it 'of a function that calls a function that uses an event stream via a provided function', ->
-      providedStreamFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: inputSubj }
       parseUserFunctions 'number = theInput(); plusOne = number + 1'
       inputSubj.onNext 10
       inputSubj.onNext 20
@@ -291,8 +291,7 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'to a function that uses an event stream via a provided function with arguments', ->
-      providedStreamFunctions inputValueWithSuffix: (prefixStream, suffixStream) ->
-        inputSubj.combineLatest prefixStream, suffixStream, (v, p, s) -> p + v + s
+      providedStreamFunctions inputValueWithSuffix: inputSubj.map (iv) -> (p, s) -> p + iv + s
 
       parseUserFunctions 'aliens = inputValueWithSuffix("some ", " stuff")'
       inputSubj.onNext 'Aarhon'
@@ -315,7 +314,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{ materials: null }, {labour: null }, {total: 0 }, {materials: 35 }, {total: 35 }, {labour: 25 }, {total: 60 }]
 
     it 'adds two changing values in formula set afterwards', ->
-      providedStreamFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'labour = theInput()'
       parseUserFunctions 'total = materials + labour'
@@ -327,7 +326,7 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'adds two changing values in function set in between', ->
-      providedStreamFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'labour = theInput()'
@@ -338,7 +337,7 @@ describe 'ReactiveRunner runs', ->
 
     it 'on individual named value including initial value', ->
 
-      providedStreamFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: inputSubj }
       parseUserFunctions 'aaa = 10'
 
       observeNamedChanges 'aaa'
