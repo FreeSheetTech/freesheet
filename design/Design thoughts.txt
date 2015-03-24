@@ -186,6 +186,16 @@ Transform functions for sequences and objects
 - Will need to generate correct JavaScript for literals, at least - quotes on string values, etc
 - Transform function needs to use current values from the streams that affect it, but have only the 'current input' as a parameter
 
+Transform functions with code generation
+----------------------------------------
+- Need to generate code for transform function calls that has action function as an argument and calls it
+- Need to know at code generation time that the second expr represents a function, not a value
+- Need to create a function stream for the action function when getting provided function stream
+- So give code generator a set of transform functions to treat differently
+- Code gen can generate function inline as local function?
+- Add any function calls to set for overall expr so appear as args to outer function and can be referenced in the local function
+
+
 Transform functions that use provided functions
 -----------------------------------------------
 - Will pass values from input to the functions

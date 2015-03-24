@@ -12,8 +12,9 @@ describe 'ReactiveRunner runs', ->
   namedChanges = null
   inputSubj = null
 
-  fromEachFunction = (seq, func) -> (func(x) for x in seq)
-  selectFunction = (seq, func) -> (x for x in seq when func(x))
+  apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
+  fromEachFunction = (seq, func) -> (apply(func, x) for x in seq)
+  selectFunction = (seq, func) -> (x for x in seq when apply(func, x))
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedValueFunctions = (functionMap) -> runner.addProvidedValueFunctions functionMap
@@ -212,7 +213,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
 
     it 'transforms all elements of a sequence to a formula including a provided stream function and values change for each value in the stream', ->
-      providedStreamFunctions { theInput: -> inputSubj }
+      providedStreamFunctions { theInput: inputSubj }
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + theInput() )'
 

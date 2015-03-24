@@ -37,6 +37,7 @@ How can it be easy to...
 - Use calculated data in text
 - Use calculated data in other elements
 - Preview the page in action while working on it
+- Easily blend in own JavaScript by just loading/referencing files
 
 Use cases
 ---------
@@ -51,5 +52,8 @@ Use cases
 - Daemon that can be set up with rules and accept input messages, pub/sub outputs
 - Public service like lambda
 - View what going on in daemon as a worksheet
+- Easily load worksheet into cloud service
+- Microservice alternative - separate processes or various worksheets in one process with streams connecting
+
 
 

@@ -67,14 +67,14 @@ module.exports = class ReactiveRunner
     subj
 
   _userFunctionStream: (func) ->
-    codeGen = new JsCodeGenerator(func.expr)
+    codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
     functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
     console.log 'codeGen.code', codeGen.code
     functionBody = "return " + codeGen.code
     functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
     innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
     combineFunction = () ->
-      argArray = (arguments[i] for i in [0..arguments.length])
+      argArray = (arguments[i] for i in [0...arguments.length])
       args = [Operations].concat(argArray)
       innerCombineFunction.apply(null, args)
     if codeGen.functionCalls.length
@@ -82,12 +82,13 @@ module.exports = class ReactiveRunner
     else
       new Rx.BehaviorSubject combineFunction()
 
+  _transformFunctionNames: -> (name for name, fn of @providedFunctions when fn.kind == ReactiveRunner.TRANSFORM)
 
   _providedFunctionStream: (func) ->
 
     result = switch func.kind
               when ReactiveRunner.STREAM then func
-              when ReactiveRunner.TRANSFORM then func
+              when ReactiveRunner.TRANSFORM then new Rx.BehaviorSubject func
               when ReactiveRunner.VALUE
                 if func.length then new Rx.BehaviorSubject func
                 else new Rx.BehaviorSubject func()
@@ -108,7 +109,7 @@ module.exports = class ReactiveRunner
 #        functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
 #        innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
 #        combineFunction = () ->
-#          argArray = (arguments[i] for i in [0..arguments.length])
+#          argArray = (arguments[i] for i in [0...arguments.length])
 #          args = [Operations].concat(argArray)
 #          innerCombineFunction.apply(null, args)
 #        if codeGen.functionCalls.length
