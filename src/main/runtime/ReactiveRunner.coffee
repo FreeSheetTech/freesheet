@@ -21,11 +21,6 @@ module.exports = class ReactiveRunner
     @allChanges = new Rx.Subject()
     @userFunctionSubjects = {}
 
-  output: (name) ->
-    func = @userFunctions[name]
-    stream = @_userFunctionStream func
-    stream
-
   addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedValueFunction: (name, fn) -> fn.kind = ReactiveRunner.VALUE; @providedFunctions[name] = fn
@@ -98,34 +93,6 @@ module.exports = class ReactiveRunner
 
   _exprStream: (expr) ->
     switch
-#      when expr instanceof Literal
-#        new Rx.BehaviorSubject(expr.value)
-#
-#      when expr instanceof InfixExpression
-#        codeGen = new JsCodeGenerator(expr)
-#        functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
-#        console.log 'codeGen.code', codeGen.code
-#        functionBody = "return " + codeGen.code
-#        functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
-#        innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
-#        combineFunction = () ->
-#          argArray = (arguments[i] for i in [0...arguments.length])
-#          args = [Operations].concat(argArray)
-#          innerCombineFunction.apply(null, args)
-#        if codeGen.functionCalls.length
-#          Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
-#        else
-#          new Rx.BehaviorSubject combineFunction()
-#
-#
-#      when expr instanceof Aggregation
-#        Rx.Observable.combineLatest @_exprStreams(expr.children), aggregateFunction(expr.childNames)
-#
-#      when expr instanceof Sequence
-#        Rx.Observable.combineLatest @_exprStreams(expr.children), sequenceFunction
-#
-#      when expr instanceof AggregationSelector
-#        @_exprStream(expr.aggregation).map (x) -> el = expr.elementName; x?[el]
 
       when expr instanceof FunctionCall
         name = expr.functionName
