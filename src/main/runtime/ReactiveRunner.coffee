@@ -64,7 +64,7 @@ module.exports = class ReactiveRunner
   _userFunctionStream: (func) ->
     codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
     functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
-    console.log 'codeGen.code', codeGen.code
+#    console.log 'codeGen.code', codeGen.code
     functionBody = "return " + codeGen.code
     functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
     innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
@@ -125,8 +125,8 @@ module.exports = class ReactiveRunner
       context = {}
       context[f.functionName] = argValue(f) for f in functionCalls  #TODO use lodash?
       functionBody = "return #{expressionCode};"
-      console.log "Generated function:\n", functionBody, "\n"
-      console.log "Context:", context, "\n\n"
+#      console.log "Generated function:\n", functionBody, "\n"
+#      console.log "Context:", context, "\n\n"
       innerFunction = new Function('_in', 'operations', 'context', functionBody)
       transformFunction = (_in) -> innerFunction _in, Operations, context
       transformFunction

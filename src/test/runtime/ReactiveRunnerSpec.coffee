@@ -131,27 +131,21 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions '''twelvePlusThree = 12 + 3; five = twelvePlusThree / 3 '''
       changesFor('five').should.eql [5]
 
-    it 'function using a provided stream function with no args', ->
-      providedStreamFunctions { theInput: new Rx.BehaviorSubject(20) }
-      parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
-      changesFor('inputMinusTwo').should.eql [18]
-
-    it 'function using a provided stream function with some args', ->
-      providedStreamFunctions { theInput: new Rx.BehaviorSubject((x) -> x) }
-      parseUserFunctions '''inputMinusTwo = theInput(15) - 2 '''
-      changesFor('inputMinusTwo').should.eql [13]
-
-    it 'function using a user function with name overriding a built-in function', ->
-      providedStreamFunctions { theInput: -> new Rx.BehaviorSubject(20) }
-      parseUserFunctions '''theInput = 30'''
-      parseUserFunctions '''inputMinusTwo = theInput - 2 '''
-      changesFor('inputMinusTwo').should.eql [28]
-
     it 'function using a provided value function with no args', ->
       providedValueFunctions { theInput: -> 20 }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
 
+    it 'function using a provided value function with some args', ->
+      providedValueFunctions { double: (x) -> x * 2 }
+      parseUserFunctions '''doubleMinusTwo = double(15) - 2 '''
+      changesFor('doubleMinusTwo').should.eql [28]
+
+    it 'function using a user function with name overriding a built-in function', ->
+      providedValueFunctions { theInput: -> 20 }
+      parseUserFunctions '''theInput = 30'''
+      parseUserFunctions '''inputMinusTwo = theInput - 2 '''
+      changesFor('inputMinusTwo').should.eql [28]
 
     it 'complex and bracketed expressions with correct precedence', ->
       parseUserFunctions 'a = 10'
