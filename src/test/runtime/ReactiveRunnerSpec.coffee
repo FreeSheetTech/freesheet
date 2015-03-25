@@ -223,10 +223,8 @@ describe 'ReactiveRunner runs', ->
       changesFor("scores").should.eql [null, [27, 30], [37, 40]]
 
     it 'transforms all elements of a sequence to a formula using a provided stream function with literal arguments and values change for each value in the stream', ->
-      providedStreamFunctions adjust:  ->
-        adjustFnGenerator = (ff) ->
-          (adjustment) -> ff + adjustment
-        inputSubj.map adjustFnGenerator
+      providedStreamFunctions
+        adjust: inputSubj.map (ff) -> (adjustment) -> ff + adjustment
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + adjust(5) )'
 
@@ -236,10 +234,8 @@ describe 'ReactiveRunner runs', ->
       changesFor("scores").should.eql [null, [32, 35], [42, 45]]    #first result is zero because adjust function not generated until first inputSubj value
 
     it 'transforms all elements of a sequence to a formula using a provided stream function with arguments from input and values change for each value in the stream', ->
-      providedStreamFunctions adjust:  ->
-        adjustFnGenerator = (ff) ->
-          (adjustment) -> ff + adjustment
-        inputSubj.startWith(0).map adjustFnGenerator
+      providedStreamFunctions
+        adjust:  inputSubj.startWith(0).map (ff) -> (adjustment) -> ff + adjustment
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, adjust(in.score) )'
 

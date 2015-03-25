@@ -29,7 +29,7 @@ describe 'TimeFunctions includes', ->
     changes = []
     runner.onChange callback
 
-  it 'timeNow - stream of current time as a Date updating every second', (done) ->
+  it 'now - stream of current time as a Date updating every second', (done) ->
     parseUserFunctions 'theTime = now()'
     checkResults = ->
       ticks = changesFor('theTime')

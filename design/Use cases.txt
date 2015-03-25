@@ -54,6 +54,9 @@ Use cases
 - View what going on in daemon as a worksheet
 - Easily load worksheet into cloud service
 - Microservice alternative - separate processes or various worksheets in one process with streams connecting
+- Page with embedded worksheet
+- Page with HTML generated on server with embedded worksheet
+- Page which does on either server or client depending on what needed
 
 
 
