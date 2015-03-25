@@ -18,7 +18,7 @@ describe 'ReactiveRunner runs', ->
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedValueFunctions = (functionMap) -> runner.addProvidedValueFunctions functionMap
-  providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
+  providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
@@ -206,8 +206,8 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
 
-    it 'transforms all elements of a sequence to a formula including a provided stream function and values change for each value in the stream', ->
-      providedStreamFunctions { theInput: inputSubj }
+    it 'transforms all elements of a sequence to a formula including a provided stream and values change for each value in the stream', ->
+      providedStreams { theInput: inputSubj }
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + theInput() )'
 
@@ -216,8 +216,8 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("scores").should.eql [null, [27, 30], [37, 40]]
 
-    it 'transforms all elements of a sequence to a formula using a provided stream function with literal arguments and values change for each value in the stream', ->
-      providedStreamFunctions
+    it 'transforms all elements of a sequence to a formula using a provided stream of a function with literal arguments and values change for each value in the stream', ->
+      providedStreams
         adjust: inputSubj.map (ff) -> (adjustment) -> ff + adjustment
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + adjust(5) )'
@@ -227,8 +227,8 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("scores").should.eql [null, [32, 35], [42, 45]]    #first result is zero because adjust function not generated until first inputSubj value
 
-    it 'transforms all elements of a sequence to a formula using a provided stream function with arguments from input and values change for each value in the stream', ->
-      providedStreamFunctions
+    it 'transforms all elements of a sequence to a formula using a provided stream of a function with arguments from input and values change for each value in the stream', ->
+      providedStreams
         adjust:  inputSubj.startWith(0).map (ff) -> (adjustment) -> ff + adjustment
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, adjust(in.score) )'
@@ -265,7 +265,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{price:null}, {price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
 
     it 'to a function that uses an event stream via a provided function', ->
-      providedStreamFunctions { theInput: inputSubj }
+      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       inputSubj.onNext 'Aarhon'
       inputSubj.onNext 'Zorgon'
@@ -273,7 +273,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:'Zorgon'}]
 
     it 'of a function that calls a function that uses an event stream via a provided function', ->
-      providedStreamFunctions { theInput: inputSubj }
+      providedStreams { theInput: inputSubj }
       parseUserFunctions 'number = theInput(); plusOne = number + 1'
       inputSubj.onNext 10
       inputSubj.onNext 20
@@ -282,7 +282,7 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'to a function that uses an event stream via a provided function with arguments', ->
-      providedStreamFunctions inputValueWithSuffix: inputSubj.map (iv) -> (p, s) -> p + iv + s
+      providedStreams inputValueWithSuffix: inputSubj.map (iv) -> (p, s) -> p + iv + s
 
       parseUserFunctions 'aliens = inputValueWithSuffix("some ", " stuff")'
       inputSubj.onNext 'Aarhon'
@@ -305,7 +305,7 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{ materials: null }, {labour: null }, {total: 0 }, {materials: 35 }, {total: 35 }, {labour: 25 }, {total: 60 }]
 
     it 'adds two changing values in formula set afterwards', ->
-      providedStreamFunctions { theInput: inputSubj }
+      providedStreams { theInput: inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'labour = theInput()'
       parseUserFunctions 'total = materials + labour'
@@ -317,7 +317,7 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'adds two changing values in function set in between', ->
-      providedStreamFunctions { theInput: inputSubj }
+      providedStreams { theInput: inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'labour = theInput()'
@@ -328,7 +328,7 @@ describe 'ReactiveRunner runs', ->
 
     it 'on individual named value including initial value', ->
 
-      providedStreamFunctions { theInput: inputSubj }
+      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aaa = 10'
 
       observeNamedChanges 'aaa'

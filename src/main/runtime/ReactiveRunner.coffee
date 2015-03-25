@@ -14,7 +14,6 @@ sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
 
 module.exports = class ReactiveRunner
   @VALUE = 'value'
-  @STREAM = 'stream'
   @TRANSFORM = 'transform'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
@@ -25,8 +24,8 @@ module.exports = class ReactiveRunner
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedValueFunction: (name, fn) -> fn.kind = ReactiveRunner.VALUE; @providedFunctions[name] = fn
   addProvidedValueFunctions: (functionMap) -> @addProvidedValueFunction n, f for n, f of functionMap
-  addProvidedStreamFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM; @providedFunctions[name] = fn
-  addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
+  addProvidedStream: (name, stream) -> @providedFunctions[name] = stream
+  addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
   addProvidedTransformFunction: (name, fn) -> fn.kind = ReactiveRunner.TRANSFORM; @providedFunctions[name] = fn
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
@@ -81,15 +80,16 @@ module.exports = class ReactiveRunner
 
   _providedFunctionStream: (func) ->
 
-    result = switch func.kind
-              when ReactiveRunner.STREAM then func
-              when ReactiveRunner.TRANSFORM then new Rx.BehaviorSubject func
-              when ReactiveRunner.VALUE
-                if func.length then new Rx.BehaviorSubject func
-                else new Rx.BehaviorSubject func()
-              else throw new Error("Unknown function kind:" + func.kind)
+    if func instanceof Rx.Observable or func instanceof Rx.Subject then func
+    else
+      result = switch func.kind
+                when ReactiveRunner.TRANSFORM then new Rx.BehaviorSubject func
+                when ReactiveRunner.VALUE
+                  if func.length then new Rx.BehaviorSubject func
+                  else new Rx.BehaviorSubject func()
+                else throw new Error("Unknown function kind:" + func.kind)
 
-    result
+      result
 
   _exprStream: (expr) ->
     switch

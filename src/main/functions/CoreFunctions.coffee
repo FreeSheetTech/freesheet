@@ -3,7 +3,6 @@ ReactiveRunner = require '../runtime/ReactiveRunner'
 _ = require 'lodash'
 
 transform = (fn) -> fn.kind = ReactiveRunner.TRANSFORM; fn
-stream = (fn) -> fn.kind = ReactiveRunner.STREAM; fn
 value = (fn) -> fn.kind = ReactiveRunner.VALUE; fn
 
 module.exports = {

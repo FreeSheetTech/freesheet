@@ -98,8 +98,10 @@ Provided function types
 - Provided functions should do the same
 - The types of function are how you call them, not what you get
 - Its actually the individual arguments that are value or stream, not the function or its return type
-- Transform functions are a bit special
 - Possible types for any individual argument are value, stream or function
+- Current function kinds just show whether the provided function needs to be wrapped in a stream or already is one
+  - this is completely separate to what types the arguments need to be
+- Transform functions are a bit special but can still fit into argument type scheme
 - Need to allow for transform functions that act on stream, not a sequence that is one value in the stream
 
 Stream functions

@@ -8,7 +8,7 @@ module.exports = class TableWorksheet
   constructor: (@el, changeCallback) ->
     @runner = new ReactiveRunner()
     @runner.onChange changeCallback
-    @runner.addProvidedStreamFunctions pageFunctions
+    @runner.addProvidedStreams pageFunctions
     @_parseTable(@runner)
 
   _parseTable: (runner) ->
