@@ -38,6 +38,7 @@ How can it be easy to...
 - Use calculated data in other elements
 - Preview the page in action while working on it
 - Easily blend in own JavaScript by just loading/referencing files
+- Manage dependencies and versions
 
 Use cases
 ---------
@@ -56,7 +57,9 @@ Use cases
 - Microservice alternative - separate processes or various worksheets in one process with streams connecting
 - Page with embedded worksheet
 - Page with HTML generated on server with embedded worksheet
-- Page which does on either server or client depending on what needed
+- Page which runs on either server or client depending on what needed
+- Desktop app like spreadsheet app
+- Desktop app that produces active documents - PDF?
 
 
 

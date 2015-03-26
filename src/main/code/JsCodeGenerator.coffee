@@ -6,11 +6,7 @@ module.exports = class JsCodeGenerator
 
   jsOperator = (op) -> if op == '<>' then '!=' else op
 
-  asList = (items, delimiters) ->
-    start = delimiters[0]
-    sep = delimiters[1]
-    end = delimiters[2]
-    if items.length then start + items.join(sep) + end else ''
+  argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
   constructor: (@expr, contextName, @transformFunctionNames = []) ->
     @functionCalls = []
@@ -48,13 +44,13 @@ module.exports = class JsCodeGenerator
         fnName = @contextPrefix + expr.functionName
         arg1 = @_generate expr.children[0]
         arg2 = @_generateFunction expr.children[1]
-        fnName + asList [arg1, arg2], '(,)'
+        fnName + argList [arg1, arg2]
 
       when expr instanceof FunctionCall
         @functionCalls.push expr if expr not in @functionCalls
         fnName = @contextPrefix + expr.functionName
         args = (@_generate(e) for e in expr.children)
-        fnName + asList args, '(,)'
+        fnName + argList args
 
 
       when expr instanceof AggregationSelector

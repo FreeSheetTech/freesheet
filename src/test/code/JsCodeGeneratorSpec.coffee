@@ -5,9 +5,7 @@ JsCodeGenerator = require './JsCodeGenerator'
 
 describe 'JsCodeGenerator', ->
 
-  @timeout 5000
-
-  genFor = (expr) -> new JsCodeGenerator expr
+  genFor = (expr, contextName, transformFunctionNames = []) -> new JsCodeGenerator expr, contextName, transformFunctionNames
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   namedValueCall = (name) -> new FunctionCall(name, name, [])
@@ -44,6 +42,20 @@ describe 'JsCodeGenerator', ->
       codeGen = genFor expr
       codeGen.code.should.eql 'theFn'
       codeGen.functionCalls.should.eql [expr]
+
+    it 'function call with arguments', ->
+      expr = new FunctionCall('theFn (10.5, "a string" )', 'theFn', [aNumber, aString])
+      codeGen = genFor expr
+      codeGen.code.should.eql 'theFn(10.5, "a string")'
+      codeGen.functionCalls.should.eql [expr]
+
+    it 'function call to transform function', ->
+      sourceExpr = new FunctionCall('theSource', 'theSource', [])
+      transformExpr = new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
+      expr = new FunctionCall('transformFn (theSource, 10.5 * "a string" )', 'transformFn', [sourceExpr, transformExpr])
+      codeGen = genFor expr, '', ['transformFn']
+      codeGen.code.should.eql 'transformFn(theSource, function(_in) { return (10.5 * "a string") })'
+      codeGen.functionCalls.should.eql [expr, sourceExpr]
 
     it 'function call to special name in changed to _in and not added to function calls', ->
       expr = new FunctionCall('in', 'in', [])

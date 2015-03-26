@@ -6,14 +6,13 @@ Operations = require './Operations'
 
 aggregateFunction = (childNames) ->
   () ->
-    result = {}  #TODO use lodash zip etc
+    result = {} #TODO use lodash zip etc
     result[childNames[i]] = arguments[i] for i in [0...childNames.length]
     result
 
 sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
 
 module.exports = class ReactiveRunner
-  @VALUE = 'value'
   @TRANSFORM = 'transform'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
@@ -22,8 +21,6 @@ module.exports = class ReactiveRunner
 
   addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
-  addProvidedValueFunction: (name, fn) -> fn.kind = ReactiveRunner.VALUE; @providedFunctions[name] = fn
-  addProvidedValueFunctions: (functionMap) -> @addProvidedValueFunction n, f for n, f of functionMap
   addProvidedStream: (name, stream) -> @providedFunctions[name] = stream
   addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
   addProvidedTransformFunction: (name, fn) -> fn.kind = ReactiveRunner.TRANSFORM; @providedFunctions[name] = fn
@@ -63,7 +60,7 @@ module.exports = class ReactiveRunner
   _userFunctionStream: (func) ->
     codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
     functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
-#    console.log 'codeGen.code', codeGen.code
+    #    console.log 'codeGen.code', codeGen.code
     functionBody = "return " + codeGen.code
     functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
     innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
@@ -82,14 +79,7 @@ module.exports = class ReactiveRunner
 
     if func instanceof Rx.Observable or func instanceof Rx.Subject then func
     else
-      result = switch func.kind
-                when ReactiveRunner.TRANSFORM then new Rx.BehaviorSubject func
-                when ReactiveRunner.VALUE
-                  if func.length then new Rx.BehaviorSubject func
-                  else new Rx.BehaviorSubject func()
-                else throw new Error("Unknown function kind:" + func.kind)
-
-      result
+      if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
 
   _exprStream: (expr) ->
     switch
@@ -123,10 +113,10 @@ module.exports = class ReactiveRunner
         args[argPos]
 
       context = {}
-      context[f.functionName] = argValue(f) for f in functionCalls  #TODO use lodash?
+      context[f.functionName] = argValue(f) for f in functionCalls #TODO use lodash?
       functionBody = "return #{expressionCode};"
-#      console.log "Generated function:\n", functionBody, "\n"
-#      console.log "Context:", context, "\n\n"
+      #      console.log "Generated function:\n", functionBody, "\n"
+      #      console.log "Context:", context, "\n\n"
       innerFunction = new Function('_in', 'operations', 'context', functionBody)
       transformFunction = (_in) -> innerFunction _in, Operations, context
       transformFunction

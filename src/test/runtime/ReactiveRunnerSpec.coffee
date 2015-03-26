@@ -17,7 +17,6 @@ describe 'ReactiveRunner runs', ->
   selectFunction = (seq, func) -> (x for x in seq when apply(func, x))
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
-  providedValueFunctions = (functionMap) -> runner.addProvidedValueFunctions functionMap
   providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
@@ -132,17 +131,17 @@ describe 'ReactiveRunner runs', ->
       changesFor('five').should.eql [5]
 
     it 'function using a provided value function with no args', ->
-      providedValueFunctions { theInput: -> 20 }
+      ((functionMap) -> providedFunctions functionMap) { theInput: -> 20 }
       parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
 
     it 'function using a provided value function with some args', ->
-      providedValueFunctions { double: (x) -> x * 2 }
+      ((functionMap) -> providedFunctions functionMap) { double: (x) -> x * 2 }
       parseUserFunctions '''doubleMinusTwo = double(15) - 2 '''
       changesFor('doubleMinusTwo').should.eql [28]
 
     it 'function using a user function with name overriding a built-in function', ->
-      providedValueFunctions { theInput: -> 20 }
+      ((functionMap) -> providedFunctions functionMap) { theInput: -> 20 }
       parseUserFunctions '''theInput = 30'''
       parseUserFunctions '''inputMinusTwo = theInput - 2 '''
       changesFor('inputMinusTwo').should.eql [28]
@@ -159,7 +158,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'a = 10'
       parseUserFunctions 'b = 20'
       parseUserFunctions 'c = 5'
-      providedValueFunctions
+      ((functionMap) -> providedFunctions functionMap)
         addOne: (a) -> a + 1
         getTheAnswer: (a, b, c) -> a + b - c
 
