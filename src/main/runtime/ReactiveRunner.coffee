@@ -12,6 +12,10 @@ aggregateFunction = (childNames) ->
 
 sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
 
+createFunction = (argNames, functionBody) ->
+  functionCreateArgs = [null].concat 'operations', argNames, functionBody
+  new (Function.bind.apply(Function, functionCreateArgs));
+
 module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
 
@@ -61,17 +65,10 @@ module.exports = class ReactiveRunner
     codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
     functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
     #    console.log 'codeGen.code', codeGen.code
-    functionBody = "return " + codeGen.code
-    functionCreateArgs = [null].concat('operations', functionCallNames, functionBody)
-    innerCombineFunction = new (Function.bind.apply(Function, functionCreateArgs));
-    combineFunction = () ->
-      argArray = (arguments[i] for i in [0...arguments.length])
-      args = [Operations].concat(argArray)
-      innerCombineFunction.apply(null, args)
-    if codeGen.functionCalls.length
-      Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), combineFunction
-    else
-      new Rx.BehaviorSubject combineFunction()
+    fullCombineFunction =  createFunction(functionCallNames, codeGen.functionBody)
+#    console.log 'fullCombineFunction', fullCombineFunction.toString()
+    args = [Operations].concat @_exprStreams(codeGen.functionCalls)
+    fullCombineFunction.apply null, args
 
   _transformFunctionNames: -> (name for name, fn of @providedFunctions when fn.kind == ReactiveRunner.TRANSFORM)
 

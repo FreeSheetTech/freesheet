@@ -1,3 +1,4 @@
+Rx = require 'rx'
 Period = require '../functions/Period'
 
 add = (a, b) ->
@@ -20,4 +21,7 @@ subtract = (a, b) ->
     else
       a - b
 
-module.exports = {add, subtract}
+combine = (streams..., combineFunction) -> Rx.Observable.combineLatest streams, combineFunction
+subject = (value) -> new Rx.BehaviorSubject value
+
+module.exports = {add, subtract, combine, subject}

@@ -12,6 +12,19 @@ module.exports = class JsCodeGenerator
     @functionCalls = []
     @contextPrefix = if contextName then contextName + '.' else ''
     @code = @_generate expr
+    @functionBody = @_generateStream expr
+
+  _generateStream: (expr) ->
+    exprCode = @_generate expr
+    functionCallNames = (fc.functionName for fc in @functionCalls)
+    args = functionCallNames.join ', '
+    combineFunctionCode = "function(#{args}) { return #{exprCode}; }"
+    streamCode = if @functionCalls.length
+        "operations.combine(#{args}, #{combineFunctionCode})"
+      else
+        "operations.subject(#{exprCode})"
+
+    "return #{streamCode};"
 
   _generate: (expr) ->
     switch
