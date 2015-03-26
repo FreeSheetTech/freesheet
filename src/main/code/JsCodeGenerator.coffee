@@ -14,23 +14,20 @@ module.exports = class JsCodeGenerator
 
 
   constructor: (@expr, contextName, @transformFunctionNames = []) ->
-    @functionCalls = []
+    @functionNames = []
     @contextPrefix = if contextName then contextName + '.' else ''
     @code = @_generate expr
     @functionBody = @_generateStream expr
 
   exprFunction: ->
-    functionCallNames = (fc.functionName for fc in @functionCalls)
-    #    console.log 'codeGen.code', codeGen.code
-    createFunction(functionCallNames, @functionBody)
+    createFunction(@functionNames, @functionBody)
 
 
   _generateStream: (expr) ->
     exprCode = @_generate expr
-    functionCallNames = (fc.functionName for fc in @functionCalls)
-    args = functionCallNames.join ', '
+    args = @functionNames.join ', '
     combineFunctionCode = "function(#{args}) { return #{exprCode}; }"
-    streamCode = if @functionCalls.length
+    streamCode = if args
         "operations.combine(#{args}, #{combineFunctionCode})"
       else
         "operations.subject(#{exprCode})"
@@ -64,15 +61,17 @@ module.exports = class JsCodeGenerator
       when expr instanceof FunctionCall and expr.functionName == 'in' then '_in'
 
       when expr instanceof FunctionCall and @_isTransformFunction expr
-        @functionCalls.push expr if expr not in @functionCalls
-        fnName = @contextPrefix + expr.functionName
+        functionName = expr.functionName
+        @functionNames.push functionName if functionName not in @functionNames
+        fnName = @contextPrefix + functionName
         arg1 = @_generate expr.children[0]
         arg2 = @_generateFunction expr.children[1]
         fnName + argList [arg1, arg2]
 
       when expr instanceof FunctionCall
-        @functionCalls.push expr if expr not in @functionCalls
-        fnName = @contextPrefix + expr.functionName
+        functionName = expr.functionName
+        @functionNames.push functionName if functionName not in @functionNames
+        fnName = @contextPrefix + functionName
         args = (@_generate(e) for e in expr.children)
         fnName + argList args
 

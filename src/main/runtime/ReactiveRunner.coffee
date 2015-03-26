@@ -61,7 +61,7 @@ module.exports = class ReactiveRunner
     codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
     fullCombineFunction =  codeGen.exprFunction()
 #    console.log 'fullCombineFunction', fullCombineFunction.toString()
-    args = [Operations].concat @_exprStreams(codeGen.functionCalls)
+    args = [Operations].concat @_exprStreams(codeGen.functionNames)
     fullCombineFunction.apply null, args
 
   _transformFunctionNames: -> (name for name, fn of @providedFunctions when fn.kind == ReactiveRunner.TRANSFORM)
@@ -72,39 +72,32 @@ module.exports = class ReactiveRunner
     else
       if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
 
-  _exprStream: (expr) ->
+  _exprStream: (name) ->
     switch
+      when func = @userFunctions[name] then @_userFunctionSubject name
+      when func = @providedFunctions[name] then @_providedFunctionStream func
+      else @_userFunctionSubject name
 
-      when expr instanceof FunctionCall
-        name = expr.functionName
-        switch
-          when func = @userFunctions[name] then @_userFunctionSubject name
-          when func = @providedFunctions[name] then @_providedFunctionStream func
-          else @_userFunctionSubject name
-
-      else
-        throw new Error("Unknown expression: " + expr.constructor.name)
-
-  _exprStreams: (exprs) -> (@_exprStream(e) for e in exprs)
+  _exprStreams: (names) -> (@_exprStream(n) for n in names)
 
   _functionStream: (expr) ->
     codeGen = new JsCodeGenerator(expr, 'context')
 
-    functionGenerator = createFunctionGenerator(codeGen.code, codeGen.functionCalls)
+    functionGenerator = createFunctionGenerator(codeGen.code, codeGen.functionNames)
     if codeGen.functionCalls.length
-      Rx.Observable.combineLatest @_exprStreams(codeGen.functionCalls), functionGenerator
+      Rx.Observable.combineLatest @_exprStreams(codeGen.functionNames), functionGenerator
     else
       new Rx.BehaviorSubject functionGenerator()
 
-  createFunctionGenerator = (expressionCode, functionCalls) ->
+  createFunctionGenerator = (expressionCode, functionNames) ->
     () ->
       args = arguments
       argValue = (functionCall) ->
-        argPos = functionCalls.indexOf(functionCall)
+        argPos = functionNames.indexOf(functionCall)
         args[argPos]
 
       context = {}
-      context[f.functionName] = argValue(f) for f in functionCalls #TODO use lodash?
+      context[f] = argValue(f) for f in functionNames #TODO use lodash?
       functionBody = "return #{expressionCode};"
       #      console.log "Generated function:\n", functionBody, "\n"
       #      console.log "Context:", context, "\n\n"

@@ -41,13 +41,13 @@ describe 'JsCodeGenerator', ->
       expr = new FunctionCall('theFn ( )', 'theFn', [])
       codeGen = genFor expr
       codeGen.code.should.eql 'theFn'
-      codeGen.functionCalls.should.eql [expr]
+      codeGen.functionNames.should.eql ['theFn']
 
     it 'function call with arguments', ->
       expr = new FunctionCall('theFn (10.5, "a string" )', 'theFn', [aNumber, aString])
       codeGen = genFor expr
       codeGen.code.should.eql 'theFn(10.5, "a string")'
-      codeGen.functionCalls.should.eql [expr]
+      codeGen.functionNames.should.eql ['theFn']
 
     it 'function call to transform function', ->
       sourceExpr = new FunctionCall('theSource', 'theSource', [])
@@ -55,13 +55,13 @@ describe 'JsCodeGenerator', ->
       expr = new FunctionCall('transformFn (theSource, 10.5 * "a string" )', 'transformFn', [sourceExpr, transformExpr])
       codeGen = genFor expr, '', ['transformFn']
       codeGen.code.should.eql 'transformFn(theSource, function(_in) { return (10.5 * "a string") })'
-      codeGen.functionCalls.should.eql [expr, sourceExpr]
+      codeGen.functionNames.should.eql ['transformFn', 'theSource']
 
     it 'function call to special name in changed to _in and not added to function calls', ->
       expr = new FunctionCall('in', 'in', [])
       codeGen = genFor expr
       codeGen.code.should.eql '_in'
-      codeGen.functionCalls.should.eql []
+      codeGen.functionNames.should.eql []
 
     it 'sequence', ->
       codeGen = genFor new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
@@ -92,4 +92,4 @@ describe 'JsCodeGenerator', ->
     it 'only the first time found', ->
       codeGen = genFor new InfixExpression('a * a', '*', [aFunctionCall, aFunctionCall])
 
-      codeGen.functionCalls.should.eql [aFunctionCall]
+      codeGen.functionNames.should.eql ['a']
