@@ -16,21 +16,21 @@ module.exports = class JsCodeGenerator
   constructor: (@expr, contextName, @transformFunctionNames = []) ->
     @functionNames = []
     @contextPrefix = if contextName then contextName + '.' else ''
-    @code = @_generate expr
-    @functionBody = @_generateStream expr
+    @code = @_generate @expr  # also collect function names
 
-  exprFunction: ->
-    createFunction(@functionNames, @functionBody)
+  exprFunction: -> createFunction(@functionNames, @exprFunctionBody())
 
+  exprFunctionBody: -> @_generateStream @expr
+
+  exprCode: -> @code
 
   _generateStream: (expr) ->
-    exprCode = @_generate expr
     args = @functionNames.join ', '
-    combineFunctionCode = "function(#{args}) { return #{exprCode}; }"
     streamCode = if args
+        combineFunctionCode = "function(#{args}) { return #{@exprCode()}; }"
         "operations.combine(#{args}, #{combineFunctionCode})"
       else
-        "operations.subject(#{exprCode})"
+        "operations.subject(#{@exprCode()})"
 
     "return #{streamCode};"
 
