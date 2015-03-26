@@ -8,11 +8,22 @@ module.exports = class JsCodeGenerator
 
   argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
+  createFunction = (argNames, functionBody) ->
+    functionCreateArgs = [null].concat 'operations', argNames, functionBody
+    new (Function.bind.apply(Function, functionCreateArgs));
+
+
   constructor: (@expr, contextName, @transformFunctionNames = []) ->
     @functionCalls = []
     @contextPrefix = if contextName then contextName + '.' else ''
     @code = @_generate expr
     @functionBody = @_generateStream expr
+
+  exprFunction: ->
+    functionCallNames = (fc.functionName for fc in @functionCalls)
+    #    console.log 'codeGen.code', codeGen.code
+    createFunction(functionCallNames, @functionBody)
+
 
   _generateStream: (expr) ->
     exprCode = @_generate expr

@@ -12,10 +12,6 @@ aggregateFunction = (childNames) ->
 
 sequenceFunction = () -> (arguments[i] for i in [0...arguments.length])
 
-createFunction = (argNames, functionBody) ->
-  functionCreateArgs = [null].concat 'operations', argNames, functionBody
-  new (Function.bind.apply(Function, functionCreateArgs));
-
 module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
 
@@ -63,9 +59,7 @@ module.exports = class ReactiveRunner
 
   _userFunctionStream: (func) ->
     codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
-    functionCallNames = (fc.functionName for fc in codeGen.functionCalls)
-    #    console.log 'codeGen.code', codeGen.code
-    fullCombineFunction =  createFunction(functionCallNames, codeGen.functionBody)
+    fullCombineFunction =  codeGen.exprFunction()
 #    console.log 'fullCombineFunction', fullCombineFunction.toString()
     args = [Operations].concat @_exprStreams(codeGen.functionCalls)
     fullCombineFunction.apply null, args
