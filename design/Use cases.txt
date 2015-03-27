@@ -60,6 +60,7 @@ Use cases
 - Page which runs on either server or client depending on what needed
 - Desktop app like spreadsheet app
 - Desktop app that produces active documents - PDF?
+- Handy calculator page eg for diet - could also do lookups
 
 
 

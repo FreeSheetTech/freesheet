@@ -1,5 +1,6 @@
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
 
+#TODO sort out mix of functions and statefulness in this class around collecting the function names
 module.exports = class JsCodeGenerator
 
   asLiteral = (value) -> JSON.stringify value

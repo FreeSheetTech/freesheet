@@ -87,12 +87,27 @@ describe 'JsCodeGenerator', ->
 
       codeGen.exprCode().should.eql '{a: 10, b: operations.add(x, y), c: [operations.add(d, operations.subtract(10, (z * 4))), "Hi!"]}'
 
-#  describe 'creates function to ', ->
-#
-#    it 'evaluate a simple expression with literals', ->
-#      codeGen = genFor new InfixExpression('10.5 * 2', '*', [aNumber, new Literal('2', 2)])
-#      operations = null
-#      codeGen.exprFunction().apply(null, operations).should.eql 21
+  describe 'creates function to generate a stream which', ->
+
+    it 'evaluates a simple expression with literals', ->
+      codeGen = genFor new InfixExpression('10.5 * 2', '*', [aNumber, new Literal('2', 2)])
+      operations = null
+      codeGen.exprFunctionBody().should.eql 'return operations.subject((10.5 * 2));'
+      result = null
+      operations = subject: (value) -> result = value
+      codeGen.exprFunction().apply(null, [operations])
+      result.should.eql(21)
+
+    it 'combines two other streams', ->
+      codeGen = genFor new InfixExpression('a * b', '*', [namedValueCall('a'), namedValueCall('b')])
+      operations = null
+      codeGen.exprFunctionBody().should.eql 'return operations.combine(a, b, function(a, b) { return (a * b); });'
+      codeGen.functionCalls = ['a', 'b']
+      result = null
+      operations = combine: (x, y, fn) -> result = fn(x, y)
+      codeGen.exprFunction().apply(null, [operations, 5, 6])
+      result.should.eql(30)
+
 
   describe 'stores function calls', ->
 
