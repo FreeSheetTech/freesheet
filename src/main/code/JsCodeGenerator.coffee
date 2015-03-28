@@ -12,7 +12,8 @@ createFunction = (argNames, functionBody) ->
 
 exprFunction = (expr, functionInfo) ->
   {code, functionNames} = exprFunctionBody expr, functionInfo
-  createFunction functionNames, code
+  theFunction = createFunction functionNames, code
+  {theFunction, functionNames}
 
 exprFunctionBody = (expr, functionInfo) ->
   {code, functionNames} = exprCode expr, functionInfo

@@ -100,7 +100,7 @@ describe 'JsCodeGenerator', ->
       exprFunctionBody(expr).code.should.eql 'return operations.subject((10.5 * 2));'
       result = null
       operations = subject: (value) -> result = value
-      exprFunction(expr).apply(null, [operations])
+      exprFunction(expr, {}).theFunction.apply(null, [operations])
       result.should.eql(21)
 
     it 'combines two other streams', ->
@@ -110,8 +110,9 @@ describe 'JsCodeGenerator', ->
       exprFunctionBody(expr, functionInfo).functionCalls = ['a', 'b']
       result = null
       operations = combine: (x, y, fn) -> result = fn(x, y)
-      exprFunction(expr, functionInfo).apply(null, [operations, 5, 6])
+      exprFunction(expr, functionInfo).theFunction.apply(null, [operations, 5, 6])
       result.should.eql(30)
+      exprFunction(expr, functionInfo).functionCalls = ['a', 'b']
 
 
   describe 'stores function calls', ->

@@ -50,13 +50,14 @@ module.exports = class ReactiveRunner
     subj
 
   _userFunctionStream: (func) ->
-    codeGen = new JsCodeGenerator(func.expr, null, @_transformFunctionNames())
-    fullCombineFunction =  codeGen.exprFunction()
-#    console.log 'fullCombineFunction', fullCombineFunction.toString()
-    args = [Operations].concat (@_functionStream(n) for n in codeGen.functionNames)
-    fullCombineFunction.apply null, args
+    {theFunction, functionNames} = JsCodeGenerator.exprFunction func.expr, @_functionInfo()
+    args = [Operations].concat (@_functionStream(n) for n in functionNames)
+    theFunction.apply null, args
 
-  _transformFunctionNames: -> (name for name, fn of @providedFunctions when fn.kind == ReactiveRunner.TRANSFORM)
+  _functionInfo: ->
+    result = {}
+    result[name] = {kind: ReactiveRunner.TRANSFORM} for name, fn of @providedFunctions when fn.kind == ReactiveRunner.TRANSFORM
+    result
 
   _providedFunctionStream: (func) ->
     if func instanceof Rx.Observable or func instanceof Rx.Subject then func
