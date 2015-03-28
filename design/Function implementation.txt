@@ -110,12 +110,22 @@ Stream functions
     addFive = <function needing value input>
     total = <function requiring stream input>
     b = consecutiveInputs()
+    c = 10
     a = addFive(b)                  ==> combine(b, function(xb) { return addFive(xb) })
     tot = total(b)                  ==> total(b)
     tot5 = total(addFive(b))        ==> total( combine( b, function(xb) { return addFive(xb) })
+    tot5a = total(b + c)            ==> total( combine( b, c, function(xb, xc) { return xb + xc })
     totPlus = addFive(total(b))     ==> combine( total(b), function(x) { return addFive(x) })
+    totPlusa = total(b) + c         ==> combine( total(b), c, function(x, c) { return x + c })
     totXX = total(addFive(b)) + addTen(c)
         ==> combine( total( combine( b, function(x) { return addFive(x) })), c, function (x,y) { return x + addTen(y) } )
+
+    nested1 =   addFive( aValue( addTen(c) + addFive(d) ) + addTen(e))
+        ===> combine( c, d, e, function(c, d, e) { return addFive( aValue( addTen(c) + addFive(d) ) + addTen(e)) })
+
+    nestedTot = addFive( total( addTen(c) + addFive(d) ) + addTen(e))
+        ===>    totStream = total( combine( c, d, function(c, d) { return addTen(c) + addFive(d); } ))
+                combine( totStream, e, function (totStream, e) { return addFive( totStream + addTen(e)
 
 - Code generation --
 - Has to generate code to create a stream function
@@ -127,3 +137,31 @@ Stream functions
 - Generator needs to be able to generate code for an expr and wrap it in a stream
 - Need to know functions called in that expr to get the params for the combine
 - Also need to roll up functions called into outer expr to get streams needed
+
+- Code to generate for an expr --
+
+- At top-level function body:
+    - depends on return type of expr
+    - if expr is a function call
+        - if return kind is value: combine
+        - if return kind is stream: as is
+    - else
+        - combine or subject
+
+- Inside exprs:
+    - depends on how expr is being used, not on expr itself
+    - if expr is an arg to a stream arg: combine expr
+    - if expr is an arg to a value arg: just the expr
+
+- So need to know return kind as well as arg kinds
+- All functions need to end up taking and returning streams - value functions just a convenience for provider
+- Doesn't make much sense to have arg kind different to return kind
+- At outer level needs to create a combine call for all referenced streams
+- Most streams will be user defined functions
+- A stream function creates its own local stream within the expression
+- A stream function argument requires a combine of all the streams that sub-expression
+- Those streams are still needed at the outer level arguments, but will not appear in the outer level combine
+- So really need recursive generate calls and to get the function calls just for a sub-expression
+- Clearer if local streams declared as vars in generated code - need to have deeper ones declared first
+- So need to return local streams created as well as external functions referenced
+-
