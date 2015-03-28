@@ -1,71 +1,77 @@
 should = require 'should'
 {Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector} = require '../ast/Expressions'
 TextParser = require '../parser/TextParser'
-JsCodeGenerator = require './JsCodeGenerator'
+{exprCode, exprFunctionBody, exprFunction} = require './JsCodeGenerator'
 
 describe 'JsCodeGenerator', ->
 
-  genFor = (expr, contextName, transformFunctionNames = []) -> new JsCodeGenerator expr, contextName, transformFunctionNames
+  code = null
+  functionNames = null
+  genFor = (expr, functionInfo = {}) -> {code, functionNames} = exprCode expr, functionInfo
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   namedValueCall = (name) -> new FunctionCall(name, name, [])
   aFunctionCall = namedValueCall('a')
 
+  beforeEach ->
+    code = null
+    functionNames = null
+
   describe 'Generates code for', ->
 
     it 'string literal', ->
-      codeGen = genFor new Literal('abc', 'abc')
-      codeGen.exprCode().should.eql '"abc"'
+      genFor new Literal('abc', 'abc')
+      code.should.eql '"abc"'
 
     it 'numeric literal', ->
-      codeGen = genFor new Literal('10.5', 10.5)
-      codeGen.exprCode().should.eql '10.5'
+      genFor new Literal('10.5', 10.5)
+      code.should.eql '10.5'
 
     it 'add expression with two literals', ->
-      codeGen = genFor new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
-      codeGen.exprCode().should.eql 'operations.add(10.5, "a string")'
+      genFor new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
+      code.should.eql 'operations.add(10.5, "a string")'
 
     it 'subtract expression with two literals', ->
-      codeGen = genFor new InfixExpression('10.5 - "a string"', '-', [aNumber, aString])
-      codeGen.exprCode().should.eql 'operations.subtract(10.5, "a string")'
+      genFor new InfixExpression('10.5 - "a string"', '-', [aNumber, aString])
+      code.should.eql 'operations.subtract(10.5, "a string")'
 
     it 'infix expression with two literals', ->
-      codeGen = genFor new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
-      codeGen.exprCode().should.eql '(10.5 * "a string")'
+      genFor new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
+      code.should.eql '(10.5 * "a string")'
 
     it 'not equal expression with two literals', ->
-      codeGen = genFor new InfixExpression('10.5 <> "a string"', '<>', [aNumber, aString])
-      codeGen.exprCode().should.eql '(10.5 != "a string")'
+      genFor new InfixExpression('10.5 <> "a string"', '<>', [aNumber, aString])
+      code.should.eql '(10.5 != "a string")'
 
     it 'function call with no arguments', ->
       expr = new FunctionCall('theFn ( )', 'theFn', [])
-      codeGen = genFor expr
-      codeGen.exprCode().should.eql 'theFn'
-      codeGen.functionNames.should.eql ['theFn']
+      genFor expr
+      code.should.eql 'theFn'
+      functionNames.should.eql ['theFn']
 
     it 'function call with arguments', ->
       expr = new FunctionCall('theFn (10.5, "a string" )', 'theFn', [aNumber, aString])
-      codeGen = genFor expr
-      codeGen.exprCode().should.eql 'theFn(10.5, "a string")'
-      codeGen.functionNames.should.eql ['theFn']
+      genFor expr
+      code.should.eql 'theFn(10.5, "a string")'
+      functionNames.should.eql ['theFn']
 
     it 'function call to transform function', ->
       sourceExpr = new FunctionCall('theSource', 'theSource', [])
       transformExpr = new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
       expr = new FunctionCall('transformFn (theSource, 10.5 * "a string" )', 'transformFn', [sourceExpr, transformExpr])
-      codeGen = genFor expr, '', ['transformFn']
-      codeGen.exprCode().should.eql 'transformFn(theSource, function(_in) { return (10.5 * "a string") })'
-      codeGen.functionNames.should.eql ['transformFn', 'theSource']
+      genFor expr, {transformFn: {kind: 'transform'}}
+      code.should.eql 'transformFn(theSource, function(_in) { return (10.5 * "a string") })'
+      functionNames.should.eql ['transformFn', 'theSource']
 
     it 'function call to special name in changed to _in and not added to function calls', ->
       expr = new FunctionCall('in', 'in', [])
-      codeGen = genFor expr
-      codeGen.exprCode().should.eql '_in'
-      codeGen.functionNames.should.eql []
+      genFor expr
+      code.should.eql '_in'
+      functionNames.should.eql []
 
     it 'sequence', ->
-      codeGen = genFor new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
-      codeGen.exprCode().should.eql '[10.5, "a string"]'
+      genFor new Sequence('[  10.5, "a string"]', [ aNumber, aString ] )
+      code.should.eql '[10.5, "a string"]'
 
     it 'aggregation', ->
       expr = new Aggregation('{abc1_: " a string ", _a_Num:10.5}', {
@@ -73,45 +79,44 @@ describe 'JsCodeGenerator', ->
         _a_Num: new Literal('10.5', 10.5)
       })
 
-      codeGen = genFor expr
-      codeGen.exprCode().should.eql '{abc1_: " a string ", _a_Num: 10.5}'
+      genFor expr
+      code.should.eql '{abc1_: " a string ", _a_Num: 10.5}'
 
     it 'aggregation selector', ->
-      codeGen = genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
-      codeGen.exprCode().should.eql '(abc).def'
+      genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
+      code.should.eql '(abc).def'
 
     it 'a complex expression', ->
       originalCode = '  { a:10, b : x +y, c: [d + 10 - z* 4, "Hi!"]  } '
       expr = new TextParser(originalCode).expression()
-      codeGen = genFor expr
+      genFor expr
 
-      codeGen.exprCode().should.eql '{a: 10, b: operations.add(x, y), c: [operations.add(d, operations.subtract(10, (z * 4))), "Hi!"]}'
+      code.should.eql '{a: 10, b: operations.add(x, y), c: [operations.add(d, operations.subtract(10, (z * 4))), "Hi!"]}'
 
   describe 'creates function to generate a stream which', ->
 
     it 'evaluates a simple expression with literals', ->
-      codeGen = genFor new InfixExpression('10.5 * 2', '*', [aNumber, new Literal('2', 2)])
-      operations = null
-      codeGen.exprFunctionBody().should.eql 'return operations.subject((10.5 * 2));'
+      expr = new InfixExpression('10.5 * 2', '*', [aNumber, new Literal('2', 2)])
+      exprFunctionBody(expr).code.should.eql 'return operations.subject((10.5 * 2));'
       result = null
       operations = subject: (value) -> result = value
-      codeGen.exprFunction().apply(null, [operations])
+      exprFunction(expr).apply(null, [operations])
       result.should.eql(21)
 
     it 'combines two other streams', ->
-      codeGen = genFor new InfixExpression('a * b', '*', [namedValueCall('a'), namedValueCall('b')])
-      operations = null
-      codeGen.exprFunctionBody().should.eql 'return operations.combine(a, b, function(a, b) { return (a * b); });'
-      codeGen.functionCalls = ['a', 'b']
+      expr = new InfixExpression('a * b', '*', [namedValueCall('a'), namedValueCall('b')])
+      functionInfo = {}
+      exprFunctionBody(expr, functionInfo).code.should.eql 'return operations.combine(a, b, function(a, b) { return (a * b); });'
+      exprFunctionBody(expr, functionInfo).functionCalls = ['a', 'b']
       result = null
       operations = combine: (x, y, fn) -> result = fn(x, y)
-      codeGen.exprFunction().apply(null, [operations, 5, 6])
+      exprFunction(expr, functionInfo).apply(null, [operations, 5, 6])
       result.should.eql(30)
 
 
   describe 'stores function calls', ->
 
     it 'only the first time found', ->
-      codeGen = genFor new InfixExpression('a * a', '*', [aFunctionCall, aFunctionCall])
+      genFor new InfixExpression('a * a', '*', [aFunctionCall, aFunctionCall])
 
-      codeGen.functionNames.should.eql ['a']
+      functionNames.should.eql ['a']
