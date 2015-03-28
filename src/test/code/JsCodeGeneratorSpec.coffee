@@ -8,6 +8,7 @@ describe 'JsCodeGenerator', ->
   code = null
   functionNames = null
   genFor = (expr, functionInfo = {}) -> {code, functionNames} = exprCode expr, functionInfo
+  genBodyFor = (expr, functionInfo = {}) -> {code, functionNames} = exprFunctionBody expr, functionInfo
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   namedValueCall = (name) -> new FunctionCall(name, name, [])
@@ -97,7 +98,9 @@ describe 'JsCodeGenerator', ->
 
     it 'evaluates a simple expression with literals', ->
       expr = new InfixExpression('10.5 * 2', '*', [aNumber, new Literal('2', 2)])
-      exprFunctionBody(expr).code.should.eql 'return operations.subject((10.5 * 2));'
+      genBodyFor expr
+      code.should.eql 'return operations.subject((10.5 * 2));'
+
       result = null
       operations = subject: (value) -> result = value
       exprFunction(expr, {}).theFunction.apply(null, [operations])
@@ -106,18 +109,41 @@ describe 'JsCodeGenerator', ->
     it 'combines two other streams', ->
       expr = new InfixExpression('a * b', '*', [namedValueCall('a'), namedValueCall('b')])
       functionInfo = {}
-      exprFunctionBody(expr, functionInfo).code.should.eql 'return operations.combine(a, b, function(a, b) { return (a * b); });'
-      exprFunctionBody(expr, functionInfo).functionCalls = ['a', 'b']
+      genBodyFor expr, functionInfo
+      code.should.eql 'return operations.combine(a, b, function(a, b) { return (a * b); });'
+      functionNames.should.eql ['a', 'b']
+
       result = null
       operations = combine: (x, y, fn) -> result = fn(x, y)
       exprFunction(expr, functionInfo).theFunction.apply(null, [operations, 5, 6])
       result.should.eql(30)
       exprFunction(expr, functionInfo).functionCalls = ['a', 'b']
 
+    it 'combines a transform function and another stream', ->
+      expr = new FunctionCall('fromEach( games, 10.5 )', 'fromEach', [namedValueCall('games'), aNumber])
+      functionInfo = fromEach: {kind: 'transform'}
+      genBodyFor expr, functionInfo
+      code.should.eql 'return operations.combine(fromEach, games, function(fromEach, games) { return fromEach(games, function(_in) { return 10.5 }); });'
+      functionNames.should.eql ['fromEach', 'games']
+
+  describe 'Generates code for calls to stream functions with', ->
+
+    functionInfo = total: {kind: 'stream'}
+
+    it 'one argument', ->
+      genBodyFor new FunctionCall('total(b)', 'total', [namedValueCall('b')]), functionInfo
+      code.should.eql 'return total(b);'
+      functionNames.should.eql ['total', 'b']
+
+    it 'one argument which is a normal function call', ->
+      genBodyFor new FunctionCall('total(addFive(b))', 'total', [new FunctionCall('addFive(b)', 'addFive', [namedValueCall('b')])]), functionInfo
+      code.should.eql 'return total(operations.combine(addFive, b, function(addFive, b) { return addFive(b); }));'
+      functionNames.should.eql ['total', 'addFive', 'b']
 
   describe 'stores function calls', ->
 
     it 'only the first time found', ->
       genFor new InfixExpression('a * a', '*', [aFunctionCall, aFunctionCall])
-
       functionNames.should.eql ['a']
+
+

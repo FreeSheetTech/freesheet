@@ -15,16 +15,30 @@ exprFunction = (expr, functionInfo) ->
   theFunction = createFunction functionNames, code
   {theFunction, functionNames}
 
+combineCode = (argNames, exprCode) ->
+  args = argNames.join ', '
+  "operations.combine(#{args}, function(#{args}) { return #{exprCode}; })"
+
+subjectCode = (exprCode) -> "operations.subject(#{exprCode})"
+
+isStreamFunctionCall = (expr, functionInfo) -> expr instanceof FunctionCall and functionInfo[expr.functionName]?.kind == 'stream'
+isNoArgsFunctionCall = (expr) -> expr instanceof FunctionCall and expr.children.length == 0
+
+streamCode = (expr, functionInfo, code, functionNames) ->
+  if isStreamFunctionCall(expr, functionInfo)
+    code
+  else if isNoArgsFunctionCall(expr)
+    code
+  else if functionNames.length
+    combineCode(functionNames, code)
+  else
+    subjectCode(code)
+
 exprFunctionBody = (expr, functionInfo) ->
   {code, functionNames} = exprCode expr, functionInfo
-  args = functionNames.join ', '
-  streamCode = if args
-    combineFunctionCode = "function(#{args}) { return #{code}; }"
-    "operations.combine(#{args}, #{combineFunctionCode})"
-  else
-    "operations.subject(#{code})"
+  bodyCode = streamCode(expr, functionInfo, code, functionNames)
 
-  {code: "return #{streamCode};", functionNames}
+  {code: "return #{bodyCode};", functionNames}
 
 exprCode = (expr, functionInfo) ->
   functionNames = []
@@ -35,11 +49,18 @@ exprCode = (expr, functionInfo) ->
   generateFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }"
 
   isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transform'
+  isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
 
   getCodeAndAccumulateFunctions = (expr) ->
     exprResult = exprCode expr, functionInfo
     accumulateFunctionNames exprResult.functionNames
     exprResult.code
+
+  getStreamCodeAndAccumulateFunctions = (expr) ->
+    exprResult = exprCode expr, functionInfo
+    accumulateFunctionNames exprResult.functionNames
+
+    streamCode expr, functionInfo, exprResult.code, exprResult.functionNames
 
   code = switch
     when expr instanceof Literal
@@ -64,6 +85,10 @@ exprCode = (expr, functionInfo) ->
       items = (getCodeAndAccumulateFunctions(e) for e in expr.children)
       '[' + items.join(', ') + ']'
 
+    when expr instanceof AggregationSelector
+      aggCode = getCodeAndAccumulateFunctions expr.aggregation
+      "(#{aggCode}).#{expr.elementName}"
+
     when expr instanceof FunctionCall and expr.functionName == 'in' then '_in'
 
     when expr instanceof FunctionCall and isTransformFunction expr
@@ -73,15 +98,17 @@ exprCode = (expr, functionInfo) ->
       arg2 = generateFunction expr.children[1]
       functionName + argList [arg1, arg2]
 
+    when expr instanceof FunctionCall and isStreamFunction expr
+      functionName = expr.functionName
+      accumulateFunctionName functionName
+      args = (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
+      functionName + argList args
+
     when expr instanceof FunctionCall
       functionName = expr.functionName
       accumulateFunctionName functionName
       args = (getCodeAndAccumulateFunctions(e) for e in expr.children)
       functionName + argList args
-
-    when expr instanceof AggregationSelector
-      aggCode = getCodeAndAccumulateFunctions expr.aggregation
-      "(#{aggCode}).#{expr.elementName}"
 
     else
       throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)

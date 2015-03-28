@@ -137,6 +137,7 @@ Stream functions
 - Generator needs to be able to generate code for an expr and wrap it in a stream
 - Need to know functions called in that expr to get the params for the combine
 - Also need to roll up functions called into outer expr to get streams needed
+- Remember: all arguments to the generated function are streams - even provided functions
 
 - Code to generate for an expr --
 
