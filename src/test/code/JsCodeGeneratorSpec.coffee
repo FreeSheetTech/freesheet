@@ -142,10 +142,17 @@ describe 'JsCodeGenerator', ->
 
     it 'inside a normal function', ->
       genBodyFor new FunctionCall('addFive(total(b))', 'addFive', [new FunctionCall('total(b)', 'total', [namedValueCall('b')])]), functionInfo
-
-      console.log functionNames
       code.should.eql 'var total_1 = total(b);\nreturn operations.combine(addFive, total_1, function(addFive, total_1) { return addFive(total_1); });'
       functionNames.should.eql ['addFive', 'total', 'b']
+
+    it 'with an expression as an argument', ->
+      originalCode = 'addFive( total( addTen(c) * addFive(d) ) / addTen(e))'
+      expr = new TextParser(originalCode).expression()
+      genBodyFor expr, functionInfo
+
+      code.should.eql '''var total_1 = total(operations.combine(addTen, c, addFive, d, function(addTen, c, addFive, d) { return (addTen(c) * addFive(d)); }));
+                         return operations.combine(addFive, total_1, addTen, e, function(addFive, total_1, addTen, e) { return addFive((total_1 / addTen(e))); });'''
+      functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'd', 'e']
 
   describe 'stores function calls', ->
 
