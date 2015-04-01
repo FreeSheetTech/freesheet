@@ -128,7 +128,9 @@ describe 'JsCodeGenerator', ->
 
   describe 'Generates code for calls to stream functions', ->
 
-    functionInfo = total: {kind: 'stream'}
+    functionInfo =
+      total: {kind: 'stream'}
+      average: {kind: 'stream'}
 
     it 'with one argument', ->
       genBodyFor new FunctionCall('total(b)', 'total', [namedValueCall('b')]), functionInfo
@@ -153,6 +155,18 @@ describe 'JsCodeGenerator', ->
       code.should.eql '''var total_1 = total(operations.combine(addTen, c, addFive, d, function(addTen, c, addFive, d) { return (addTen(c) * addFive(d)); }));
                          return operations.combine(addFive, total_1, addTen, e, function(addFive, total_1, addTen, e) { return addFive((total_1 / addTen(e))); });'''
       functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'd', 'e']
+
+    it 'complex expression with multiple streams at different levels and function used twice in one combine', ->
+      originalCode = 'addFive( total( addTen(c) * addFive( average( c * total(addTen(d)) ) / addTen(e))))'
+      expr = new TextParser(originalCode).expression()
+      genBodyFor expr, functionInfo
+
+      code.should.eql '''var total_1 = total(operations.combine(addTen, d, function(addTen, d) { return addTen(d); }));
+                         var average_1 = average(operations.combine(c, total_1, function(c, total_1) { return (c * total_1); }));
+                         var total_2 = total(operations.combine(addTen, c, addFive, average_1, e, function(addTen, c, addFive, average_1, e) { return (addTen(c) * addFive((average_1 / addTen(e)))); }));
+                         return operations.combine(addFive, total_2, function(addFive, total_2) { return addFive(total_2); });'''
+      functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'average', 'd', 'e']
+
 
   describe 'stores function calls', ->
 

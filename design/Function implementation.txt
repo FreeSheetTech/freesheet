@@ -166,3 +166,17 @@ Stream functions
 - Clearer if local streams declared as vars in generated code - need to have deeper ones declared first
 - So need to return local streams created as well as external functions referenced
 -
+
+- For stream function, we need to:
+   - accumulate function name of function itself up to top level
+   - accumulate function names of functions used in arguments up to top level
+   - create a local stream name
+   - create a local stream expr - combine names of this expr and arguments if multiple inputs
+   - accumulate the local stream up to top level
+   - use the local stream name as the expr
+   - Use the local stream name in the combine at the next level
+   - Use the function names from this expr and arguments in the combine of the local stream expr
+   - Do not pass the function names from this expr or arguments to the combine at the next level
+
+
+

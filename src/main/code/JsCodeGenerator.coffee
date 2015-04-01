@@ -49,12 +49,17 @@ exprCode = (expr, functionInfo) ->
   localStreams = []
   combineNames = []
 
+  localStreamName = (name) ->
+    startsWithName = (ls) -> ls.name.indexOf(name + '_') == 0
+    existingStreamsCount = localStreams.filter(startsWithName).length
+    name + '_' + (existingStreamsCount + 1)
+
   accumulateFunctionName = (name) -> functionNames.push name if name not in functionNames
-  accumulateLocalStream = (name, code) -> localStreams.unshift {name, code}
   accumulateFunctionNames = (names) -> accumulateFunctionName(n) for n in names
+  accumulateLocalStream = (name, code) -> localStreams.unshift {name, code}
   accumulateLocalStreams = (streams) -> localStreams.unshift s for s in streams
-  accumulateCombineName = (name) -> combineNames.push name
-  accumulateCombineNames = (names) -> combineNames = combineNames.concat names
+  accumulateCombineName = (name) -> combineNames.push name if name not in combineNames
+  accumulateCombineNames = (names) -> accumulateCombineName(n) for n in names
 
   generateFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }"
 
@@ -124,28 +129,11 @@ exprCode = (expr, functionInfo) ->
       accumulateFunctionName functionName
       args = (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
       lsCode = functionName + argList args
-      lsName = functionName + "_1"
+      lsName = localStreamName functionName
       accumulateLocalStream lsName, lsCode
       accumulateCombineName lsName
       lsName
 
-#      [ 'addFive', 'total', 'b' ]
-#      Expected :"var total_1 = total(b);\nreturn operations.combine(addFive, total_1, function(addFive, total_1) { return addFive(total_1); });"
-#      Actual   :"var total_1 = total(b);\nreturn operations.combine(addFive, total, b, function(addFive, total, b) { return addFive(total_1); });"
-#
-#      For stream function, we need to:
-#         - accumulate function name of function itself up to top level
-#         - accumulate function names of functions used in arguments up to top level
-#         - create a local stream name
-#         - create a local stream expr - combine names of this expr and arguments if multiple inputs
-#         - accumulate the local stream up to top level
-#         - use the local stream name as the expr
-#         - Use the local stream name in the combine at the next level
-#         - Use the function names from this expr and arguments in the combine of the local stream expr
-#         - Do not pass the function names from this expr or arguments to the combine at the next level
-#
-#
-#
 
     when expr instanceof FunctionCall
       functionName = expr.functionName
