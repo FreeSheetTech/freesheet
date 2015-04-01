@@ -280,4 +280,5 @@ Reusing functions
 - If click on a formula that uses the function, show instance for that function
 - Import just by calling an import function and giving it a name - named values can also be functions
 - Functions may load dependencies transitively
+- If all worksheets are pure and effects have to be explicitly connected, makes it safer to reuse others' worksheets
 

@@ -126,19 +126,26 @@ describe 'JsCodeGenerator', ->
       code.should.eql 'return operations.combine(fromEach, games, function(fromEach, games) { return fromEach(games, function(_in) { return 10.5 }); });'
       functionNames.should.eql ['fromEach', 'games']
 
-  describe 'Generates code for calls to stream functions with', ->
+  describe 'Generates code for calls to stream functions', ->
 
     functionInfo = total: {kind: 'stream'}
 
-    it 'one argument', ->
+    it 'with one argument', ->
       genBodyFor new FunctionCall('total(b)', 'total', [namedValueCall('b')]), functionInfo
-      code.should.eql 'return total(b);'
+      code.should.eql 'var total_1 = total(b);\nreturn total_1;'
       functionNames.should.eql ['total', 'b']
 
-    it 'one argument which is a normal function call', ->
+    it 'with one argument which is a normal function call', ->
       genBodyFor new FunctionCall('total(addFive(b))', 'total', [new FunctionCall('addFive(b)', 'addFive', [namedValueCall('b')])]), functionInfo
-      code.should.eql 'return total(operations.combine(addFive, b, function(addFive, b) { return addFive(b); }));'
+      code.should.eql 'var total_1 = total(operations.combine(addFive, b, function(addFive, b) { return addFive(b); }));\nreturn total_1;'
       functionNames.should.eql ['total', 'addFive', 'b']
+
+    it 'inside a normal function', ->
+      genBodyFor new FunctionCall('addFive(total(b))', 'addFive', [new FunctionCall('total(b)', 'total', [namedValueCall('b')])]), functionInfo
+
+      console.log functionNames
+      code.should.eql 'var total_1 = total(b);\nreturn operations.combine(addFive, total_1, function(addFive, total_1) { return addFive(total_1); });'
+      functionNames.should.eql ['addFive', 'total', 'b']
 
   describe 'stores function calls', ->
 

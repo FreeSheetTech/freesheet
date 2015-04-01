@@ -159,6 +159,7 @@ Stream functions
 - Doesn't make much sense to have arg kind different to return kind
 - At outer level needs to create a combine call for all referenced streams
 - Most streams will be user defined functions
+NEXT:
 - A stream function creates its own local stream within the expression
 - A stream function argument requires a combine of all the streams that sub-expression
 - Those streams are still needed at the outer level arguments, but will not appear in the outer level combine
