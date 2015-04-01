@@ -18,6 +18,7 @@ describe 'ReactiveRunner runs', ->
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
+  providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
@@ -246,6 +247,20 @@ describe 'ReactiveRunner runs', ->
                           {pointsFactor: 6}, {fudgeFactor: 4},
                           {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
 
+  describe 'stream functions', ->
+
+    it 'finds the total of the values in a stream', ->
+      providedStreams { theInput: inputSubj }
+      providedStreamFunctions
+        total: (s) ->
+          s.scan( (acc, x) -> acc + x)
+      parseUserFunctions 'tot = total(theInput)'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+      inputSubj.onNext 40
+
+      changesFor("tot").should.eql [null, 20, 50, 90]
 
 
   describe 'updates dependent expressions and notifies changes', ->

@@ -167,7 +167,7 @@ Stream functions
 - So need to return local streams created as well as external functions referenced
 -
 
-- For stream function, we need to:
+- For stream function code generation, we need to:
    - accumulate function name of function itself up to top level
    - accumulate function names of functions used in arguments up to top level
    - create a local stream name
@@ -178,5 +178,6 @@ Stream functions
    - Use the function names from this expr and arguments in the combine of the local stream expr
    - Do not pass the function names from this expr or arguments to the combine at the next level
 
-
+- For stream functions in runner, we need to:
+  - provide the stream function to the expr function as a function, not wrapped in a stream
 

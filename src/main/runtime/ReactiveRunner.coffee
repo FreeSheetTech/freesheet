@@ -6,6 +6,7 @@ Operations = require './Operations'
 
 module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
+  @STREAM = 'stream'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @allChanges = new Rx.Subject()
@@ -17,6 +18,8 @@ module.exports = class ReactiveRunner
   addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
   addProvidedTransformFunction: (name, fn) -> fn.kind = ReactiveRunner.TRANSFORM; @providedFunctions[name] = fn
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
+  addProvidedStreamFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM; @providedFunctions[name] = fn
+  addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
     name = funcDef.name
@@ -51,21 +54,22 @@ module.exports = class ReactiveRunner
 
   _userFunctionStream: (func) ->
     {theFunction, functionNames} = JsCodeGenerator.exprFunction func.expr, @_functionInfo()
-    args = [Operations].concat (@_functionStream(n) for n in functionNames)
+    args = [Operations].concat (@_functionArg(n) for n in functionNames)
     theFunction.apply null, args
 
   _functionInfo: ->
     result = {}
-    result[name] = {kind: ReactiveRunner.TRANSFORM} for name, fn of @providedFunctions when fn.kind == ReactiveRunner.TRANSFORM
+    result[name] = {kind: fn.kind} for name, fn of @providedFunctions when fn.kind
     result
+
+  _functionArg: (name) ->
+    switch
+      when func = @userFunctions[name] then @_userFunctionSubject name
+      when (func = @providedFunctions[name])? and func.kind == ReactiveRunner.STREAM then func
+      when func = @providedFunctions[name] then @_providedFunctionStream func
+      else @_userFunctionSubject name
 
   _providedFunctionStream: (func) ->
     if func instanceof Rx.Observable or func instanceof Rx.Subject then func
     else
       if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
-
-  _functionStream: (name) ->
-    switch
-      when func = @userFunctions[name] then @_userFunctionSubject name
-      when func = @providedFunctions[name] then @_providedFunctionStream func
-      else @_userFunctionSubject name
