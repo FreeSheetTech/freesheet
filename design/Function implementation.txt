@@ -165,7 +165,6 @@ Stream functions
 - So really need recursive generate calls and to get the function calls just for a sub-expression
 - Clearer if local streams declared as vars in generated code - need to have deeper ones declared first
 - So need to return local streams created as well as external functions referenced
--
 
 - For stream function code generation, we need to:
    - accumulate function name of function itself up to top level
@@ -181,3 +180,8 @@ Stream functions
 - For stream functions in runner, we need to:
   - provide the stream function to the expr function as a function, not wrapped in a stream
 
+Streams and sequences
+---------------------
+- itemsOf - could be just a marker to say 'generate different code'
+- Really just getting a different stream either way
+- Maybe generating code for overall exprs so don't have separate stream for each expr now makes this more difficult
