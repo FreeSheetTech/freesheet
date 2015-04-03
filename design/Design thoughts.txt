@@ -166,7 +166,6 @@ Sequences and objects
 - Could use stream functions for streams and sequences, but say which you are doing?
 
 
-
 Transform functions for sequences and objects
 ---------------------------------------------
 - Easily pass through individual parts or all input values so can add properties
