@@ -163,6 +163,8 @@ Sequences and objects
   - only one input stream and one output stream
 - Can list functions/expressions still pick up other values like inputs or times?
 - Poss: No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
+- Could use stream functions for streams and sequences, but say which you are doing?
+
 
 
 Transform functions for sequences and objects
@@ -281,4 +283,42 @@ Reusing functions
 - Import just by calling an import function and giving it a name - named values can also be functions
 - Functions may load dependencies transitively
 - If all worksheets are pure and effects have to be explicitly connected, makes it safer to reuse others' worksheets
+- If all worksheets are pure, they will be far easier to re-use
+- If users can create impure worksheets, they won't be bothered to clean them up for reuse
+- Testing much easier with pure worksheets
 
+Transform and aggregation functions
+-----------------------------------
+- Transform is sequence -> sequence
+- Aggregation is sequence -> value
+- Both may apply either to a stream or to sequence values delivered by a stream
+- In many cases obvious which you want, in others not
+- FRP map + function is elided by this language
+-
+- Users want to use same functions
+- Function providers want to reuse them
+- Possible approaches:
+  - Try to guess according to way it is used
+  - Automatically generate two different function names
+  - Assume apply to sequence value, use a modifier like foreach to apply to the stream
+  - Assume apply to the stream, use a modifier like valueOf to apply to individual values
+- Normal assumption is that functions apply to values
+- Applying across stream values is an extension to spreadsheet paradigm so should be different
+- Have a function like 'itemsOf' to mean 'treat as a stream, not individual values'
+  - eg count(questions) vs count(itemsof(questions))
+- How use same function to do running total of stream values and all values of a sequence?
+- Stream from sequence ends, but asynchronous.  Use special scheduler?
+- Can we write all functions in stream style and have them automatically applied to sequences by framework?
+- How know which code to generate?
+- Transform functions - can also be applied to stream or sequence
+  - eg select(itemsof(answers), it > 5)
+- Does this mean a change from functions being stream functions to just being sequence functions applied to stream or sequence?
+- Any way to make itemsOf automatically present something different to the caller?
+
+Teaching people to use it
+-------------------------
+
+- Build up a worksheet which does something interesting, like playing a game
+- Have people fill in formulas one by one
+- Check answer
+- Some people will never get to events, so do that later - pay for what you use
