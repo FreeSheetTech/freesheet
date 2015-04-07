@@ -1,14 +1,10 @@
 Parser = require './Parser'
+_ = require 'lodash'
 
 module.exports = class TextParser
   constructor: (@text) ->
 
   expression: -> Parser.parse @text, {startRule: 'expression'}
   functionDefinition: -> Parser.parse @text, {startRule: 'functionDefinition'}
-  functionDefinitionMap: ->
-    functions = Parser.parse @text, {startRule: 'functionDefinitionList'}
-#    console.log "Functions ", functions
-    result = {}
-    result[f.name] = f for f in functions
-    result
-
+  functionDefinitionList: ->  Parser.parse @text, {startRule: 'functionDefinitionList'}
+  functionDefinitionMap: -> _.indexBy @functionDefinitionList(), 'name'

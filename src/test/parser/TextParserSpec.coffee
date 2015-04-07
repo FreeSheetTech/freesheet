@@ -11,6 +11,7 @@ describe 'TextParser parses', ->
   expressionFor = (text) -> new TextParser(text).expression()
   functionFor = (text) -> new TextParser(text).functionDefinition()
   functionMapFor = (text) -> new TextParser(text).functionDefinitionMap()
+  functionListFor = (text) -> new TextParser(text).functionDefinitionList()
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
@@ -171,6 +172,20 @@ describe 'TextParser parses', ->
         fn1: new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
         fn2: new UserFunction('fn2', ['a', 'bbb'], new InfixExpression('22/10.5', '/', [aNumber22, aNumber]))
       }
+
+    it 'with many functions separated by a semicolon, as a list', ->
+      functionListFor('fn1 = 10.5 / 22; \n fn2 (a, bbb) = 22/10.5').should.eql [
+          new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22])),
+          new UserFunction('fn2', ['a', 'bbb'], new InfixExpression('22/10.5', '/', [aNumber22, aNumber]))
+        ]
+
+
+#      TODO make parser recognise newlines to separate functions
+#    it 'with many functions separated by a newline', ->
+#      functionMapFor('fn1 = 10.5 / 22\nfn2  = 22/10.5').should.eql {
+#        fn1: new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
+#        fn2: new UserFunction('fn2', ['a', 'bbb'], new InfixExpression('22/10.5', '/', [aNumber22, aNumber]))
+#      }
 
     it 'with zero functions', ->
       functionMapFor('   ').should.eql {}

@@ -61,6 +61,7 @@ Use cases
 - Desktop app like spreadsheet app
 - Desktop app that produces active documents - PDF?
 - Handy calculator page eg for diet - could also do lookups
+- Tool for processing text inputs
 
 
 

@@ -52,6 +52,7 @@ Knows its parent expression?
 
 Inputs and Outputs
 ==================
+- Worksheet has named inputs   eg input size; input type
 
 
 Representations
