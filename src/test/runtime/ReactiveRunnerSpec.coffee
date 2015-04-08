@@ -24,6 +24,7 @@ describe 'ReactiveRunner runs', ->
     map = new TextParser(text).functionDefinitionMap()
     (v for k, v of map)
   parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
+  removeUserFunction = (name) -> runner.removeUserFunction name
 
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
@@ -354,7 +355,34 @@ describe 'ReactiveRunner runs', ->
 
       namedChanges.should.eql [{aaa: 10}, {xxx: null}, {bbb: null}, {bbb: null}, {bbb: 'value of bbb'}]
 
+  describe 'removes named functions so that', ->
 
+    it 'all changes no longer invokes callback', ->
+      providedStreams { theInput: inputSubj }
+      parseUserFunctions 'aliens = theInput()'
+      inputSubj.onNext 'Aarhon'
+
+      removeUserFunction 'aliens'
+      inputSubj.onNext 'Zorgon'
+
+      changes.should.eql [{aliens:null}, {aliens:'Aarhon'}]
+
+    it 'named change no longer invokes callback', ->
+      providedStreams { theInput: inputSubj }
+      parseUserFunctions 'aliens = theInput()'
+      observeNamedChanges 'aliens'
+      inputSubj.onNext 'Aarhon'
+
+      removeUserFunction 'aliens'
+      inputSubj.onNext 'Zorgon'
+
+      namedChanges.should.eql [{aliens:null}, {aliens:'Aarhon'}]
+
+    it 'does nothing for a non-existent function', ->
+      removeUserFunction 'xxx'
+
+    it 'does the right thing if delete a user function used in formulas', ->
+      assert false
 
 #  it 'function with one arg which is a literal', ->
 #    scriptFunctions = parse '''addFive(n) = n + 5; total = addFive(14)'''
