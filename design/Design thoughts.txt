@@ -229,6 +229,7 @@ Programming environment
 - Can use own styling in an HTML worksheet table eg for comments/headings
 - Separate streams might lead to better debugging, but maybe better to use tools to evaluate highlighted exprs on the fly
 - Can add any expression to worksheet at any time, so can have a tool where highlight an expr and it shows value in a popup
+- Can add own JS/CS functions
 
 Named values
 ------------

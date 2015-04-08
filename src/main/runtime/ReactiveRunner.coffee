@@ -39,8 +39,12 @@ module.exports = class ReactiveRunner
 
   onChange: (callback, name) ->
     if name
-      subj = @_userFunctionSubject name
-      subj.subscribe (value) -> callback name, value
+      @allChanges.subscribe (nameValue) -> if nameValue[0] == name then callback nameValue[0], nameValue[1]
+      if subj = @userFunctionSubjects[name]
+        callback name, subj.value
+      else
+        @_newUserFunctionSubject name
+#      subj.subscribe (value) -> callback name, value
     else
       @allChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 

@@ -9,11 +9,11 @@ module.exports = class TextRunner
   clear: -> @removeFunction f.name for f in @functionDefinitions()
 
   load: (text) ->
-    loadedDefs = new TextParser(text).functionDefinitionMap()
+    @_defs = new TextParser(text).functionDefinitionList()
 
   asText: ->
 
-  functionDefinitions: -> (f for f in @_defs)
+  functionDefinitions: -> @_defs[..]
 
   updateFunction: (name, definition) ->
     newDef = (name) ->
