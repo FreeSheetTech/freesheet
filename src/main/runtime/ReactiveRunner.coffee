@@ -42,7 +42,8 @@ module.exports = class ReactiveRunner
       subj.onNext(null)
       subj.sourceSub?.dispose()
       subj.allChangesSub.dispose()
-      delete @userFunctionSubjects[name]
+      for name, subj of @userFunctionSubjects
+        if not subj.hasObservers() then delete @userFunctionSubjects[name]
 
   onChange: (callback, name) ->
     if name

@@ -381,7 +381,7 @@ describe 'ReactiveRunner runs', ->
     it 'does nothing for a non-existent function', ->
       removeUserFunction 'xxx'
 
-    it 'uses null if delete a user function used in formulas', ->
+    it 'sends null to other functions that use it', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       parseUserFunctions 'greetings = "Hi " + aliens '
@@ -393,6 +393,23 @@ describe 'ReactiveRunner runs', ->
 
       namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings:'Hi null'}]
       changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens:null}, {greetings:'Hi null'}]
+
+#      test of internals
+    it 'cleans up user function subjects when no longer used', ->
+      providedStreams { theInput: inputSubj }
+      parseUserFunctions 'aliens = theInput()'
+      parseUserFunctions 'greetings = "Hi " + aliens '
+      runner.userFunctionSubjects.should.have.property('aliens')
+      runner.userFunctionSubjects.should.have.property('greetings')
+
+      removeUserFunction 'aliens'
+      runner.userFunctionSubjects.should.have.property('aliens')
+      runner.userFunctionSubjects.should.have.property('greetings')
+
+      removeUserFunction 'greetings'
+      runner.userFunctionSubjects.should.not.have.property('aliens')
+      runner.userFunctionSubjects.should.not.have.property('greetings')
+
 
 #  it 'function with one arg which is a literal', ->
 #    scriptFunctions = parse '''addFive(n) = n + 5; total = addFive(14)'''
