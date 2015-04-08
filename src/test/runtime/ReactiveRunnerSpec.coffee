@@ -357,7 +357,7 @@ describe 'ReactiveRunner runs', ->
 
   describe 'removes named functions so that', ->
 
-    it 'all changes no longer invokes callback', ->
+    it 'all changes sends a null and no longer invokes callback', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       inputSubj.onNext 'Aarhon'
@@ -365,9 +365,9 @@ describe 'ReactiveRunner runs', ->
       removeUserFunction 'aliens'
       inputSubj.onNext 'Zorgon'
 
-      changes.should.eql [{aliens:null}, {aliens:'Aarhon'}]
+      changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:null}]
 
-    it 'named change no longer invokes callback', ->
+    it 'named change sends a null and no longer invokes callback', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       observeNamedChanges 'aliens'
@@ -376,13 +376,23 @@ describe 'ReactiveRunner runs', ->
       removeUserFunction 'aliens'
       inputSubj.onNext 'Zorgon'
 
-      namedChanges.should.eql [{aliens:null}, {aliens:'Aarhon'}]
+      namedChanges.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:null}]
 
     it 'does nothing for a non-existent function', ->
       removeUserFunction 'xxx'
 
-    it 'does the right thing if delete a user function used in formulas', ->
-      assert false
+    it 'uses null if delete a user function used in formulas', ->
+      providedStreams { theInput: inputSubj }
+      parseUserFunctions 'aliens = theInput()'
+      parseUserFunctions 'greetings = "Hi " + aliens '
+      observeNamedChanges 'greetings'
+      inputSubj.onNext 'Aarhon'
+
+      removeUserFunction 'aliens'
+      inputSubj.onNext 'Zorgon'
+
+      namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings:'Hi null'}]
+      changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens:null}, {greetings:'Hi null'}]
 
 #  it 'function with one arg which is a literal', ->
 #    scriptFunctions = parse '''addFive(n) = n + 5; total = addFive(14)'''

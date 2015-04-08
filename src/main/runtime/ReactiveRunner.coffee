@@ -39,6 +39,7 @@ module.exports = class ReactiveRunner
 
   removeUserFunction: (name) ->
     if subj = @userFunctionSubjects[name]
+      subj.onNext(null)
       subj.sourceSub?.dispose()
       subj.allChangesSub.dispose()
       delete @userFunctionSubjects[name]
