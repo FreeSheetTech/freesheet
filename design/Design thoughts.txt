@@ -230,6 +230,9 @@ Programming environment
 - Separate streams might lead to better debugging, but maybe better to use tools to evaluate highlighted exprs on the fly
 - Can add any expression to worksheet at any time, so can have a tool where highlight an expr and it shows value in a popup
 - Can add own JS/CS functions
+- Click/hover to see documentation for functions/parameters
+- Choose from functions available
+- Worksheet tool needs AST to give help and debugging tools
 
 Named values
 ------------
@@ -338,7 +341,7 @@ Managing subscriptions and user functions
 - Can use hasObservers and dispose on Rx.Subject
 - If remove a user function used in other functions, then same situation as if it was used in a function before it is defined - send null or error
 - Need to handle situation where user function is removed, but subject kept because used in another function, then that removed - need to clean up first one
-
+- Changes: good if only had one change per function per input eg total depends on a and b, b depends on a, a changes, total emits two changes
 
 Teaching people to use it
 -------------------------
