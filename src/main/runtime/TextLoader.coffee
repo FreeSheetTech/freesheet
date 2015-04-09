@@ -15,6 +15,7 @@ module.exports = class TextLoader
     @setFunction f for f in @_defs
 
   asText: ->
+    ("#{d.name} = #{d.expr.text.trim()};\n" for d in @_defs).join('')
 
   functionDefinitions: -> @_defs[..]
 
