@@ -150,6 +150,7 @@ Sequences and objects
 - Some list operators need static lists eg sorting may need IxJS
 - Dot operator creates a stream with pluck for one item
 - Need object expressions
+- Should use a function instead of special brackets eg LIST(a, 10, d * 4) and GROUP(a: 10, b: d * 4) - special syntax - more familiar
 - Need to filter as well as transform
 - BUT for simple case, non-reusable, can you just refer to the input value by name?
 - Sequences automatically have expression applied to every element

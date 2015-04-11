@@ -19,11 +19,12 @@ module.exports = class TextLoader
 
   functionDefinitions: -> @_defs[..]
 
-  setFunctionAsText: (name, definition) ->
+  setFunctionAsText: (name, definition, oldName) ->
     funcDef = new TextParser(name + ' = ' + definition).functionDefinition()
-    @setFunction funcDef
+    @setFunction funcDef, oldName
 
-  setFunction: (funcDef) ->
+  setFunction: (funcDef, oldName) ->
+    if oldName then @removeFunction oldName
     defIndex = _.findIndex @_defs, (x) -> x.name == funcDef.name
     if defIndex == -1 then defIndex = @_defs.length
     @runner.addUserFunction funcDef
@@ -32,6 +33,6 @@ module.exports = class TextLoader
   removeFunction: (name) ->
     def = _.find @_defs, (x) -> x.name == name
     @runner.removeUserFunction name
-    @_defs.pull def
+    _.pull @_defs, def
 
   parseDefinitions: (text) ->  new TextParser(text).functionDefinitionList()

@@ -1,0 +1,22 @@
+{
+  "name": "freesheet",
+  "version": "0.1.0",
+  "description": "An Excel-like functional programming language for end-users",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/boocockp/freesheet.git"
+  },
+  "homepage": "https://github.com/boocockp/freesheet",
+  "dependencies": {
+    "lodash": "^3.3.1"
+  },
+  "devDependencies": {
+    "chai": "^2.2.0",
+    "should": "^4.1.0",
+    "sinon": "^1.14.1",
+    "sinon-chai": "^2.7.0"
+  }
+}
