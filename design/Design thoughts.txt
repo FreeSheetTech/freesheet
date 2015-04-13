@@ -351,3 +351,4 @@ Teaching people to use it
 - Have people fill in formulas one by one
 - Check answer
 - Some people will never get to events, so do that later - pay for what you use
+- In tutorial games, time how long it takes people to answer questions so you know which are the tough ones
