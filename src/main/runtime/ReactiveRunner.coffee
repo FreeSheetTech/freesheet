@@ -26,14 +26,11 @@ module.exports = class ReactiveRunner
     @userFunctions[name] = funcDef
     source = @_userFunctionStream funcDef
 
-    if subj = @userFunctionSubjects[name]
-      subj.sourceSub?.dispose()
-      subj.sourceSub = source.subscribe subj
-    else
-      subj = @userFunctionSubjects[name] = new Rx.BehaviorSubject(null)
-      subj.sourceSub = source.subscribe subj
+    subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(null))
+    subj.sourceSub?.dispose()
+    subj.sourceSub = source.subscribe subj
+    if not subj.allChangesSub
       subj.allChangesSub = subj.subscribe (value) => @allChanges.onNext [name, value]
-
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
@@ -41,7 +38,9 @@ module.exports = class ReactiveRunner
     if subj = @userFunctionSubjects[name]
       subj.onNext(null)
       subj.sourceSub?.dispose()
+      subj.sourceSub = null
       subj.allChangesSub.dispose()
+      subj.allChangesSub = null
       for name, subj of @userFunctionSubjects
         if not subj.hasObservers() then delete @userFunctionSubjects[name]
 

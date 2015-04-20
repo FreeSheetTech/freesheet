@@ -41,6 +41,7 @@ Immediate to do
 - Core functions
 - Error handling
     - Date and time period arithmetic
+- Streams stopped when dependents removed - eg now() and map to elapsed
 
 Future steps
 ------------

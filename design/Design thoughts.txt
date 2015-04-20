@@ -44,6 +44,8 @@ Thoughts
 - A worksheet is a function mapping a set of input event sequences to a set of outputs
 - Or maybe a single sequence of input event combinations to a single sequence of output event combinations
 - Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
+- Connects up with the idea of state being the history of an object
+- Which connects up with setting up test data by performing sequence of operations on the system
 - Need to be able to use functions as first class objects - it is FP, after all
 - Do functions have to be defined separately or can they be nested within another sheet?
 - How do things like filtering on input or adding a value to a column

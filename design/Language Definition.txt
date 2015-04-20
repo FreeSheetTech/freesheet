@@ -142,6 +142,10 @@ Name scope
 - If take most local, could use items for different scopes for different elements if some elements didn't contain the name - v confusing
 - Prefix names: in/out, current/this
 
+Functional stuff
+----------------
+- Ok to do functional equivalence? - it would be with no args, so why not more - vs extensional equivalence
+- Function composition?   - or just too confusing, can do with nested calls anyway
 
 Issues
 ======
