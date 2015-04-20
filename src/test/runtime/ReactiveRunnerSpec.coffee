@@ -387,6 +387,16 @@ describe 'ReactiveRunner runs', ->
     it 'does nothing for a non-existent function', ->
       removeUserFunction 'xxx'
 
+    it 'does nothing if a function removed twice', ->
+      parseUserFunctions 'aliens = theInput()'
+      removeUserFunction 'aliens'
+      removeUserFunction 'aliens'
+
+    it 'does nothing if a function removed twice while still in use by other functions', ->
+      parseUserFunctions 'aliens = "zorg"; greetings =  "Hi " + aliens'
+      removeUserFunction 'aliens'
+      removeUserFunction 'aliens'
+
     it 'sends null to other functions that use it', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'

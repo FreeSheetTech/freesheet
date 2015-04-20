@@ -39,7 +39,7 @@ module.exports = class ReactiveRunner
       subj.onNext(null)
       subj.sourceSub?.dispose()
       subj.sourceSub = null
-      subj.allChangesSub.dispose()
+      subj.allChangesSub?.dispose()
       subj.allChangesSub = null
       for name, subj of @userFunctionSubjects
         if not subj.hasObservers() then delete @userFunctionSubjects[name]
