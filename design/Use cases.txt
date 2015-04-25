@@ -45,6 +45,8 @@ Use cases
 - Standalone calculation and understanding engine eg pricing
 - Run a worksheet as a server side API
 - Database read and update
+- Transparent data access
+- Data held in worksheets - esp reference data
 - Other web service access and filtering
 - Programmer uses to generate JS and use in another program
 - End user customises an application
@@ -63,6 +65,8 @@ Use cases
 - Handy calculator page eg for diet - could also do lookups
 - Tool for processing text inputs
 - Add own JS/CS functions, lodash available, store with worksheet - trusted cases only
+- Modular application with many scripts referencing each other
+- Accounting system with some fixed parts and some user-modifiable parts
 
 
 

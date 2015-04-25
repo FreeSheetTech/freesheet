@@ -45,6 +45,8 @@ Thoughts
 - Or maybe a single sequence of input event combinations to a single sequence of output event combinations
 - Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
 - Connects up with the idea of state being the history of an object
+- Current value is init state with every update folded in
+- May need to snapshot state at intervals - manual or auto, each year or after every update?
 - Which connects up with setting up test data by performing sequence of operations on the system
 - Need to be able to use functions as first class objects - it is FP, after all
 - Do functions have to be defined separately or can they be nested within another sheet?
@@ -76,6 +78,7 @@ Thoughts
 - Data load should just be a function that returns an input stream, single complex value, include anywhere
 - May want to include function results as top-level definitions on the page - could just be named worksheet with one unnamed row
 - Re-use worksheet functions from any other page - just has to be a parseable table
+- Or keep worksheets in script form
 - Could publish pages of library functions - just put documentation and examples on the page with them
 - Consider saving all inputs in dev mode to replay when a formula changes
 - Maybe all function streams should have distinct on them
@@ -93,7 +96,7 @@ Thoughts
 - A worksheet at top level of page with no inputs looks like a data value, but may still have formulas
 - Instantiation: top-level worksheets with no inputs will normally be objects on the page
 - Functions: how distinguish functions with no inputs from top-level value objects
-- Functions with no inputs can still reference implicit inputs, such as form fields or data retrieval
+- Functions with no inputs can still reference implicit inputs, such as form fields or data retrieval - at least in a "connector" sheet
 - Function call in a cell may expand to a big multi-level table
 - In tables, a function with no inputs and just a simple output is represented by a single formula cell and its value
 - More flexible with values in the same cell as formula, like Excel, with styling to show one or other or both - could easily use CSS to look like two cells
@@ -345,6 +348,7 @@ Managing subscriptions and user functions
 - If remove a user function used in other functions, then same situation as if it was used in a function before it is defined - send null or error
 - Need to handle situation where user function is removed, but subject kept because used in another function, then that removed - need to clean up first one
 - Changes: good if only had one change per function per input eg total depends on a and b, b depends on a, a changes, total emits two changes
+- Does the set of observers need to change depending on the current values of the expr - or does Rx take care of that?
 
 Teaching people to use it
 -------------------------

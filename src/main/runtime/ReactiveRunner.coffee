@@ -12,6 +12,7 @@ module.exports = class ReactiveRunner
     @allChanges = new Rx.Subject()
     @userFunctionSubjects = {}
 
+  # TODO  addProvidedFunction and addProvidedStream do the same thing
   addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedStream: (name, stream) -> @providedFunctions[name] = stream

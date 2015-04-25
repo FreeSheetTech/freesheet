@@ -1,0 +1,43 @@
+Embedded worksheets
+===================
+
+Aims
+----
+
+- Create a worksheet in any HTML page
+- Embed a worksheet in a CK editor
+- Edit the worksheet in place, save code along with page
+- Edit a standalone worksheet and save as a document on site
+- Import a worksheet
+- See values of worksheet live while editing?
+- See when editing but hide the worksheet when page viewed
+- See the worksheet when page viewed for debugging
+- Enter formulas in worksheet and save them with the page
+- Link inputs on worksheet to elements/events on the page
+- Link outputs of the worksheet to actions on the page
+- Easily use worksheet outputs in template placeholders on the page
+- Allow for reuse and import
+- Allow for linking multiple worksheets
+- Allow for testing
+
+Thoughts
+--------
+- Running a Freesheet script in a page is different to having a worksheet
+- The table is just a tool to help editing and debugging
+- Include FS runtime to be able to run scripts
+- Scripts included with script tags
+- Include FS worksheet JS to be able to see a worksheet for any included script
+- Worksheets may appear in page on load, or appear on demand, or pop up
+- Can work in any HTML page
+- Should also work inside a CKEditor
+- Need to update the text in the script at a suitable point
+- The worksheet is not saved in the HTML
+- If script is loaded externally, need a protocol for updating the script - or not?
+- Need to be able to insert scripts just by asking for a new worksheet - for less-techie users
+- Worksheets may be hidden when page in use - so debugging could appear anywhere
+- Worksheets may be intended to be visible, so want them at a particular place in the page
+- May want to hide formula column
+- Data worksheets are different
+- Calculator sheets and connector sheets
+- Connector sheets intended just to link calculator sheets to i/o
+- Can you enforce this or is it just a convention?
