@@ -67,6 +67,7 @@ Use cases
 - Add own JS/CS functions, lodash available, store with worksheet - trusted cases only
 - Modular application with many scripts referencing each other
 - Accounting system with some fixed parts and some user-modifiable parts
+- Web app - each function is an endpoint - one sheet per request
 
 
 

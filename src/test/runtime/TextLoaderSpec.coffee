@@ -13,6 +13,7 @@ describe 'TextLoader', ->
 
   loader = null
   runner = null
+  changeCallback = null
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
   fn1 = new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
@@ -23,6 +24,7 @@ describe 'TextLoader', ->
     runner =
       addUserFunction: sinon.spy()
       removeUserFunction: sinon.spy()
+      onChange: (fn) -> changeCallback = fn
     loader = new TextLoader(runner)
 
 
@@ -76,5 +78,31 @@ describe 'TextLoader', ->
     loader.functionDefinitions().should.eql [fn2]
     runner.removeUserFunction.should.have.been.calledWith('fn1')
     runner.addUserFunction.should.not.have.been.called
+
+  it 'loads all definitions from text and adds them to those already there', ->
+    loader._defs = [fn3]
+    loader.loadDefinitions '   fn1 = 10.5 / 22;\n\n\nfn2 = 22+10.5;\n'
+    loader.functionDefinitions().should.eql [fn3, fn1, fn2]
+
+  it 'gets definitions with values in order', ->
+    loader._defs = [fn3, fn1, fn2]
+    changeCallback 'fn3', 10
+    changeCallback 'fn2', 'ABC'
+    loader.functionDefinitionsAndValues().should.eql [
+      {name: 'fn3', definition: fn3, value: 10}
+      {name: 'fn1', definition: fn1, value: null}
+      {name: 'fn2', definition: fn2, value: 'ABC'}
+    ]
+
+  it 'updates values with changes', ->
+    loader._defs = [fn3, fn2]
+    loader._defs = [fn3, fn2]
+    changeCallback 'fn3', 10
+    changeCallback 'fn3', 'ABC'
+    loader.functionDefinitionsAndValues().should.eql [
+      {name: 'fn3', definition: fn3, value: 'ABC'}
+      {name: 'fn2', definition: fn2, value: null}
+    ]
+
 
 

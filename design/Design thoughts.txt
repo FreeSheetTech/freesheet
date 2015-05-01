@@ -261,6 +261,7 @@ Worksheets
 - For large arrays of objects, show as table if seem to have "similar" keys in each object
 - Display headings and 2-3 rows, with expansion options to see all, maybe paginated
 - Inputs defined at top of worksheet, can enter values for testing in col 2
+- Good to keep worksheet similar to text: preserve blank lines and comments, but formulas may span several lines and parser ignores them
 
 Issues
 ------

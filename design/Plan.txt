@@ -30,6 +30,8 @@ Next steps
 - Multiple updating displays for all usages of function
 - Data loading functions
 - Actions on output events
+- Define own functions
+- Data tables
 
 Immediate to do
 ---------------

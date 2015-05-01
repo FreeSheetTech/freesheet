@@ -5,19 +5,23 @@ module.exports = class TextLoader
 
   constructor: (@runner) ->
     @_defs = []
+    @_values = {}
+    @runner.onChange (name, value) => @_values[name] = value
 
   clear: ->
     @runner.removeUserFunction f.name for f in @_defs
     @_defs = []
 
   loadDefinitions: (text) ->
-    @_defs = @parseDefinitions text
+    @_defs = @_defs.concat @parseDefinitions text
     @setFunction f for f in @_defs
 
   asText: ->
     ("#{d.name} = #{d.expr.text.trim()};\n" for d in @_defs).join('')
 
   functionDefinitions: -> @_defs[..]
+
+  functionDefinitionsAndValues: -> _.map @_defs, (def) => {name: def.name, definition: def, value: @_values[def.name] or null}
 
   setFunctionAsText: (name, definition, oldName, beforeName) ->
     funcDef = new TextParser(name + ' = ' + definition).functionDefinition()
