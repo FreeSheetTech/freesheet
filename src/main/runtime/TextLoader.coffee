@@ -38,8 +38,8 @@ module.exports = class TextLoader
         defIndex = beforeIndex
         # insert new element in middle of array
         @_defs[beforeIndex...beforeIndex] = null
-    @runner.addUserFunction funcDef
     @_defs[defIndex] = funcDef
+    @runner.addUserFunction funcDef
 
   removeFunction: (name) ->
     def = _.find @_defs, (x) -> x.name == name

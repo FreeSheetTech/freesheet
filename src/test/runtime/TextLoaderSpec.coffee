@@ -104,5 +104,15 @@ describe 'TextLoader', ->
       {name: 'fn2', definition: fn2, value: null}
     ]
 
+  it 'sets a function and adds it to definitions and values before runner onChange triggered', ->
+    runner.addUserFunction = (fn) ->
+      changeCallback fn.name, 99
+      loader.functionDefinitions().should.eql [fn2]
+      loader.functionDefinitionsAndValues().should.eql [
+        {name: 'fn2', definition: fn2, value: 99}
+      ]
+
+    loader._defs = []
+    loader.setFunctionAsText('fn2', ' 22+10.5 ', 'fn2', 'fn3')
 
 

@@ -15,5 +15,6 @@ module.exports = class Sheet
   update: (name, definition, oldName, beforeName) -> @loader.setFunctionAsText name, definition, oldName, beforeName
   remove: (name) -> @loader.removeFunction name
   formulas: -> @loader.functionDefinitions()
+  formulasAndValues: -> @loader.functionDefinitionsAndValues()
   addFunctions: (functionMap) -> @runner.addProvidedFunctions functionMap
   onChange: (callback, name) -> @runner.onChange callback, name
