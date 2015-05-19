@@ -41,3 +41,12 @@ Thoughts
 - Calculator sheets and connector sheets
 - Connector sheets intended just to link calculator sheets to i/o
 - Can you enforce this or is it just a convention?
+
+Programming in the page
+-----------------------
+- Can show inline or src script as worksheet
+- Can edit worksheet
+- How save the worksheet - inline and separate file
+- How make it clear to user they are editing a shared resource
+- Can you edit a worksheet on its own outside a page?
+

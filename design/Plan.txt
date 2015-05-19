@@ -55,5 +55,6 @@ Future steps
 - Open source but pay for hosting
 - Instant play and save
 - JSFiddle-like instant worksheet page
+- Works in JSFiddle
 
 

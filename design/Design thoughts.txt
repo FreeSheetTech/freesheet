@@ -359,3 +359,5 @@ Teaching people to use it
 - Check answer
 - Some people will never get to events, so do that later - pay for what you use
 - In tutorial games, time how long it takes people to answer questions so you know which are the tough ones
+- Compare to familiar things eg big expressions vs separate defs -> one long sentence in English vs separate definitions
+- You are just saying what things mean, and you need to learn a few words

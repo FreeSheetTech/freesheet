@@ -20,6 +20,20 @@ Invoice with line items
 - Want to show for each line item: input data and price, tax, total
 - Want to show for invoice: input data, no of items, item total, tax total, invoice total
 
+Standalone web page
+-------------------
+- Hosted on any website eg S3
+- Edited in IDE
+- Source in Github
+- Freesheet scripts are part of the source like HTML, JS, CSS
+- Script has inputs from page elements
+- Script updates page elements
+- Show worksheet in page for debugging
+- Show worksheet in page for editing and updating
+- Worksheet hidden/not created in normal mode
+- Worksheet events on definition change so can do something to save the change
+
+
 How would you do...
 -------------------
 - A space invaders game
@@ -67,7 +81,12 @@ Use cases
 - Add own JS/CS functions, lodash available, store with worksheet - trusted cases only
 - Modular application with many scripts referencing each other
 - Accounting system with some fixed parts and some user-modifiable parts
-- Web app - each function is an endpoint - one sheet per request
+- User-modifiable worksheets and application worksheets
+- Web app - each function is an endpoint - one sheet instance per request
+- Worksheets where only formulas can be changed
+- Runtime Environments: server/node, web page, standalone
+- Programming environments: IDE, browser, standalone
+
 
 
 
