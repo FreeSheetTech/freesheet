@@ -58,3 +58,12 @@ Future steps
 - Works in JSFiddle
 
 
+Stages of usefulness
+--------------------
+
+- Worksheet with save/load: demo concept, results visible in worksheet
+- Embedded script creating worksheet: show worksheet in web page
+- Embedded script with templating: HTML created active web page, compact language, debugging
+
+- ??? : develop script in worksheet and save
+- ??? : WYSIWYG page development

@@ -32,6 +32,14 @@ describe 'TextLoader', ->
     loader._defs = [fn1, fn2]
     loader.asText().should.eql 'fn1 = 10.5 / 22;\nfn2 = 22+10.5;\n'
 
+  it 'gets a definition by name', ->
+    loader._defs = [fn1, fn2]
+    loader.getFunction('fn2').should.eql fn2
+
+  it 'gets text of a definition by name', ->
+    loader._defs = [fn1, fn2]
+    loader.getFunctionAsText('fn2').should.eql '22+10.5'
+
   it 'sets a function from a FunctionDefinition and puts it at the end', ->
     loader._defs = [fn1]
     loader.setFunction(fn2)

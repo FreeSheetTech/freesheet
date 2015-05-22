@@ -23,6 +23,9 @@ module.exports = class TextLoader
 
   functionDefinitionsAndValues: -> _.map @_defs, (def) => {name: def.name, definition: def, value: @_values[def.name] or null}
 
+  getFunction: (name) -> _.find @_defs, (x) -> x.name == name
+  getFunctionAsText: (name) -> @getFunction(name).expr.text
+
   setFunctionAsText: (name, definition, oldName, beforeName) ->
     funcDef = new TextParser(name + ' = ' + definition).functionDefinition()
     @setFunction funcDef, oldName, beforeName
