@@ -101,7 +101,14 @@ select from sequence: seq[indexExpr]
 
 infix operations: + - * / and or not == != > >= < <=
 
-Possible changes: xxxOf(anAggregate) where xxx is the name of any item in the aggregate
+Possible changes
+----------------
+
+- xxxOf(anAggregate) where xxx is the name of any item in the aggregate
+- select from sequence or aggregate with () - same as function call syntax
+- then make sequences and aggregates equivalent to functions, use all interchangeably
+- aggregate has + operator to add another aggregate to it
+- infix operators for transform and filter: changedTo and where
 
 
 
