@@ -67,3 +67,23 @@ describe 'CoreFunctions includes', ->
     parseUserFunctions 'items = [ 1,2,3,4,5,6 ]'
     parseUserFunctions 'itemCount = count( items )'
     changesFor('itemCount').should.eql [6]
+
+  it 'ifElse - boolean chooses one of two other expressions', ->
+    parseUserFunctions 'score = 10; passMark = 20'
+    parseUserFunctions 'result = ifElse(score >= passMark, "Pass", "Fail")'
+    changesFor('result').should.eql ['Fail']
+    parseUserFunctions 'score = 30'
+    changesFor('result').should.eql ['Fail', 'Pass']
+
+   it 'and - boolean operator', ->
+     parseUserFunctions 'resultTrue = and(1 == 1, 4 > 3) '
+     parseUserFunctions 'resultFalse = and(1 == 1, 4 < 3) '
+     changesFor('resultTrue').should.eql [true]
+     changesFor('resultFalse').should.eql [false]
+
+   it 'or - boolean operator', ->
+     parseUserFunctions 'resultFalse = or(1 > 1, 4 > 3) '
+     parseUserFunctions 'resultTrue = or(1 == 1, 4 < 3) '
+     changesFor('resultFalse').should.eql [false]
+     changesFor('resultTrue').should.eql [true]
+
