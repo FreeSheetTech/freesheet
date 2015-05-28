@@ -53,3 +53,6 @@ describe 'TimeFunctions includes', ->
     parseUserFunctions 'gameLength = seconds(30)'
     parseUserFunctions 'secondsRemaining = asSeconds(gameLength)'
     changesFor('secondsRemaining').should.eql([30])
+
+  it 'as Seconds - null for null', ->
+    should.eql(TimeFunctions.asSeconds(null), null)

@@ -12,6 +12,8 @@ add = (a, b) ->
 
 subtract = (a, b) ->
   switch
+    when a instanceof Date and b == null or a == null and b instanceof Date
+      null
     when a instanceof Period and b instanceof Period
       new Period(a.millis - b.millis)
     when a instanceof Date and b instanceof Date
