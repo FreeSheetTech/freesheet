@@ -16,6 +16,7 @@ describe 'TextParser parses', ->
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
   trueLit = new Literal('true', true)
+  noLit = new Literal('no', false)
   namedValueCall = (name) -> new FunctionCall(name, name, [])
   aFunctionCall = namedValueCall('a')
 
@@ -113,7 +114,10 @@ describe 'TextParser parses', ->
     describe 'logical', ->
 
       it 'and with two operands', ->
-        expressionFor(' 10.5 + "a string"').should.eql new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
+        expressionFor(' 10.5 and true ').should.eql new InfixExpression('10.5 and true', 'and', [aNumber, trueLit])
+
+      it 'or with two operands', ->
+        expressionFor(' 10.5 or true ').should.eql new InfixExpression('10.5 or true', 'or', [aNumber, trueLit])
 
 
     describe 'precedence', ->
@@ -149,6 +153,30 @@ describe 'TextParser parses', ->
         expressionFor('abc.def * 10.5').should.eql new InfixExpression('abc.def * 10.5', '*', [
           new AggregationSelector('abc.def', namedValueCall('abc'), 'def'),
           aNumber
+        ])
+
+      it 'comparative higher than and', ->
+        expressionFor('true and 10.5 > 22').should.eql new InfixExpression('true and 10.5 > 22', 'and', [
+          trueLit,
+          new InfixExpression('10.5 > 22', '>', [aNumber, aNumber22])
+        ])
+
+      it 'comparative higher than or', ->
+        expressionFor('true or 10.5 > 22').should.eql new InfixExpression('true or 10.5 > 22', 'or', [
+          trueLit,
+          new InfixExpression('10.5 > 22', '>', [aNumber, aNumber22])
+        ])
+
+      it 'and higher than or', ->
+        expressionFor('true or 10.5 and 22').should.eql new InfixExpression('true or 10.5 and 22', 'or', [
+          trueLit,
+          new InfixExpression('10.5 and 22', 'and', [aNumber, aNumber22])
+        ])
+
+      it 'and really higher than or', ->
+        expressionFor('true and 10.5 or 22').should.eql new InfixExpression('true and 10.5 or 22', 'or', [
+          new InfixExpression('true and 10.5', 'and', [trueLit, aNumber])
+          aNumber22
         ])
 
   describe 'select from structures', ->

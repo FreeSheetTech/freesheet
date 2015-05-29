@@ -52,6 +52,14 @@ describe 'JsCodeGenerator', ->
       genFor new InfixExpression('10.5 <> "a string"', '<>', [aNumber, aString])
       code.should.eql '(10.5 != "a string")'
 
+    it 'and expression with two literals', ->
+      genFor new InfixExpression('10.5 and "a string"', 'and', [aNumber, aString])
+      code.should.eql '(10.5 && "a string")'
+
+    it 'or expression with two literals', ->
+      genFor new InfixExpression('10.5 or "a string"', 'or', [aNumber, aString])
+      code.should.eql '(10.5 || "a string")'
+
     it 'function call with no arguments', ->
       expr = new FunctionCall('theFn ( )', 'theFn', [])
       genFor expr

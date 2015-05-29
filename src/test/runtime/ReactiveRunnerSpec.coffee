@@ -110,6 +110,16 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'f = d2 <> d1'
       changes[2..].should.eql [{a: false}, {b: true}, {c: true}, {d: false}, {e: false}, {f:true}]
 
+    it 'logical operations with comparisons', ->
+      parseUserFunctions 'a = 100 > 100'
+      parseUserFunctions 'b = 100 < 101'
+      parseUserFunctions 'c = 101 >= 100'
+      parseUserFunctions 'x = a and b'
+      parseUserFunctions 'x = a or b'
+      parseUserFunctions 'x = b and c'
+      parseUserFunctions 'x = a or b and c or false'
+      changesFor('x').should.eql [false, true, true, true]
+
     it 'concatenates strings', ->
       parseUserFunctions 'a = "The A"'
       parseUserFunctions 'aa = a + 10 + " times"'

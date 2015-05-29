@@ -23,7 +23,7 @@ identifierList = items:(
 
 expression = _ expr:anyExpression _  { return expr; }
 
-anyExpression = expr:comparative { return expr; }
+anyExpression = expr:logical { return expr; }
 
 functionCall = functionCallWithArgs / functionCallNoArgs
 functionCallWithArgs = functionName:identifier _ "(" _ args:anyExpressionList _ ")" { return new FunctionCall(text().trim(), functionName, args); }
@@ -34,6 +34,12 @@ anyExpressionList = items:(
                      rest:(_ "," _ a:anyExpression { return a; })*
                      { return [first].concat(rest); }
                    )? { return result = items !== null ? items : []; }
+
+logical = or / andLike
+or = left:andLike _ "or" _ right:logical { return infixExpr( 'or', [left, right]); }
+
+andLike = and / comparative
+and = left:comparative _ "and" _ right:andLike { return infixExpr( 'and', [left, right]); }
 
 comparative = equal / notEqual / lessThanOrEqual / greaterThanOrEqual / lessThan / greaterThan / additive
 
@@ -63,7 +69,9 @@ primary = aggregation / sequence / none / boolean / number / string / functionCa
 
 none = "none" !identifierPart { return new Literal(text().trim(), null); }
 
-boolean "true/false" = val:("true" / "false" / "yes" / "no") !identifierPart { var boolVal = (val == "true" || val == "yes"); return new Literal(text().trim(), boolVal)}
+booleanTrue  = val:("true" /  "yes") !identifierPart { return new Literal(text().trim(), true)}
+booleanFalse  = val:("false" /  "no") !identifierPart { return new Literal(text().trim(), false)}
+boolean "true/false" = booleanTrue / booleanFalse
 
 floatOrInt = $ (digit+ ("." digit*)? / "." digit+)
 

@@ -2,7 +2,12 @@
 
 asLiteral = (value) -> JSON.stringify value
 
-jsOperator = (op) -> if op == '<>' then '!=' else op
+jsOperator = (op) ->
+  switch op
+    when '<>' then '!='
+    when 'and' then '&&'
+    when 'or' then '||'
+    else op
 
 argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
