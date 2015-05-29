@@ -7,7 +7,7 @@ describe 'JsCodeGenerator', ->
 
   code = null
   functionNames = null
-  genFor = (expr, functionInfo = {}) -> {code, functionNames} = exprCode expr, functionInfo
+  genFor = (expr, functionInfo = {}) -> {code, functionNames} = exprCode expr, functionInfo; code
   genBodyFor = (expr, functionInfo = {}) -> {code, functionNames} = exprFunctionBody expr, functionInfo
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
@@ -23,6 +23,10 @@ describe 'JsCodeGenerator', ->
     it 'none', ->
       genFor new Literal(' none ', null)
       code.should.eql 'null'
+
+    it 'boolean literals', ->
+      genFor( new Literal('true', true)).should.eql( 'true' )
+      genFor( new Literal(' no ', false)).should.eql( 'false' )
 
     it 'string literal', ->
       genFor new Literal('abc', 'abc')

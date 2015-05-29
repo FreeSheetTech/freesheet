@@ -59,9 +59,11 @@ selectorOrPrimary = aggregationSelector / primary
 aggregationSelector = _ aggExpr:(aggregation / functionCall / bracketedExpression) _ "." _ name:identifier _
                             { return new AggregationSelector(text().trim(), aggExpr, name)}
 
-primary = aggregation / sequence / none / number / string / functionCall / bracketedExpression
+primary = aggregation / sequence / none / boolean / number / string / functionCall / bracketedExpression
 
-none = "none" { return new Literal(text().trim(), null); }
+none = "none" !identifierPart { return new Literal(text().trim(), null); }
+
+boolean "true/false" = val:("true" / "false" / "yes" / "no") !identifierPart { var boolVal = (val == "true" || val == "yes"); return new Literal(text().trim(), boolVal)}
 
 floatOrInt = $ (digit+ ("." digit*)? / "." digit+)
 
@@ -69,7 +71,8 @@ number "number" = num:floatOrInt { var val = parseFloat(num, 10); return new Lit
 
 string "string" = doubleQuote chars:[^"]* doubleQuote { var val = chars.join(""); return new Literal(text().trim(), val); }
 
-identifier "identifier" = $(alpha (alpha/digit)*)
+identifier "identifier" = $(alpha identifierPart*)
+identifierPart = (alpha/digit)
 
 bracketedExpression = _ "(" _ expr:anyExpression _ ")" _ { return expr; }
 

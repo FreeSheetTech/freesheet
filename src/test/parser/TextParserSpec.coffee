@@ -15,6 +15,7 @@ describe 'TextParser parses', ->
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   aNumber22 = new Literal('22', 22)
+  trueLit = new Literal('true', true)
   namedValueCall = (name) -> new FunctionCall(name, name, [])
   aFunctionCall = namedValueCall('a')
 
@@ -22,6 +23,12 @@ describe 'TextParser parses', ->
 
     it 'none to a Literal', ->
       expressionFor('  none  ').should.eql new Literal('none', null)
+
+    it 'booleans to a Literal', ->
+      expressionFor('  true  ').should.eql new Literal('true', true)
+      expressionFor('yes  ').should.eql new Literal('yes', true)
+      expressionFor('false').should.eql new Literal('false', false)
+      expressionFor('no').should.eql new Literal('no', false)
 
     it 'string to a Literal', ->
       expressionFor('  "a string"  ').should.eql aString
@@ -46,6 +53,9 @@ describe 'TextParser parses', ->
     it 'with no arguments', ->
       expressionFor('  theFn ( )  ').should.eql new FunctionCall('theFn ( )', 'theFn', [])
 
+    it 'which start with literal names', ->
+      expressionFor('nonesuch').should.eql new FunctionCall('nonesuch', 'nonesuch', [])
+      expressionFor('yesitdoes()').should.eql new FunctionCall('yesitdoes()', 'yesitdoes', [])
 
     it 'with no braces', ->
       expressionFor('  theFn ').should.eql new FunctionCall('theFn', 'theFn', [])
@@ -99,6 +109,11 @@ describe 'TextParser parses', ->
 
       it 'not equal with two operands', ->
         expressionFor('a <> 22 ').should.eql new InfixExpression('a <> 22', '<>', [aFunctionCall, aNumber22])
+
+    describe 'logical', ->
+
+      it 'and with two operands', ->
+        expressionFor(' 10.5 + "a string"').should.eql new InfixExpression('10.5 + "a string"', '+', [aNumber, aString])
 
 
     describe 'precedence', ->
