@@ -20,6 +20,9 @@ describe 'TextParser parses', ->
 
   describe 'expressions', ->
 
+    it 'none to a Literal', ->
+      expressionFor('  none  ').should.eql new Literal('none', null)
+
     it 'string to a Literal', ->
       expressionFor('  "a string"  ').should.eql aString
 

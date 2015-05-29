@@ -55,4 +55,4 @@ describe 'TimeFunctions includes', ->
     changesFor('secondsRemaining').should.eql([30])
 
   it 'as Seconds - null for null', ->
-    should.eql(TimeFunctions.asSeconds(null), null)
+    should.equal(TimeFunctions.asSeconds(null), null)

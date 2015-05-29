@@ -146,7 +146,7 @@ Name scope
 - current aggregation expression - when constructing an aggregation - prefixed out
 - Poss: automatically take most local scope: current expr, current input, top-level - convenient and intuitive
 - Poss: always take top-level scope, need to prefix others
-- If take most local, could use items for different scopes for different elements if some elements didn't contain the name - v confusing
+- If take most local, could use items from different scopes for different elements if some elements didn't contain the name - v confusing. Or useful?
 - Prefix names: in/out, current/this
 
 Functional stuff

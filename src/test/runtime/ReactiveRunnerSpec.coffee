@@ -55,6 +55,16 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 100}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
 
+    it 'operations with null', ->
+      parseUserFunctions 'a=100 + none'
+      parseUserFunctions 'b = none'
+      parseUserFunctions 'c = a <> none'
+      parseUserFunctions 'c = a == none'
+      parseUserFunctions 'c = b <> none'
+      parseUserFunctions 'c = b == none'
+
+      changes.should.eql [{a: 100}, {b: null}, {c: true}, {c: false}, {c: false}, {c: true}]
+
     it 'subtraction of two Dates', ->
       parseUserFunctions 'd1=dateValue("2014-02-03 12:00:20")'
       parseUserFunctions 'd2=dateValue("2014-02-03 12:00:30")'
@@ -238,6 +248,12 @@ describe 'ReactiveRunner runs', ->
       inputSubj.onNext 30
 
       changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]  #first result is unadjusted values because adjust function starts with 0
+
+#    it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
+#      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+#      parseUserFunctions 'scores = fromEach( games, {basicTime: in.time, fullTime: time + 2, maxTime: basicTime + 3} )'
+#
+#      changesFor("scores").should.eql [[{basicTime: 21, fullTime: 23, maxTime: 24}, {basicTime: 25, fullTime: 27, maxTime: 28}]]
 
     it 'filters elements of a sequence using a formula including a value from the input and named values', ->
       parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'

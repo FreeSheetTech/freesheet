@@ -20,6 +20,10 @@ describe 'JsCodeGenerator', ->
 
   describe 'Generates code for', ->
 
+    it 'none', ->
+      genFor new Literal(' none ', null)
+      code.should.eql 'null'
+
     it 'string literal', ->
       genFor new Literal('abc', 'abc')
       code.should.eql '"abc"'

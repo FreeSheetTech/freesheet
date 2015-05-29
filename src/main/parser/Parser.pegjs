@@ -59,7 +59,9 @@ selectorOrPrimary = aggregationSelector / primary
 aggregationSelector = _ aggExpr:(aggregation / functionCall / bracketedExpression) _ "." _ name:identifier _
                             { return new AggregationSelector(text().trim(), aggExpr, name)}
 
-primary = aggregation / sequence / number / string / functionCall / bracketedExpression
+primary = aggregation / sequence / none / number / string / functionCall / bracketedExpression
+
+none = "none" { return new Literal(text().trim(), null); }
 
 floatOrInt = $ (digit+ ("." digit*)? / "." digit+)
 
