@@ -65,7 +65,9 @@ module.exports = class ReactiveRunner
 
   _userFunctionStream: (func) ->
     {theFunction, functionNames} = JsCodeGenerator.exprFunction func.expr, @_functionInfo()
-    args = [Operations].concat (@_functionArg(n) for n in functionNames)
+    ctx = {}
+    ctx[n] = @_functionArg(n) for n in functionNames
+    args = [Operations, ctx]
     theFunction.apply null, args
 
   _functionInfo: ->
