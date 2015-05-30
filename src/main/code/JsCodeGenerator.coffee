@@ -1,4 +1,9 @@
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
+_ = require 'lodash'
+
+class Name
+  constructor: (@name, @local = false) ->
+  toString: -> @name
 
 asLiteral = (value) -> JSON.stringify value
 
@@ -12,7 +17,7 @@ jsOperator = (op) ->
 argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
 createFunction = (argNames, functionBody) ->
-  functionCreateArgs = [null].concat 'operations', argNames, functionBody
+  functionCreateArgs = [null].concat 'operations','_ctx', functionBody
   new (Function.bind.apply(Function, functionCreateArgs));
 
 exprFunction = (expr, functionInfo) ->
@@ -21,8 +26,9 @@ exprFunction = (expr, functionInfo) ->
   {theFunction, functionNames}
 
 combineCode = (argNames, exprCode) ->
-  args = argNames.join ', '
-  "operations.combine(#{args}, function(#{args}) { return #{exprCode}; })"
+  names = (n.name for n in argNames)
+  args = names.join ', '
+  "operations.combine(#{fromContextAll(argNames).join ', '}, function(#{args}) { return #{exprCode}; })"
 
 localStreamsVars = (localStreams) -> if localStreams.length then ("var #{s.name} = #{s.code};" for s in localStreams).join('\n') + '\n' else ''
 
@@ -31,13 +37,22 @@ subjectCode = (exprCode) -> "operations.subject(#{exprCode})"
 isStreamFunctionCall = (expr, functionInfo) -> expr instanceof FunctionCall and functionInfo[expr.functionName]?.kind == 'stream'
 isNoArgsFunctionCall = (expr) -> expr instanceof FunctionCall and expr.children.length == 0
 
+fromContext = (name) ->
+  switch
+    when name instanceof Name and !name.local then "_ctx.#{name.name}"
+    when name instanceof Name and name.local then name.name
+    else "_ctx.#{name}"
+
+fromContextAll = (names) -> (fromContext n for n in names)
+withoutContext = (code) -> code.replace /_ctx./g, ''
+
 streamCode = (expr, functionInfo, code, combineNames) ->
   if isStreamFunctionCall(expr, functionInfo)
-    code
+    withoutContext(code)
   else if isNoArgsFunctionCall(expr)
     code
   else if combineNames.length
-     combineCode(combineNames, code)
+     combineCode(combineNames, withoutContext(code))
   else
     subjectCode(code)
 
@@ -63,7 +78,9 @@ exprCode = (expr, functionInfo) ->
   accumulateFunctionNames = (names) -> accumulateFunctionName(n) for n in names
   accumulateLocalStream = (name, code) -> localStreams.unshift {name, code}
   accumulateLocalStreams = (streams) -> localStreams.unshift s for s in streams
-  accumulateCombineName = (name) -> combineNames.push name if name not in combineNames
+  accumulateCombineName = (name) ->
+    if !_.find(combineNames, (n) -> n.name == name.name)
+      combineNames.push name
   accumulateCombineNames = (names) -> accumulateCombineName(n) for n in names
 
   generateFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }"
@@ -82,7 +99,7 @@ exprCode = (expr, functionInfo) ->
     if isNoArgsFunctionCall(expr)
       code
     else if combineNames.length
-      combineCode(combineNames, code)
+      combineCode(combineNames, withoutContext(code))
     else
       subjectCode(code)
 
@@ -124,28 +141,28 @@ exprCode = (expr, functionInfo) ->
     when expr instanceof FunctionCall and isTransformFunction expr
       functionName = expr.functionName
       accumulateFunctionName functionName
-      accumulateCombineName functionName
+      accumulateCombineName new Name functionName
       arg1 = getCodeAndAccumulateFunctions expr.children[0]
       arg2 = generateFunction expr.children[1]
-      functionName + argList [arg1, arg2]
+      fromContext(functionName) + argList [arg1, arg2]
 
     when expr instanceof FunctionCall and isStreamFunction expr
       functionName = expr.functionName
       accumulateFunctionName functionName
       args = (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
-      lsCode = functionName + argList args
+      lsCode = fromContext functionName + argList args
       lsName = localStreamName functionName
       accumulateLocalStream lsName, lsCode
-      accumulateCombineName lsName
-      lsName
+      accumulateCombineName new Name lsName, true
+      fromContext lsName
 
 
     when expr instanceof FunctionCall
       functionName = expr.functionName
       accumulateFunctionName functionName
-      accumulateCombineName functionName
+      accumulateCombineName new Name functionName
       args = (getCodeAndAccumulateFunctions(e) for e in expr.children)
-      functionName + argList args
+      fromContext(functionName) + argList args
 
     else
       throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)

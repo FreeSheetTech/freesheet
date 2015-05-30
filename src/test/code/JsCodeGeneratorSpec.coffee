@@ -63,13 +63,13 @@ describe 'JsCodeGenerator', ->
     it 'function call with no arguments', ->
       expr = new FunctionCall('theFn ( )', 'theFn', [])
       genFor expr
-      code.should.eql 'theFn'
+      code.should.eql '_ctx.theFn'
       functionNames.should.eql ['theFn']
 
     it 'function call with arguments', ->
       expr = new FunctionCall('theFn (10.5, "a string" )', 'theFn', [aNumber, aString])
       genFor expr
-      code.should.eql 'theFn(10.5, "a string")'
+      code.should.eql '_ctx.theFn(10.5, "a string")'
       functionNames.should.eql ['theFn']
 
     it 'function call to transform function', ->
@@ -77,7 +77,7 @@ describe 'JsCodeGenerator', ->
       transformExpr = new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
       expr = new FunctionCall('transformFn (theSource, 10.5 * "a string" )', 'transformFn', [sourceExpr, transformExpr])
       genFor expr, {transformFn: {kind: 'transform'}}
-      code.should.eql 'transformFn(theSource, function(_in) { return (10.5 * "a string") })'
+      code.should.eql '_ctx.transformFn(_ctx.theSource, function(_in) { return (10.5 * "a string") })'
       functionNames.should.eql ['transformFn', 'theSource']
 
     it 'function call to special name in changed to _in and not added to function calls', ->
@@ -101,14 +101,14 @@ describe 'JsCodeGenerator', ->
 
     it 'aggregation selector', ->
       genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
-      code.should.eql '(abc).def'
+      code.should.eql '(_ctx.abc).def'
 
     it 'a complex expression', ->
       originalCode = '  { a:10, b : x +y, c: [d + 10 - z* 4, "Hi!"]  } '
       expr = new TextParser(originalCode).expression()
       genFor expr
 
-      code.should.eql '{a: 10, b: operations.add(x, y), c: [operations.add(d, operations.subtract(10, (z * 4))), "Hi!"]}'
+      code.should.eql '{a: 10, b: operations.add(_ctx.x, _ctx.y), c: [operations.add(_ctx.d, operations.subtract(10, (_ctx.z * 4))), "Hi!"]}'
 
   describe 'creates function to generate a stream which', ->
 
@@ -126,12 +126,12 @@ describe 'JsCodeGenerator', ->
       expr = new InfixExpression('a * b', '*', [namedValueCall('a'), namedValueCall('b')])
       functionInfo = {}
       genBodyFor expr, functionInfo
-      code.should.eql 'return operations.combine(a, b, function(a, b) { return (a * b); });'
+      code.should.eql 'return operations.combine(_ctx.a, _ctx.b, function(a, b) { return (a * b); });'
       functionNames.should.eql ['a', 'b']
 
       result = null
       operations = combine: (x, y, fn) -> result = fn(x, y)
-      exprFunction(expr, functionInfo).theFunction.apply(null, [operations, 5, 6])
+      exprFunction(expr, functionInfo).theFunction.apply(null, [operations, {a:5, b:6}])
       result.should.eql(30)
       exprFunction(expr, functionInfo).functionCalls = ['a', 'b']
 
@@ -139,7 +139,7 @@ describe 'JsCodeGenerator', ->
       expr = new FunctionCall('fromEach( games, 10.5 )', 'fromEach', [namedValueCall('games'), aNumber])
       functionInfo = fromEach: {kind: 'transform'}
       genBodyFor expr, functionInfo
-      code.should.eql 'return operations.combine(fromEach, games, function(fromEach, games) { return fromEach(games, function(_in) { return 10.5 }); });'
+      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return 10.5 }); });'
       functionNames.should.eql ['fromEach', 'games']
 
   describe 'Generates code for calls to stream functions', ->
@@ -150,17 +150,17 @@ describe 'JsCodeGenerator', ->
 
     it 'with one argument', ->
       genBodyFor new FunctionCall('total(b)', 'total', [namedValueCall('b')]), functionInfo
-      code.should.eql 'var total_1 = total(b);\nreturn total_1;'
+      code.should.eql 'var total_1 = _ctx.total(_ctx.b);\nreturn total_1;'
       functionNames.should.eql ['total', 'b']
 
     it 'with one argument which is a normal function call', ->
       genBodyFor new FunctionCall('total(addFive(b))', 'total', [new FunctionCall('addFive(b)', 'addFive', [namedValueCall('b')])]), functionInfo
-      code.should.eql 'var total_1 = total(operations.combine(addFive, b, function(addFive, b) { return addFive(b); }));\nreturn total_1;'
+      code.should.eql 'var total_1 = _ctx.total(operations.combine(_ctx.addFive, _ctx.b, function(addFive, b) { return addFive(b); }));\nreturn total_1;'
       functionNames.should.eql ['total', 'addFive', 'b']
 
     it 'inside a normal function', ->
       genBodyFor new FunctionCall('addFive(total(b))', 'addFive', [new FunctionCall('total(b)', 'total', [namedValueCall('b')])]), functionInfo
-      code.should.eql 'var total_1 = total(b);\nreturn operations.combine(addFive, total_1, function(addFive, total_1) { return addFive(total_1); });'
+      code.should.eql 'var total_1 = _ctx.total(_ctx.b);\nreturn operations.combine(_ctx.addFive, total_1, function(addFive, total_1) { return addFive(total_1); });'
       functionNames.should.eql ['addFive', 'total', 'b']
 
     it 'with an expression as an argument', ->
@@ -168,8 +168,8 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       genBodyFor expr, functionInfo
 
-      code.should.eql '''var total_1 = total(operations.combine(addTen, c, addFive, d, function(addTen, c, addFive, d) { return (addTen(c) * addFive(d)); }));
-                         return operations.combine(addFive, total_1, addTen, e, function(addFive, total_1, addTen, e) { return addFive((total_1 / addTen(e))); });'''
+      code.should.eql '''var total_1 = _ctx.total(operations.combine(_ctx.addTen, _ctx.c, _ctx.addFive, _ctx.d, function(addTen, c, addFive, d) { return (addTen(c) * addFive(d)); }));
+                         return operations.combine(_ctx.addFive, total_1, _ctx.addTen, _ctx.e, function(addFive, total_1, addTen, e) { return addFive((total_1 / addTen(e))); });'''
       functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'd', 'e']
 
     it 'complex expression with multiple streams at different levels and function used twice in one combine', ->
@@ -177,10 +177,10 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       genBodyFor expr, functionInfo
 
-      code.should.eql '''var total_1 = total(operations.combine(addTen, d, function(addTen, d) { return addTen(d); }));
-                         var average_1 = average(operations.combine(c, total_1, function(c, total_1) { return (c * total_1); }));
-                         var total_2 = total(operations.combine(addTen, c, addFive, average_1, e, function(addTen, c, addFive, average_1, e) { return (addTen(c) * addFive((average_1 / addTen(e)))); }));
-                         return operations.combine(addFive, total_2, function(addFive, total_2) { return addFive(total_2); });'''
+      code.should.eql '''var total_1 = _ctx.total(operations.combine(_ctx.addTen, _ctx.d, function(addTen, d) { return addTen(d); }));
+                         var average_1 = _ctx.average(operations.combine(_ctx.c, total_1, function(c, total_1) { return (c * total_1); }));
+                         var total_2 = _ctx.total(operations.combine(_ctx.addTen, _ctx.c, _ctx.addFive, average_1, _ctx.e, function(addTen, c, addFive, average_1, e) { return (addTen(c) * addFive((average_1 / addTen(e)))); }));
+                         return operations.combine(_ctx.addFive, total_2, function(addFive, total_2) { return addFive(total_2); });'''
       functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'average', 'd', 'e']
 
 
