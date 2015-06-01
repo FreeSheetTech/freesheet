@@ -149,17 +149,6 @@ Name scope
 - If take most local, could use items from different scopes for different elements if some elements didn't contain the name - v confusing. Or useful?
 - Prefix names: in/out, current/this
 
-Most local scope implementation
--------------------------------
-- Could have a one-off context object passed to each function
-- Context contains all the arg streams, and _in
-- Local names can be added as they are generated - will overwrite ones already there
-- Restriction that a local name must be defined before it can be accessed
-- OR generate a context inside each function from the args  - then functions called normally
-  - add everything from _in to the context, but _in still available
-  - add local names to the context as they are generated
-  - allows for a let syntax if desired
-
 Functional stuff
 ----------------
 - Ok to do functional equivalence? - it would be with no args, so why not more - vs extensional equivalence

@@ -97,7 +97,7 @@ describe 'JsCodeGenerator', ->
       })
 
       genFor expr
-      code.should.eql '{abc1_: " a string ", _a_Num: 10.5}'
+      code.should.eql '{abc1_: abc1_ = " a string ", _a_Num: _a_Num = 10.5}'
 
     it 'aggregation selector', ->
       genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
@@ -108,7 +108,7 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       genFor expr
 
-      code.should.eql '{a: 10, b: operations.add(_ctx.x, _ctx.y), c: [operations.add(_ctx.d, operations.subtract(10, (_ctx.z * 4))), "Hi!"]}'
+      code.should.eql '{a: a = 10, b: b = operations.add(_ctx.x, _ctx.y), c: c = [operations.add(_ctx.d, operations.subtract(10, (_ctx.z * 4))), "Hi!"]}'
 
   describe 'creates function to generate a stream which', ->
 

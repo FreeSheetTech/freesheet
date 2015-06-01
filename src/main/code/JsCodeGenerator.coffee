@@ -18,7 +18,9 @@ argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
 createFunction = (argNames, functionBody) ->
   functionCreateArgs = [null].concat 'operations','_ctx', functionBody
-  new (Function.bind.apply(Function, functionCreateArgs));
+  result = new (Function.bind.apply(Function, functionCreateArgs))
+  console.log 'createFunction', result
+  result
 
 exprFunction = (expr, functionInfo) ->
   {code, functionNames} = exprFunctionBody expr, functionInfo
@@ -65,6 +67,7 @@ exprFunctionBody = (expr, functionInfo) ->
   {code: bodyCode, functionNames}
 
 exprCode = (expr, functionInfo) ->
+  localNames = []
   functionNames = []
   localStreams = []
   combineNames = []
@@ -74,6 +77,7 @@ exprCode = (expr, functionInfo) ->
     existingStreamsCount = localStreams.filter(startsWithName).length
     name + '_' + (existingStreamsCount + 1)
 
+  accumulateLocalName = (name) -> localNames.push(name) if name not in localNames
   accumulateFunctionName = (name) -> functionNames.push name if name not in functionNames
   accumulateFunctionNames = (names) -> accumulateFunctionName(n) for n in names
   accumulateLocalStream = (name, code) -> localStreams.unshift {name, code}
@@ -83,7 +87,7 @@ exprCode = (expr, functionInfo) ->
       combineNames.push name
   accumulateCombineNames = (names) -> accumulateCombineName(n) for n in names
 
-  generateFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }"
+  applyTransformFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }"
 
   isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transform'
   isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
@@ -124,8 +128,11 @@ exprCode = (expr, functionInfo) ->
     when expr instanceof Aggregation
       items = []
       for i in [0...expr.children.length]
-        items.push "#{expr.childNames[i]}: #{getCodeAndAccumulateFunctions expr.children[i] }"
+        name = expr.childNames[i]
+        accumulateLocalName name
+        items.push "#{name}: #{name} = #{getCodeAndAccumulateFunctions expr.children[i] }"
 
+      'var ' + items.join(',\n    ') + ';'
       '{' + items.join(', ') + '}'
 
     when expr instanceof Sequence
@@ -143,7 +150,7 @@ exprCode = (expr, functionInfo) ->
       accumulateFunctionName functionName
       accumulateCombineName new Name functionName
       arg1 = getCodeAndAccumulateFunctions expr.children[0]
-      arg2 = generateFunction expr.children[1]
+      arg2 = applyTransformFunction expr.children[1]
       fromContext(functionName) + argList [arg1, arg2]
 
     when expr instanceof FunctionCall and isStreamFunction expr

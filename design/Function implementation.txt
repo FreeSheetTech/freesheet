@@ -185,3 +185,60 @@ Streams and sequences
 - itemsOf - could be just a marker to say 'generate different code'
 - Really just getting a different stream either way
 - Maybe generating code for overall exprs so don't have separate stream for each expr now makes this more difficult
+
+Most local scope implementation
+-------------------------------
+- Could have a one-off context object passed to each function
+- Context contains all the arg streams
+- Context also passed to transform functions, with _in
+- Local names can be added as they are generated - will overwrite ones already there
+- Restriction that a local name must be defined before it can be accessed
+- OR generate a context inside each function from the args  - then functions called normally
+  - add everything from _in to the context, but _in still available
+  - add local names to the context as they are generated
+  - allows for a let syntax if desired
+- Local vars are automatically a local context
+- Need to know which names are top-level so can put them in the combine statement - how?
+- Example of code generated without local names:
+    scores = fromEach( games, {basicTime: in.time, fullTime: time + 2, maxTime: basicTime + 3} )
+    ==>
+    createFunction function anonymous(operations,_ctx) {
+        return operations.combine(_ctx.fromEach, _ctx.games, _ctx.time, _ctx.basicTime,
+            function(fromEach, games, time, basicTime) { return fromEach(games, function(_in) {
+                return {basicTime: (_in).time, fullTime: operations.add(time, 2), maxTime: operations.add(basicTime, 3)} }); });
+    }
+
+- Example of code required for local names:
+    scores = fromEach( games, {basicTime: in.time, fullTime: time + 2, maxTime: basicTime + 3} )
+    ==>
+    createFunction function anonymous(operations,_ctx) {
+        return operations.combine(_ctx.fromEach, _ctx.games,
+            function(fromEach, games) { return fromEach(games, function(_in) {
+                var basicTime = (_in).time;
+                var fullTime = operations.add(time || _in.time, 2);
+                var maxTime = operations.add(basicTime, 3);
+                return {basicTime: basicTime, fullTime: fullTime, maxTime: maxTime} }); });
+    }
+
+- To know whether its a local var: is it in an aggregate being generated?
+- Do you need to know all the top-level functions before you generate code?
+- Would you have to regenerate all the code every time you added a function?
+- Why not restrict local names to those known at the time eg aggregate members and maybe let definitions in the future?
+  - qualify input items with in if want to use them
+  - keeps away from the strange behaviour you might get if in names automatically available unqualified
+  - can use other ways to copy all of input aggregate members to output
+
+- So required original expression and code is
+    scores = fromEach( games, {basicTime: in.time, fullTime: in.time + 2, maxTime: basicTime + 3} )
+    ==>
+    createFunction function anonymous(operations,_ctx) {
+        return operations.combine(_ctx.fromEach, _ctx.games,
+            function(fromEach, games) { return fromEach(games, function(_in) {
+                var basicTime = (_in).time;
+                var fullTime = operations.add((_in).time, 2);
+                var maxTime = operations.add(basicTime, 3);
+                return {basicTime: basicTime, fullTime: fullTime, maxTime: maxTime} }); });
+
+- So approach is easy:
+  - when generating code for an aggregate, define all vars in order, just use them in the map expression at the end
+  - don't accumulate functions if they are aggregate members

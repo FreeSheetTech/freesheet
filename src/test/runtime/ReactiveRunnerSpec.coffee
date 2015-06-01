@@ -259,11 +259,11 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]  #first result is unadjusted values because adjust function starts with 0
 
-#    it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
-#      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
-#      parseUserFunctions 'scores = fromEach( games, {basicTime: in.time, fullTime: time + 2, maxTime: basicTime + 3} )'
-#
-#      changesFor("scores").should.eql [[{basicTime: 21, fullTime: 23, maxTime: 24}, {basicTime: 25, fullTime: 27, maxTime: 28}]]
+    it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
+      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
+      parseUserFunctions 'scores = fromEach( games, {basicTime: in.time, fullTime: basicTime + 2, maxTime: fullTime + 3} )'
+
+      changesFor("scores").should.eql [[{basicTime: 21, fullTime: 23, maxTime: 26}, {basicTime: 25, fullTime: 27, maxTime: 30}]]
 
     it 'filters elements of a sequence using a formula including a value from the input and named values', ->
       parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'
