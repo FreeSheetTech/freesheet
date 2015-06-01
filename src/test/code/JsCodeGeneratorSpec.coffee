@@ -142,6 +142,17 @@ describe 'JsCodeGenerator', ->
       code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return 10.5 }); });'
       functionNames.should.eql ['fromEach', 'games']
 
+
+    it 'combines streams into an aggregate with local names', ->
+      originalCode = 'fromEach( games, {basicTime: in.time, fullTime: basicTime + 2, maxTime: fullTime + 3} )'
+      expr = new TextParser(originalCode).expression()
+      functionInfo = fromEach: {kind: 'transform'}
+
+      genBodyFor expr, functionInfo
+      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return {basicTime: basicTime = (_in).time, fullTime: fullTime = operations.add(basicTime, 2), maxTime: maxTime = operations.add(fullTime, 3)} }); });'
+      functionNames.should.eql ['fromEach', 'games']
+
+
   describe 'Generates code for calls to stream functions', ->
 
     functionInfo =

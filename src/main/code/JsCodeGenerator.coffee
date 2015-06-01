@@ -66,8 +66,8 @@ exprFunctionBody = (expr, functionInfo) ->
 
   {code: bodyCode, functionNames}
 
-exprCode = (expr, functionInfo) ->
-  localNames = []
+exprCode = (expr, functionInfo, incomingLocalNames = []) ->
+  localNames = [].concat incomingLocalNames
   functionNames = []
   localStreams = []
   combineNames = []
@@ -78,12 +78,12 @@ exprCode = (expr, functionInfo) ->
     name + '_' + (existingStreamsCount + 1)
 
   accumulateLocalName = (name) -> localNames.push(name) if name not in localNames
-  accumulateFunctionName = (name) -> functionNames.push name if name not in functionNames
+  accumulateFunctionName = (name) -> functionNames.push name if (name not in functionNames and name not in localNames)
   accumulateFunctionNames = (names) -> accumulateFunctionName(n) for n in names
   accumulateLocalStream = (name, code) -> localStreams.unshift {name, code}
   accumulateLocalStreams = (streams) -> localStreams.unshift s for s in streams
   accumulateCombineName = (name) ->
-    if !_.find(combineNames, (n) -> n.name == name.name)
+    if (name.name not in localNames and !_.find(combineNames, (n) -> n.name == name.name))
       combineNames.push name
   accumulateCombineNames = (names) -> accumulateCombineName(n) for n in names
 
@@ -93,9 +93,9 @@ exprCode = (expr, functionInfo) ->
   isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
 
   getCodeAndAccumulateFunctions = (expr) ->
-    exprResult = exprCode expr, functionInfo
-    accumulateFunctionNames exprResult.functionNames
-    accumulateCombineNames exprResult.combineNames
+    exprResult = exprCode expr, functionInfo, localNames
+    accumulateFunctionName(n) for n in exprResult.functionNames
+    accumulateCombineName(n) for n in exprResult.combineNames
     accumulateLocalStreams exprResult.localStreams
     exprResult.code
 
@@ -108,7 +108,7 @@ exprCode = (expr, functionInfo) ->
       subjectCode(code)
 
   getStreamCodeAndAccumulateFunctions = (expr) ->
-    exprResult = exprCode expr, functionInfo
+    exprResult = exprCode expr, functionInfo, localNames
     accumulateFunctionNames exprResult.functionNames
     accumulateLocalStreams exprResult.localStreams
     localStreamCode expr, exprResult.code, exprResult.combineNames
@@ -127,12 +127,13 @@ exprCode = (expr, functionInfo) ->
 
     when expr instanceof Aggregation
       items = []
+      aggregationNames = (n for n in expr.childNames)
+      accumulateLocalName n for n in aggregationNames
+
       for i in [0...expr.children.length]
         name = expr.childNames[i]
-        accumulateLocalName name
-        items.push "#{name}: #{name} = #{getCodeAndAccumulateFunctions expr.children[i] }"
+        items.push "#{name}: #{name} = #{getCodeAndAccumulateFunctions expr.children[i], aggregationNames }"
 
-      'var ' + items.join(',\n    ') + ';'
       '{' + items.join(', ') + '}'
 
     when expr instanceof Sequence
