@@ -97,7 +97,7 @@ describe 'JsCodeGenerator', ->
       })
 
       genFor expr
-      code.should.eql '{abc1_: abc1_ = " a string ", _a_Num: _a_Num = 10.5}'
+      code.should.eql 'function() { return {abc1_: abc1_ = " a string ", _a_Num: _a_Num = 10.5}; }()'
 
     it 'aggregation selector', ->
       genFor new AggregationSelector('abc.def', namedValueCall('abc'), 'def')
@@ -108,7 +108,7 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       genFor expr
 
-      code.should.eql '{a: a = 10, b: b = operations.add(_ctx.x, _ctx.y), c: c = [operations.add(_ctx.d, operations.subtract(10, (_ctx.z * 4))), "Hi!"]}'
+      code.should.eql 'function() { return {a: a = 10, b: b = operations.add(_ctx.x, _ctx.y), c: c = [operations.add(_ctx.d, operations.subtract(10, (_ctx.z * 4))), "Hi!"]}; }()'
 
   describe 'creates function to generate a stream which', ->
 
@@ -149,7 +149,7 @@ describe 'JsCodeGenerator', ->
       functionInfo = fromEach: {kind: 'transform'}
 
       genBodyFor expr, functionInfo
-      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return {basicTime: basicTime = (_in).time, fullTime: fullTime = operations.add(basicTime, 2), maxTime: maxTime = operations.add(fullTime, 3)} }); });'
+      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return function() { return {basicTime: basicTime = (_in).time, fullTime: fullTime = operations.add(basicTime, 2), maxTime: maxTime = operations.add(fullTime, 3)}; }() }); });'
       functionNames.should.eql ['fromEach', 'games']
 
 

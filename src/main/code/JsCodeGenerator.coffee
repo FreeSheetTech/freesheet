@@ -132,7 +132,7 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
         name = expr.childNames[i]
         items.push "#{name}: #{name} = #{getCodeAndAccumulateFunctions expr.children[i], aggregationNames }"
 
-      '{' + items.join(', ') + '}'
+      'function() { return {' + items.join(', ') + '}; }()'
 
     when expr instanceof Sequence
       items = (getCodeAndAccumulateFunctions(e) for e in expr.children)
