@@ -125,15 +125,16 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
         else "(#{left} #{jsOperator(expr.operator)} #{right})"
 
     when expr instanceof Aggregation
+      varDecls = []
       items = []
       aggregationNames = (n for n in expr.childNames)
 
       for i in [0...expr.children.length]
         name = expr.childNames[i]
-        items.push "#{name}: #{name} = #{getCodeAndAccumulateFunctions expr.children[i], aggregationNames }"
+        varDecls.push "#{name} = #{getCodeAndAccumulateFunctions expr.children[i], aggregationNames }"
+        items.push "#{name}: #{name}"
 
-      varDecls = aggregationNames.join ', '
-      "function() { var #{varDecls}; return {#{items.join(', ')}}; }()"
+      "function() { var #{varDecls.join(', ')}; return {#{items.join(', ')}}; }()"
 
     when expr instanceof Sequence
       items = (getCodeAndAccumulateFunctions(e) for e in expr.children)
