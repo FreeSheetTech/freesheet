@@ -45,8 +45,9 @@ Immediate to do
 - Cyclic references
     - Date and time period arithmetic
 - Streams stopped when dependents removed - eg now() and map to elapsed
-    - if and boolean expressions
-- simplified references in aggregates
+- if expressions
+    - boolean expressions
+    - simplified references in aggregates
 - merge aggregate with + operator
     - none for null 
 - worksheet entry/display improvements

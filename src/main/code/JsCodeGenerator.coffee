@@ -19,7 +19,7 @@ argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 createFunction = (argNames, functionBody) ->
   functionCreateArgs = [null].concat 'operations','_ctx', functionBody
   result = new (Function.bind.apply(Function, functionCreateArgs))
-  console.log 'createFunction', result
+#  console.log 'createFunction', result
   result
 
 exprFunction = (expr, functionInfo) ->
