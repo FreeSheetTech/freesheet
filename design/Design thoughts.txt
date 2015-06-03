@@ -353,6 +353,18 @@ Managing subscriptions and user functions
 - Changes: good if only had one change per function per input eg total depends on a and b, b depends on a, a changes, total emits two changes
 - Does the set of observers need to change depending on the current values of the expr - or does Rx take care of that?
 
+Error handling
+--------------
+- Syntax errors in parsing:
+  - catch exception in TextLoader
+  - Cannot get event from Runner because don't have function definition
+  - Remove name from runner - which will send value change to null if it was there
+  - TextLoader trigger onFunctionChange with error
+  - store bad text in TextLoader
+  - save bad text in text file
+  - handle invalid syntax while loading from text file
+- Calculation errors while running:
+
 Teaching people to use it
 -------------------------
 

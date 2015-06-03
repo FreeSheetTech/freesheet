@@ -27,7 +27,7 @@ describe 'TimeFunctions includes', ->
     runner = new ReactiveRunner()
     runner.addProvidedFunctions TimeFunctions
     changes = []
-    runner.onChange callback
+    runner.onValueChange callback
 
   it 'now - stream of current time as a Date updating every second', (done) ->
     parseUserFunctions 'theTime = now()'

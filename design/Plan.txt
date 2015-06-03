@@ -53,7 +53,7 @@ Immediate to do
 - worksheet entry/display improvements
 - styling in pages
 - documentation
-- working in elmon
+- working in elmon or other site
 
 Future steps
 ------------

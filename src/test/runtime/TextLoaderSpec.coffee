@@ -24,7 +24,7 @@ describe 'TextLoader', ->
     runner =
       addUserFunction: sinon.spy()
       removeUserFunction: sinon.spy()
-      onChange: (fn) -> changeCallback = fn
+      onValueChange: (fn) -> changeCallback = fn
     loader = new TextLoader(runner)
 
 
@@ -112,7 +112,7 @@ describe 'TextLoader', ->
       {name: 'fn2', definition: fn2, value: null}
     ]
 
-  it 'sets a function and adds it to definitions and values before runner onChange triggered', ->
+  it 'sets a function and adds it to definitions and values before runner onValueChange triggered', ->
     runner.addUserFunction = (fn) ->
       changeCallback fn.name, 99
       loader.functionDefinitions().should.eql [fn2]

@@ -19,4 +19,5 @@ module.exports = class Sheet
   formulas: -> @loader.functionDefinitions()
   formulasAndValues: -> @loader.functionDefinitionsAndValues()
   addFunctions: (functionMap) -> @runner.addProvidedFunctions functionMap
-  onChange: (callback, name) -> @runner.onChange callback, name
+  onValueChange: (callback) -> @runner.onValueChange callback
+  onFormulaChange: (callback) -> @runner.onFunctionChange callback

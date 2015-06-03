@@ -6,7 +6,7 @@ module.exports = class TextLoader
   constructor: (@runner) ->
     @_defs = []
     @_values = {}
-    @runner.onChange (name, value) => @_values[name] = value
+    @runner.onValueChange (name, value) => @_values[name] = value
 
   clear: ->
     @runner.removeUserFunction f.name for f in @_defs

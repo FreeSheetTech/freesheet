@@ -24,7 +24,7 @@ describe 'CoreFunctions includes', ->
     runner = new ReactiveRunner()
     runner.addProvidedFunctions CoreFunctions
     changes = []
-    runner.onChange callback
+    runner.onValueChange callback
 
   it 'fromEach - transform input to output simple value', ->
     parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'

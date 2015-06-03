@@ -9,6 +9,7 @@ describe 'ReactiveRunner runs', ->
 
   runner = null
   changes = null
+  functionChanges = null
   namedChanges = null
   inputSubj = null
 
@@ -31,13 +32,15 @@ describe 'ReactiveRunner runs', ->
 
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
-  observeNamedChanges = (name) -> runner.onChange namedCallback, name
+  observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
 
   beforeEach ->
     runner = new ReactiveRunner()
     changes = []
+    functionChanges = []
     namedChanges = []
-    runner.onChange callback
+    runner.onValueChange callback
+    runner.onFunctionChange (type, name) -> functionChanges.push [type, name]
     inputSubj = new Rx.Subject()
     providedFunctions TimeFunctions
     providedTransformFunctions
@@ -295,12 +298,14 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'price = 22.5; tax_rate = 0.2'
       parseUserFunctions 'price = 33.5'
       changes.should.eql [{price:22.5}, {'tax_rate':0.2}, {price: 33.5}]
+      functionChanges.should.eql [['addOrUpdate', 'price'], ['addOrUpdate', 'tax_rate'], ['addOrUpdate', 'price']]
 
     it 'to a constant value formula when it is set and removed and set again', ->
       parseUserFunctions 'price = 20; tax_rate = 0.2; total = price + (price * tax_rate)'
       runner.removeUserFunction 'price'
       parseUserFunctions 'price = 30'
       changes.should.eql [{price:20}, {'tax_rate':0.2}, {total: 24}, {price: null}, {total: 0}, {total: 36}, {price: 30}]
+      functionChanges.should.eql [['addOrUpdate', 'price'], ['addOrUpdate', 'tax_rate'], ['addOrUpdate', 'total'], ['remove', 'price'], ['addOrUpdate', 'price']]
 
     it 'to a function set after it is observed', ->
       observeNamedChanges 'price'

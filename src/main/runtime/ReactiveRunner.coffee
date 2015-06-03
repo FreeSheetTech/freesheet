@@ -9,7 +9,8 @@ module.exports = class ReactiveRunner
   @STREAM = 'stream'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
-    @allChanges = new Rx.Subject()
+    @valueChanges = new Rx.Subject()
+    @functionChanges = new Rx.Subject()
     @userFunctionSubjects = {}
 
   # TODO  addProvidedFunction and addProvidedStream do the same thing
@@ -26,41 +27,49 @@ module.exports = class ReactiveRunner
     name = funcDef.name
     @userFunctions[name] = funcDef
     source = @_userFunctionStream funcDef
+    @functionChanges.onNext ['addOrUpdate', name]
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(null))
     subj.sourceSub?.dispose()
     subj.sourceSub = source.subscribe subj
-    if not subj.allChangesSub
-      subj.allChangesSub = subj.subscribe (value) => @allChanges.onNext [name, value]
+    if not subj.valueChangesSub
+      subj.valueChangesSub = subj.subscribe (value) =>
+        @valueChanges.onNext [name, value]
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
-  removeUserFunction: (name) ->
-    if subj = @userFunctionSubjects[name]
+  removeUserFunction: (functionName) ->
+    if subj = @userFunctionSubjects[functionName]
       subj.onNext(null)
       subj.sourceSub?.dispose()
       subj.sourceSub = null
-      subj.allChangesSub?.dispose()
-      subj.allChangesSub = null
-      for name, subj of @userFunctionSubjects
-        if not subj.hasObservers() then delete @userFunctionSubjects[name]
+      subj.valueChangesSub?.dispose()
+      subj.valueChangesSub = null
+      for subjName, subj of @userFunctionSubjects
+        if not subj.hasObservers() then delete @userFunctionSubjects[subjName]
 
-  onChange: (callback, name) ->
+    @functionChanges.onNext ['remove', functionName]
+
+
+  onValueChange: (callback, name) ->
     if name
-      @allChanges.subscribe (nameValue) -> if nameValue[0] == name then callback nameValue[0], nameValue[1]
+      @valueChanges.subscribe (nameValue) -> if nameValue[0] == name then callback nameValue[0], nameValue[1]
       if subj = @userFunctionSubjects[name]
         callback name, subj.value
       else
         @_newUserFunctionSubject name
     else
-      @allChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
+      @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
+
+  onFunctionChange: (callback) -> @functionChanges.subscribe (typeName) -> callback typeName[0], typeName[1]
 
   #  private functions
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name))
   _newUserFunctionSubject: (name) ->
     subj = new Rx.BehaviorSubject(null)
-    subj.allChangesSub = subj.subscribe (value) => @allChanges.onNext [name, value]
+    subj.valueChangesSub = subj.subscribe (value) =>
+      @valueChanges.onNext [name, value]
     subj
 
   _userFunctionStream: (func) ->
