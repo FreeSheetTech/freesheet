@@ -109,6 +109,9 @@ Possible changes
 - then make sequences and aggregates equivalent to functions, use all interchangeably
 - aggregate has + operator to add another aggregate to it
 - infix operators for transform and filter: changedTo and where
+- if then else operator
+- case function which takes alternate conditions and results
+- match function that looks like switch
 
 
 

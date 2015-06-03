@@ -3,7 +3,7 @@ sinon = require 'sinon'
 sinonChai = require 'sinon-chai'
 TextLoader = require './TextLoader'
 {Literal, InfixExpression} = require '../ast/Expressions'
-{UserFunction, ArgumentDefinition} = require '../ast/FunctionDefinition'
+{UserFunction, ArgumentDefinition, FunctionError} = require '../ast/FunctionDefinition'
 
 should = chai.Should()
 chai.use sinonChai
@@ -123,4 +123,24 @@ describe 'TextLoader', ->
     loader._defs = []
     loader.setFunctionAsText('fn2', ' 22+10.5 ', 'fn2', 'fn3')
 
+  it 'sets a function with a syntax error and notifies change but does not update runner', ->
+    loader._defs = [fn1, fn3]
+    loader.setFunctionAsText('fn2', ' 22+ ', '', 'fn3')
+    loader.functionDefinitions()[0].should.eql fn1
+    loader.functionDefinitions()[1].name.should.eql 'fn2'
+    loader.functionDefinitions()[1].error.toString().should.match /^SyntaxError.*/
+    loader.functionDefinitions()[2].should.eql fn3
+    loader.
+    runner.removeUserFunction.should.have.been.calledWith('fn2')
+    runner.addUserFunction.should.not.have.been.called
 
+  it 'sets a function with a syntax error and keeps the text for all purposes', ->
+    loader._defs = [fn1]
+    loader.setFunctionAsText('fn2', ' 22+ ', '', '')
+    loader.asText().should.eql '''fn1 = 10.5 / 22;\nfn2 = 22+;\n'''
+    defsAndValues = loader.functionDefinitionsAndValues()
+    defsAndValues[0].should.eql {name: 'fn1', definition: fn1, value: null}
+    defsAndValues[1].name.should.eql 'fn2'
+    defsAndValues[1].definition.name.should.eql 'fn2'
+    defsAndValues[1].value.should.be.an.instanceof(Error)
+    defsAndValues[1].value.toString().should.match /^SyntaxError.*/

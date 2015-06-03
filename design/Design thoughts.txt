@@ -356,10 +356,11 @@ Managing subscriptions and user functions
 Error handling
 --------------
 - Syntax errors in parsing:
-  - catch exception in TextLoader
+    - catch exception in TextLoader
   - Cannot get event from Runner because don't have function definition
-  - Remove name from runner - which will send value change to null if it was there
+    - Remove name from runner - which will send value change to null if it was there
   - TextLoader trigger onFunctionChange with error
+  - TextLoader also passes on function changes from runner, decorated with beforeName
   - store bad text in TextLoader
   - save bad text in text file
   - handle invalid syntax while loading from text file
