@@ -35,7 +35,7 @@ describe 'TimeFunctions includes', ->
       ticks = changesFor('theTime')
       ticks.length.should.eql(3)
       latestTickMillis = ticks[2].getTime()
-      (Date.now() - latestTickMillis).should.be.lessThan(1000)
+      (Date.now() - latestTickMillis).should.be.lessThan(1010)
       done()
     setTimeout checkResults, 3000
 

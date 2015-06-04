@@ -144,3 +144,4 @@ describe 'TextLoader', ->
     defsAndValues[1].definition.name.should.eql 'fn2'
     defsAndValues[1].value.should.be.an.instanceof(Error)
     defsAndValues[1].value.toString().should.match /^SyntaxError.*/
+
