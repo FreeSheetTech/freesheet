@@ -363,7 +363,7 @@ Error handling
   - TextLoader also passes on function changes from runner, decorated with beforeName
     - store bad text in TextLoader
     - save bad text in text file
-  - handle invalid syntax while loading from text file
+    - handle invalid syntax while loading from text file
 
 - Calculation errors while running:
 
