@@ -146,3 +146,11 @@ describe 'TextLoader', ->
     defsAndValues[1].value.should.be.an.instanceof(Error)
     defsAndValues[1].value.toString().should.match /^SyntaxError.*/
 
+  it 'loads definitions with errors from text and adds them to those already there', ->
+    loader._defs = [fn3]
+    loader.loadDefinitions '   fn1 = }+/;\n\n\nfn2 = 22+10.5;\n'
+    loader.functionDefinitions()[0].should.eql fn3
+    loader.functionDefinitions()[2].should.eql fn2
+    loader.functionDefinitions()[1].name.should.eql 'fn1'
+    loader.functionDefinitions()[1].error.toString().should.match /^SyntaxError.*/
+

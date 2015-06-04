@@ -1,10 +1,6 @@
 _ = require 'lodash'
 TextParser = require '../parser/TextParser'
 
-class FunctionError
-  constructor: (@name, text, @error) ->
-    @expr = {text}
-
 module.exports = class TextLoader
 
   constructor: (@runner) ->
