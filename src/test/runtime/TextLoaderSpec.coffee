@@ -138,6 +138,7 @@ describe 'TextLoader', ->
     loader._defs = [fn1]
     loader.setFunctionAsText('fn2', ' 22+ ', '', '')
     loader.asText().should.eql '''fn1 = 10.5 / 22;\nfn2 = 22+;\n'''
+    loader.getFunctionAsText('fn2').should.eql '22+'
     defsAndValues = loader.functionDefinitionsAndValues()
     defsAndValues[0].should.eql {name: 'fn1', definition: fn1, value: null}
     defsAndValues[1].name.should.eql 'fn2'

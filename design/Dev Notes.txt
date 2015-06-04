@@ -1,0 +1,7 @@
+Development Notes
+=================
+
+IntelliJ CoffeeScript File watcher settings
+Arguments: --map -o $ProjectFileDir$/target/coffeejs/$FileDirRelativeToSourcepath$  --compile $FileName$
+Working dir: $FileDir$
+Output paths to refresh: $ProjectFileDir$/target/coffeejs/$FileDirRelativeToSourcepath$/$FileNameWithoutExtension$.js:$ProjectFileDir$/target/coffeejs/$FileDirRelativeToSourcepath$/$FileNameWithoutExtension$.map:$ProjectFileDir$/target/coffeejs/$FileDirRelativeToSourcepath$/$FileNameWithoutExtension$.js.map

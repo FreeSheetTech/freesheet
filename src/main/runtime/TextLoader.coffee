@@ -36,7 +36,7 @@ module.exports = class TextLoader
       funcDef = new TextParser(name + ' = ' + definition).functionDefinition()
       @setFunction funcDef, oldName, beforeName
     catch error
-      funcError = new FunctionError name, definition, error
+      funcError = new FunctionError name, definition.trim(), error
       @setFunctionError funcError, oldName, beforeName
 
   setFunction: (funcDef, oldName, beforeName) ->
