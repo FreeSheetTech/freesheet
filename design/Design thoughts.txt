@@ -148,6 +148,7 @@ Thoughts
 - Sandboxed - when used as embedded scripting language, can run only the provided functions, so no danger, like with Groovy
 - Specification language: process AST to translate into English-like description, or graphical form
 - Rules engine - way for users to change business rules in a system
+- Emphasises steady values (signal) over changes (event) - different to most FRP systems
 
 Sequences and objects
 ---------------------

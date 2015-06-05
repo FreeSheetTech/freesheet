@@ -10,7 +10,6 @@ module.exports = class ReactiveRunner
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
-    @functionChanges = new Rx.Subject()
     @userFunctionSubjects = {}
 
   # TODO  addProvidedFunction and addProvidedStream do the same thing
@@ -27,7 +26,6 @@ module.exports = class ReactiveRunner
     name = funcDef.name
     @userFunctions[name] = funcDef
     source = @_userFunctionStream funcDef
-    @functionChanges.onNext ['addOrUpdate', name]
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(null))
     subj.sourceSub?.dispose()
@@ -48,9 +46,6 @@ module.exports = class ReactiveRunner
       for subjName, subj of @userFunctionSubjects
         if not subj.hasObservers() then delete @userFunctionSubjects[subjName]
 
-    @functionChanges.onNext ['remove', functionName]
-
-
   onValueChange: (callback, name) ->
     if name
       @valueChanges.subscribe (nameValue) -> if nameValue[0] == name then callback nameValue[0], nameValue[1]
@@ -60,8 +55,6 @@ module.exports = class ReactiveRunner
         @_newUserFunctionSubject name
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
-
-  onFunctionChange: (callback) -> @functionChanges.subscribe (typeName) -> callback typeName[0], typeName[1]
 
   #  private functions
 

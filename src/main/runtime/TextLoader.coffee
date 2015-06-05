@@ -33,14 +33,16 @@ module.exports = class TextLoader
     else
       @setFunction funcDef, oldName, beforeName
 
+    funcDef
+
   setFunction: (funcDef, oldName, beforeName) ->
     if oldName and oldName != funcDef.name then @removeFunction oldName
     @_addDefinition funcDef, beforeName
     @runner.addUserFunction funcDef
 
-  setFunctionError: (funcDef, oldName, beforeName) ->
-    @removeFunction funcDef.name
-    @_addDefinition funcDef, beforeName
+  setFunctionError: (funcError, oldName, beforeName) ->
+    @removeFunction funcError.name
+    @_addDefinition funcError, beforeName
 
   removeFunction: (name) ->
     def = _.find @_defs, (x) -> x.name == name

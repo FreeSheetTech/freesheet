@@ -61,8 +61,9 @@ describe 'TextLoader', ->
 
   it 'replaces a function from a text definition', ->
     loader._defs = [fn1]
-    loader.setFunctionAsText('fn2', ' 22+10.5 ', 'fn1')
+    newFn = loader.setFunctionAsText('fn2', ' 22+10.5 ', 'fn1')
     loader.functionDefinitions().should.eql [fn2]
+    loader.functionDefinitions()[0].should.equal newFn
     runner.removeUserFunction.should.have.been.calledWith('fn1')
     runner.addUserFunction.should.have.been.calledWith(fn2)
 
@@ -125,10 +126,11 @@ describe 'TextLoader', ->
 
   it 'sets a function with a syntax error and notifies change but does not update runner', ->
     loader._defs = [fn1, fn3]
-    loader.setFunctionAsText('fn2', ' 22+ ', '', 'fn3')
+    fnErr = loader.setFunctionAsText('fn2', ' 22+ ', '', 'fn3')
     loader.functionDefinitions()[0].should.eql fn1
     loader.functionDefinitions()[1].name.should.eql 'fn2'
     loader.functionDefinitions()[1].error.toString().should.match /^SyntaxError.*/
+    loader.functionDefinitions()[1].should.equal fnErr
     loader.functionDefinitions()[2].should.eql fn3
     loader.
     runner.removeUserFunction.should.have.been.calledWith('fn2')

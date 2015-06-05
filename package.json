@@ -15,11 +15,12 @@
     "rx": "~2.5.3"
   },
   "devDependencies": {
+    "browserify": "~10.2.3",
     "chai": "^2.2.0",
+    "mocha": "^2.2.5",
+    "pegjs": "~0.8.0",
     "should": "^4.1.0",
     "sinon": "^1.14.1",
-    "sinon-chai": "^2.7.0",
-    "pegjs": "~0.8.0",
-    "browserify": "~10.2.3"
+    "sinon-chai": "^2.7.0"
   }
 }

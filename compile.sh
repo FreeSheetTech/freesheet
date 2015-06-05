@@ -10,6 +10,7 @@ coffee --map -o target/coffeejs/tool -c src/main/tool/*.coffee
 
 coffee --map -o target/coffeejs/ast -c src/test/ast/*.coffee
 coffee --map -o target/coffeejs/code -c src/test/code/*.coffee
+coffee --map -o target/coffeejs/freesheet -c src/test/freesheet/*.coffee
 coffee --map -o target/coffeejs/functions -c src/test/functions/*.coffee
 coffee --map -o target/coffeejs/parser -c src/test/parser/*.coffee
 coffee --map -o target/coffeejs/runtime -c src/test/runtime/*.coffee

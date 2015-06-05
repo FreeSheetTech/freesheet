@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+set -e
+
 ./compileParser.sh
 ./compile.sh
 ./test.sh
+./buildDist.js
