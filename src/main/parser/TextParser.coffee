@@ -7,10 +7,13 @@ module.exports = class TextParser
 
   expression: -> Parser.parse @text, {startRule: 'expression'}
   functionDefinition: ->
+    defText = @text.trim()
     try
-      Parser.parse @text, {startRule: 'functionDefinition'}
+      Parser.parse defText, {startRule: 'functionDefinition'}
     catch error
-      [name, def] = @text.trim().split(new RegExp(' *= *'))
+      [name, def] = defText.split(new RegExp(' *= *'))
+      namePartLength = defText.length - defText.replace(new RegExp('\\w+ *= *'), '').length
+      error.columnInExpr = error.column - namePartLength
       new FunctionError name, def.trim(), error
 
   functionDefinitionList: ->

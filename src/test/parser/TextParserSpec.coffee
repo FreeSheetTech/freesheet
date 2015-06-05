@@ -208,11 +208,14 @@ describe 'TextParser parses', ->
       functionQ.constructor.name.should.eql 'UserFunction'
 
     it 'with a syntax error', ->
-      functionQ = functionFor('q = getTheAnswer(100, ')
+      functionQ = functionFor('  q = getTheAnswer(100}  ')
       functionQ.constructor.name.should.eql 'FunctionError'
       functionQ.name.should.eql 'q'
-      functionQ.expr.should.eql {text: 'getTheAnswer(100,'}
+      functionQ.expr.should.eql {text: 'getTheAnswer(100}'}
       functionQ.error.toString().should.match /^SyntaxError/
+      functionQ.error.line.should.equal 1
+      functionQ.error.column.should.equal 21
+      functionQ.error.columnInExpr.should.equal 17
 
 
   describe 'a map of function definitions', ->

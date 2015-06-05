@@ -16,19 +16,23 @@ describe 'Sheet', ->
     functionChanges = []
     namedChanges = []
     sheet.onValueChange callback
-    sheet.onFormulaChange (type, name) -> functionChanges.push [type, name]
+    sheet.onFormulaChange (type, name, text, error) ->
+      change = [type, name]
+      change.push text if text
+      change.push error if error
+      functionChanges.push change
 
 
   describe 'notifies function changes', ->
     it 'for successful add', ->
       sheet.update 'fn1', '10'
-      functionChanges.should.eql [['addOrUpdate', 'fn1']]
+      functionChanges.should.eql [['addOrUpdate', 'fn1', '10']]
 
-   it 'for successful remove', ->
+    it 'for successful remove', ->
       sheet.update 'fn1', '10'
       sheet.remove 'fn1'
-      functionChanges.should.eql [['addOrUpdate', 'fn1'], ['remove', 'fn1']]
+      functionChanges.should.eql [['addOrUpdate', 'fn1', '10'], ['remove', 'fn1']]
 
     it 'for error', ->
       sheet.update 'fn1', '10('
-      functionChanges.should.eql [['error', 'fn1']]
+      functionChanges.should.eql [['error', 'fn1', '10(', 'Error in formula on line 1 at position 3' ]]

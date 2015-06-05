@@ -7,6 +7,8 @@ TextLoader = require '../runtime/TextLoader'
 
 module.exports = class Sheet
 
+  errorText = (error) -> "Error in formula on line #{error.line} at position #{error.columnInExpr}"
+
   constructor: (@name) ->
     @runner = new ReactiveRunner()
     @loader = new TextLoader(@runner)
@@ -19,8 +21,8 @@ module.exports = class Sheet
   update: (name, definition, oldName, beforeName) ->
     funcDef = @loader.setFunctionAsText name, definition, oldName, beforeName
     notification = switch
-      when funcDef instanceof FunctionDefinition then ['addOrUpdate', name]
-      when funcDef instanceof FunctionError then ['error', name]
+      when funcDef instanceof FunctionDefinition then ['addOrUpdate', name, funcDef.expr.text]
+      when funcDef instanceof FunctionError then ['error', name, funcDef.expr.text, errorText(funcDef.error)]
       else throw new Error 'Unknown function definition type: ' + funcDef
     @functionChanges.onNext notification
 
@@ -34,5 +36,5 @@ module.exports = class Sheet
   formulasAndValues: -> @loader.functionDefinitionsAndValues()
   addFunctions: (functionMap) -> @runner.addProvidedFunctions functionMap
   onValueChange: (callback) -> @runner.onValueChange callback
-  onFormulaChange: (callback) -> @functionChanges.subscribe (typeName) -> callback typeName[0], typeName[1]
+  onFormulaChange: (callback) -> @functionChanges.subscribe (updateArgs) -> callback.apply(null, updateArgs)
 
