@@ -156,3 +156,6 @@ describe 'TextLoader', ->
     loader.functionDefinitions()[1].name.should.eql 'fn1'
     loader.functionDefinitions()[1].error.toString().should.match /^SyntaxError.*/
 
+    runner.removeUserFunction.should.have.been.calledWith('fn1')
+    runner.addUserFunction.should.not.have.been.calledWith(fn1)
+    runner.addUserFunction.should.have.been.calledWith(fn2)

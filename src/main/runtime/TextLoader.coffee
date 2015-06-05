@@ -14,8 +14,7 @@ module.exports = class TextLoader
     @_defs = []
 
   loadDefinitions: (text) ->
-    @_defs = @_defs.concat @parseDefinitions text
-    @setFunction f for f in @_defs
+    @_setFunctionOrError f for f in @parseDefinitions text
 
   asText: ->
     ("#{d.name} = #{d.expr.text.trim()};\n" for d in @_defs).join('')
@@ -28,11 +27,7 @@ module.exports = class TextLoader
 
   setFunctionAsText: (name, definition, oldName, beforeName) ->
     funcDef = new TextParser(name + ' = ' + definition).functionDefinition()
-    if funcDef instanceof FunctionError
-      @setFunctionError funcDef, oldName, beforeName
-    else
-      @setFunction funcDef, oldName, beforeName
-
+    @_setFunctionOrError funcDef, oldName, beforeName
     funcDef
 
   setFunction: (funcDef, oldName, beforeName) ->
@@ -48,6 +43,12 @@ module.exports = class TextLoader
     def = _.find @_defs, (x) -> x.name == name
     @runner.removeUserFunction name
     _.pull @_defs, def
+
+  _setFunctionOrError: (funcDef, oldName, beforeName) ->
+    if funcDef instanceof FunctionError
+      @setFunctionError funcDef, oldName, beforeName
+    else
+      @setFunction funcDef, oldName, beforeName
 
   _defIndex: (name) -> _.findIndex @_defs, (x) -> x.name == name
 
