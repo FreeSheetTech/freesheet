@@ -129,6 +129,12 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 'The A'}, {aa: 'The A10 times'}]
 
+    it 'merges aggregates', ->
+      parseUserFunctions 'a = {a: 10}'
+      parseUserFunctions 'b = a + {b: 20}'
+
+      changes.should.eql [{a: {a: 10}}, {b: {a: 10, b: 20}}]
+
     it 'creates objects for aggregation expressions using constants, function calls and operations', ->
       parseUserFunctions 'x = 20; obj = {a: 10, b: "Fred", c: x, d: x + 30}'
       changes.should.eql [{x: 20}, {obj: {a: 10, b: "Fred", c: 20, d: 50}}]

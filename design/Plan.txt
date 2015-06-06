@@ -41,11 +41,10 @@ Immediate to do
     - Object expressions
     - Scoping rules - including object expressions
     - Core functions
-- Error handling
+    - Error handling
 - Cyclic references
     - Date and time period arithmetic
 - Streams stopped when dependents removed - eg now() and map to elapsed
-- if expressions
     - boolean expressions
     - simplified references in aggregates
 - merge aggregate with + operator

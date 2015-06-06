@@ -39,6 +39,8 @@ module.exports = class Operations
         new Period(a.millis + b.millis)
       when a instanceof Date and b instanceof Period
         new Date(a.getTime() + b.millis)
+      when _.isPlainObject(a) and _.isPlainObject(b)
+        _.merge {}, a, b
       else
         a + b
 
