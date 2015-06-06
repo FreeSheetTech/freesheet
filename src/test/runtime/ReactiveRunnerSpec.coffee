@@ -206,8 +206,18 @@ describe 'ReactiveRunner runs', ->
 
     it 'divide by zero', ->
       parseUserFunctions 'a = 10'
-      parseUserFunctions 'num = a / 0'
-      changes.should.eql [{a: 10}, {num: error 'num', 'Divide by zero'}]
+      parseUserFunctions 'b = 0'
+      parseUserFunctions 'num = a / b'
+      changes.should.eql [{a: 10}, {b: 0}, {num: error 'num', 'Divide by zero'}]
+
+    it 'invalid calculation', ->
+      parseUserFunctions 'a = 10'
+      parseUserFunctions 'num = a - "xxx"'
+      changes.should.eql [{a: 10}, {num: error 'num', 'Invalid values in calculation'}]
+
+    it 'invalid calculation in literal expression', ->
+      parseUserFunctions 'num = 10 - "xxx"'
+      changes.should.eql [{num: error 'num', 'Invalid values in calculation'}]
 
   describe 'expressions as function arguments with sequences', ->
     it 'transforms all elements of a sequence to a literal', ->

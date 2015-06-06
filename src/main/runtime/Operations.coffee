@@ -1,4 +1,5 @@
 Rx = require 'rx'
+_ = require 'lodash'
 Period = require '../functions/Period'
 {CalculationError} = require '../error/Errors'
 
@@ -14,6 +15,7 @@ module.exports = class Operations
   checkResult = (value) ->
     switch
       when value == Number.POSITIVE_INFINITY or value == Number.NEGATIVE_INFINITY then throw new Error 'Divide by zero'
+      when _.isNaN value then throw new Error 'Invalid values in calculation'
       else value
 
   _error: (err) -> if err instanceof CalculationError then err else new CalculationError(@name, err.message)
@@ -22,6 +24,12 @@ module.exports = class Operations
     try
       checkArgs arguments
       checkResult fn.apply this, arguments
+    catch e
+      @_error e
+
+  _valueCheck: (value) ->
+    try
+      checkResult value
     catch e
       @_error e
 
@@ -49,4 +57,4 @@ module.exports = class Operations
 
 
   combine: (streams..., combineFunction) -> Rx.Observable.combineLatest streams, @_errorCheck(combineFunction)
-  subject: (value) -> new Rx.BehaviorSubject value
+  subject: (value) -> new Rx.BehaviorSubject @_valueCheck value

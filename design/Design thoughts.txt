@@ -367,13 +367,13 @@ Error handling
     - handle invalid syntax while loading from text file
 
 - Calculation errors while running:
- - catch exception in runner - where?
- - Detect invalid operations eg divide by zero, divide strings which give Infinity or NaN
+    - catch exception in runner - where?
+    - Detect invalid operations eg divide by zero, divide strings which give Infinity or NaN
     - Detect uses of undefined names
- - Catch TypeError from calling undefined function
- - return the error as the value of that expression
- - error has full details of which function and what values
- - if error is an input to any other expression, the result of that expression is error too, linked to original
+    - Catch TypeError from calling undefined function
+    - return the error as the value of that expression
+    - error has full details of which function and what values
+    - if error is an input to any other expression, the result of that expression is error too, linked to original
  - propagated errors link to the original error
 
 Teaching people to use it
