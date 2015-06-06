@@ -1,4 +1,9 @@
 class CalculationError extends Error
   constructor: (@functionName, @message) ->
 
-module.exports = {CalculationError}
+class FunctionError
+  constructor: (@name, text, @error) ->
+    @expr = {text}
+
+
+module.exports = {CalculationError, FunctionError}

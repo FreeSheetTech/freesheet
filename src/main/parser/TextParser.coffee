@@ -1,5 +1,5 @@
 Parser = require './Parser'
-{FunctionError} = require '../ast/FunctionDefinition'
+{FunctionError} = require '../error/Errors'
 _ = require 'lodash'
 
 module.exports = class TextParser

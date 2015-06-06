@@ -3,7 +3,8 @@
 Rx = require 'rx'
 ReactiveRunner = require '../runtime/ReactiveRunner'
 TextLoader = require '../runtime/TextLoader'
-{FunctionDefinition, FunctionError} = require '../ast/FunctionDefinition'
+{FunctionDefinition} = require '../ast/FunctionDefinition'
+{FunctionError} = require '../error/Errors'
 
 module.exports = class Sheet
 

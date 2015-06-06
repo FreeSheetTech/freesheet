@@ -12,11 +12,8 @@ class BuiltInFunction extends FunctionDefinition
 class ArgumentDefinition
   constructor: (@name, @kind) ->
 
-class FunctionError
-  constructor: (@name, text, @error) ->
-    @expr = {text}
 
 
 streamArgDefs = (names) -> (new ArgumentDefinition(n, 'stream') for n in names)
 
-module.exports = {FunctionDefinition, UserFunction, BuiltInFunction, ArgumentDefinition, FunctionError}
+module.exports = {FunctionDefinition, UserFunction, BuiltInFunction, ArgumentDefinition}

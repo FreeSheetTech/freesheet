@@ -1,6 +1,6 @@
 _ = require 'lodash'
 TextParser = require '../parser/TextParser'
-{FunctionError} = require '../ast/FunctionDefinition'
+{FunctionError} = require '../error/Errors'
 
 module.exports = class TextLoader
 

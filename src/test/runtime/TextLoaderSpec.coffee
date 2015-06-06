@@ -3,7 +3,8 @@ sinon = require 'sinon'
 sinonChai = require 'sinon-chai'
 TextLoader = require './TextLoader'
 {Literal, InfixExpression} = require '../ast/Expressions'
-{UserFunction, ArgumentDefinition, FunctionError} = require '../ast/FunctionDefinition'
+{UserFunction, ArgumentDefinition} = require '../ast/FunctionDefinition'
+{FunctionError} = require '../error/Errors'
 
 should = chai.Should()
 chai.use sinonChai
