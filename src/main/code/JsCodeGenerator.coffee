@@ -30,7 +30,7 @@ exprFunction = (expr, functionInfo) ->
 combineCode = (argNames, exprCode) ->
   names = (n.name for n in argNames)
   args = names.join ', '
-  "operations.combine(#{fromContextAll(argNames).join ', '}, function(#{args}) { try {operations.checkArgs(arguments); return #{exprCode};} catch (e) { return operations.error(e); } })"
+  "operations.combine(#{fromContextAll(argNames).join ', '}, function(#{args}) { return #{exprCode}; })"
 
 localStreamsVars = (localStreams) -> if localStreams.length then ("var #{s.name} = #{s.code};" for s in localStreams).join('\n') + '\n' else ''
 

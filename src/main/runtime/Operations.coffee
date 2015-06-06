@@ -24,8 +24,6 @@ subtract = (a, b) ->
     else
       a - b
 
-combine = (streams..., combineFunction) -> Rx.Observable.combineLatest streams, combineFunction
-subject = (value) -> new Rx.BehaviorSubject value
 checkArgs = (args) ->
   for a in args
     if a instanceof Error
@@ -34,4 +32,14 @@ checkArgs = (args) ->
 error = (err) ->
   if err instanceof CalculationError then err else new CalculationError("theFunction", err.message)
 
-module.exports = {add, subtract, combine, subject, checkArgs, error}
+errorCheck = (fn) -> ->
+#  try {operations.checkArgs(arguments); return #{exprCode};} catch (e) { return operations.error(e); }
+  try
+    checkArgs arguments
+    fn.apply this, arguments
+  catch e
+    error e
+
+combine = (streams..., combineFunction) -> Rx.Observable.combineLatest streams, errorCheck(combineFunction)
+subject = (value) -> new Rx.BehaviorSubject value
+module.exports = {add, subtract, combine, subject}
