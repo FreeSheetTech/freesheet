@@ -2,6 +2,7 @@ Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
 JsCodeGenerator = require '../code/JsCodeGenerator'
 Period = require '../functions/Period'
+{CalculationError} = require '../error/Errors'
 Operations = require './Operations'
 
 module.exports = class ReactiveRunner
@@ -52,15 +53,16 @@ module.exports = class ReactiveRunner
       if subj = @userFunctionSubjects[name]
         callback name, subj.value
       else
-        @_newUserFunctionSubject name
+        @_newUserFunctionSubject name, null
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
   #  private functions
 
-  _userFunctionSubject: (name) -> @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name))
-  _newUserFunctionSubject: (name) ->
-    subj = new Rx.BehaviorSubject(null)
+  _userFunctionSubject: (name) -> @userFunctionSubjects[name]
+  _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))
+  _newUserFunctionSubject: (name, initialValue) ->
+    subj = new Rx.BehaviorSubject(initialValue)
     subj.valueChangesSub = subj.subscribe (value) =>
       @valueChanges.onNext [name, value]
     subj
@@ -82,7 +84,7 @@ module.exports = class ReactiveRunner
       when func = @userFunctions[name] then @_userFunctionSubject name
       when (func = @providedFunctions[name])? and func.kind == ReactiveRunner.STREAM then func
       when func = @providedFunctions[name] then @_providedFunctionStream func
-      else @_userFunctionSubject name
+      else @_unknownUserFunctionSubject name
 
   _providedFunctionStream: (func) ->
     if func instanceof Rx.Observable or func instanceof Rx.Subject then func

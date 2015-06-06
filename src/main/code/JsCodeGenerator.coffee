@@ -19,7 +19,7 @@ argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 createFunction = (argNames, functionBody) ->
   functionCreateArgs = [null].concat 'operations','_ctx', functionBody
   result = new (Function.bind.apply(Function, functionCreateArgs))
-#  console.log 'createFunction', result
+  console.log 'createFunction', result
   result
 
 exprFunction = (expr, functionInfo) ->
@@ -30,7 +30,7 @@ exprFunction = (expr, functionInfo) ->
 combineCode = (argNames, exprCode) ->
   names = (n.name for n in argNames)
   args = names.join ', '
-  "operations.combine(#{fromContextAll(argNames).join ', '}, function(#{args}) { return #{exprCode}; })"
+  "operations.combine(#{fromContextAll(argNames).join ', '}, function(#{args}) { try {operations.checkArgs(arguments); return #{exprCode};} catch (e) { return operations.error(e); } })"
 
 localStreamsVars = (localStreams) -> if localStreams.length then ("var #{s.name} = #{s.code};" for s in localStreams).join('\n') + '\n' else ''
 

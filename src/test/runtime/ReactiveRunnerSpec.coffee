@@ -4,6 +4,7 @@ TextParser = require '../parser/TextParser'
 ReactiveRunner = require './ReactiveRunner'
 TimeFunctions = require '../functions/TimeFunctions'
 Period = require '../functions/Period'
+{CalculationError} = require '../error/Errors'
 
 describe 'ReactiveRunner runs', ->
 
@@ -32,6 +33,7 @@ describe 'ReactiveRunner runs', ->
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
+  unknown = (name) -> new CalculationError(name, 'Unknown name')
 
   beforeEach ->
     runner = new ReactiveRunner()
@@ -187,6 +189,20 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'q = getTheAnswer(100, b + addOne(a), getTheAnswer ( 4, 10, c)  )'
 
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
+
+  describe 'errors in expression evaluation', ->
+
+    it 'create a subtype of Error', ->
+      e = new CalculationError("fn1", "it went wrong")
+      e.functionName.should.eql 'fn1'
+      e.message.should.eql 'it went wrong'
+      e.should.be.an.instanceof Error
+
+    it 'calling unknown function', ->
+      parseUserFunctions 'a = 10'
+#      parseUserFunctions 'b = 10/0'
+      parseUserFunctions 'num = a + ddd(5)'
+      changes.should.eql [{a: 10}, {ddd: unknown 'ddd'}, {num: unknown 'ddd'}]
 
   describe 'expressions as function arguments with sequences', ->
     it 'transforms all elements of a sequence to a literal', ->
@@ -349,7 +365,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'materials = 35; labour = 25'
 
-      changes.should.eql [{ materials: null }, {labour: null }, {total: 0 }, {materials: 35 }, {total: 35 }, {labour: 25 }, {total: 60 }]
+      changes.should.eql [{ materials: unknown('materials') }, {labour: unknown('labour')  }, {total: unknown('materials') }, {materials: 35 }, {total: unknown('labour') }, {labour: 25 }, {total: 60 }]
 
     it 'adds two changing values in formula set afterwards', ->
       providedStreams { theInput: inputSubj }
@@ -371,7 +387,7 @@ describe 'ReactiveRunner runs', ->
 
       inputSubj.onNext 25
 
-      changes.should.eql [{materials: 35}, {labour:null}, {total: 35}, {labour:25}, {total: 60}]
+      changes.should.eql [{materials: 35}, {labour: unknown('labour')}, {total: unknown('labour')}, {labour:25}, {total: 60}]
 
     it 'on individual named value including initial value', ->
 

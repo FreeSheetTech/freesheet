@@ -1,5 +1,6 @@
 Rx = require 'rx'
 Period = require '../functions/Period'
+{CalculationError} = require '../error/Errors'
 
 add = (a, b) ->
   switch
@@ -25,5 +26,12 @@ subtract = (a, b) ->
 
 combine = (streams..., combineFunction) -> Rx.Observable.combineLatest streams, combineFunction
 subject = (value) -> new Rx.BehaviorSubject value
+checkArgs = (args) ->
+  for a in args
+    if a instanceof Error
+      throw a
 
-module.exports = {add, subtract, combine, subject}
+error = (err) ->
+  if err instanceof CalculationError then err else new CalculationError("theFunction", err.message)
+
+module.exports = {add, subtract, combine, subject, checkArgs, error}
