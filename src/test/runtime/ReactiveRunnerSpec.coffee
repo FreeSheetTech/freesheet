@@ -33,7 +33,8 @@ describe 'ReactiveRunner runs', ->
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
-  unknown = (name) -> new CalculationError(name, 'Unknown name')
+  unknown = (name) -> error(name, 'Unknown name')
+  error = (name, msg) -> new CalculationError(name, msg)
 
   beforeEach ->
     runner = new ReactiveRunner()
@@ -200,9 +201,13 @@ describe 'ReactiveRunner runs', ->
 
     it 'calling unknown function', ->
       parseUserFunctions 'a = 10'
-#      parseUserFunctions 'b = 10/0'
       parseUserFunctions 'num = a + ddd(5)'
       changes.should.eql [{a: 10}, {ddd: unknown 'ddd'}, {num: unknown 'ddd'}]
+
+    it 'divide by zero', ->
+      parseUserFunctions 'a = 10'
+      parseUserFunctions 'num = a / 0'
+      changes.should.eql [{a: 10}, {num: error 'num', 'Divide by zero'}]
 
   describe 'expressions as function arguments with sequences', ->
     it 'transforms all elements of a sequence to a literal', ->

@@ -71,7 +71,7 @@ module.exports = class ReactiveRunner
     {theFunction, functionNames} = JsCodeGenerator.exprFunction func.expr, @_functionInfo()
     ctx = {}
     ctx[n] = @_functionArg(n) for n in functionNames
-    args = [Operations, ctx]
+    args = [new Operations(func.name), ctx]
     theFunction.apply null, args
 
   _functionInfo: ->

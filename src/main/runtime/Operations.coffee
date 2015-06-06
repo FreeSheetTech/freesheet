@@ -2,44 +2,51 @@ Rx = require 'rx'
 Period = require '../functions/Period'
 {CalculationError} = require '../error/Errors'
 
-add = (a, b) ->
-  switch
-    when a instanceof Period and b instanceof Period
-      new Period(a.millis + b.millis)
-    when a instanceof Date and b instanceof Period
-      new Date(a.getTime() + b.millis)
-    else
-      a + b
+module.exports = class Operations
 
-subtract = (a, b) ->
-  switch
-    when a instanceof Date and b == null or a == null and b instanceof Date
-      null
-    when a instanceof Period and b instanceof Period
-      new Period(a.millis - b.millis)
-    when a instanceof Date and b instanceof Date
-      new Period(a.getTime() - b.getTime())
-    when a instanceof Date and b instanceof Period
-      new Date(a.getTime() - b.millis)
-    else
-      a - b
+  constructor: (@name) ->
 
-checkArgs = (args) ->
-  for a in args
-    if a instanceof Error
-      throw a
+  checkArgs = (args) ->
+    for a in args
+      if a instanceof Error
+        throw a
 
-error = (err) ->
-  if err instanceof CalculationError then err else new CalculationError("theFunction", err.message)
+  checkResult = (value) ->
+    switch
+      when value == Number.POSITIVE_INFINITY or value == Number.NEGATIVE_INFINITY then throw new Error 'Divide by zero'
+      else value
 
-errorCheck = (fn) -> ->
-#  try {operations.checkArgs(arguments); return #{exprCode};} catch (e) { return operations.error(e); }
-  try
-    checkArgs arguments
-    fn.apply this, arguments
-  catch e
-    error e
+  _error: (err) -> if err instanceof CalculationError then err else new CalculationError(@name, err.message)
 
-combine = (streams..., combineFunction) -> Rx.Observable.combineLatest streams, errorCheck(combineFunction)
-subject = (value) -> new Rx.BehaviorSubject value
-module.exports = {add, subtract, combine, subject}
+  _errorCheck: (fn) -> =>
+    try
+      checkArgs arguments
+      checkResult fn.apply this, arguments
+    catch e
+      @_error e
+
+  add: (a, b) ->
+    switch
+      when a instanceof Period and b instanceof Period
+        new Period(a.millis + b.millis)
+      when a instanceof Date and b instanceof Period
+        new Date(a.getTime() + b.millis)
+      else
+        a + b
+
+  subtract: (a, b) ->
+    switch
+      when a instanceof Date and b == null or a == null and b instanceof Date
+        null
+      when a instanceof Period and b instanceof Period
+        new Period(a.millis - b.millis)
+      when a instanceof Date and b instanceof Date
+        new Period(a.getTime() - b.getTime())
+      when a instanceof Date and b instanceof Period
+        new Date(a.getTime() - b.millis)
+      else
+        a - b
+
+
+  combine: (streams..., combineFunction) -> Rx.Observable.combineLatest streams, @_errorCheck(combineFunction)
+  subject: (value) -> new Rx.BehaviorSubject value
