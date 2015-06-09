@@ -1,0 +1,204 @@
+Stream and sequence functions
+=============================
+
+Sequences and objects
+---------------------
+- Need notation to refer to elements of maps and lists in basic formula syntax
+- Some list operators need static lists eg sorting may need IxJS
+- Dot operator creates a stream with pluck for one item
+- Need object expressions
+- Should use a function instead of special brackets eg LIST(a, 10, d * 4) and GROUP(a: 10, b: d * 4) - special syntax - more familiar
+- Need to filter as well as transform
+- BUT for simple case, non-reusable, can you just refer to the input value by name?
+- Sequences automatically have expression applied to every element
+- As all functions have stream inputs and outputs, if you apply it to a single value, get a single value, to stream you get a stream
+- BUT need to be have aggregate expressions applied to the whole list
+- Danger - if have stream that supplies a list for each value, what are you iterating over/aggregating on
+- If want a short name, just define it!
+- For dealing with lists (repeating data groups), need a foreach mechanism as well as aggregation
+- Lists can be treated similarly to streams in some ways - many operations apply to both
+- Functions applied to lists may be simpler than or different to those applied to sets of streams
+  - only one input stream and one output stream
+- Can list functions/expressions still pick up other values like inputs or times?
+- Poss: No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
+- Could use stream functions for streams and sequences, but say which you are doing?
+- May want to define a literal sequence but have it treated like a stream
+
+Transform functions for sequences and objects
+---------------------------------------------
+- Easily pass through individual parts or all input values so can add properties
+- Need to apply object expression to an input
+- Input is the current scope of the expression
+- Need a way to refer to this OR to name it in the expression
+- Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
+- Must work for an 'add one' case as well as transforming a data structure
+
+Transform and aggregation functions
+-----------------------------------
+- Transform is sequence -> sequence
+- Aggregation is sequence -> value
+- Both may apply either to a stream or to sequence values delivered by a stream
+- In many cases obvious which you want, in others not
+- FRP map + function is elided by this language
+- Users want to use same functions
+- Function providers want to reuse them
+- Possible approaches:
+  - Try to guess according to way it is used
+  - Automatically generate two different function names
+  - Assume apply to sequence value, use a modifier like foreach to apply to the stream
+  - Assume apply to the stream, use a modifier like valueOf to apply to individual values
+- Normal assumption is that functions apply to values
+- Applying across stream values is an extension to spreadsheet paradigm so should be different
+- Have a function like 'itemsOf' to mean 'treat as a stream, not individual values'
+  - eg count(questions) vs count(itemsof(questions))
+- How use same function to do running total of stream values and all values of a sequence?
+- Stream from sequence ends, but asynchronous.  Use special scheduler?
+- Can we write all functions in stream style and have them automatically applied to sequences by framework?
+- How know which code to generate?
+- Transform functions - can also be applied to stream or sequence
+  - eg select(itemsof(answers), it > 5)
+- Does this mean a change from functions being stream functions to just being sequence functions applied to stream or sequence?
+- Any way to make itemsOf automatically present something different to the caller?
+- Pros of different function names:
+  - fewer parentheses
+  - clearer that you have two functions for different purposes
+  - only certain functions can be applied to sequences
+  - obvious which are stream functions
+  - if multiple arguments, all need to be stream or value, so would need multiple itemsOf and would need to be the same
+  - some functions may be stream only or sequence only
+- SO - don't change anything right now
+
+In domain modelling
+-------------------
+- With domain modelling, will need functions to act on event sequences
+- Want to act on event sequences, and also on sequences contained in individual incoming events
+- Would be useful to use the same functions
+- Need to avoid confusion about which you want
+
+
+
+Examples
+--------
+
+Transactions
+------------
+
+- InputStream of transactions, each containing a list of postings
+- Want a stream of just the valid transactions
+- Valid Condition is whether total amounts of debits and credits in transaction is zero
+- Could write:
+    transactions = input
+    validTransactions = select(transactions, sum(in.debits) == sum(in.credits))
+    debitSides = fromEach(validTransactions, select(in.postings, in.type == 'debit'))
+- first def ok because sequences of debits and credits are named within the transaction aggregate (in)
+- second def has confusion between two in variables
+
+Questions
+---------
+- One page of questions
+- Questions are a single static set - effectively an input stream with one item
+    questions = [ {id: 1, question: "water", answer: "l'aqua"}, {id: 2, question: "sea", answer: "il mare"}];
+
+    questionsWithAnswers = fromEach(questions, in + {entered: input("q"+in.id),
+                                                    correct: entered and entered == in.answer});
+    answeredQuestions = select(questionsWithAnswers, in.entered);
+
+    totalScore = sum(fromEach(questionsWithAnswers, in.score));
+    allAnswered = count(answeredQuestions) == count(questions);
+
+
+Quiz and questions
+------------------
+- Quiz is a sequence of rounds with a set of questions on each round
+- questionsets is an input stream
+- each item in questionsets is a static sequence of questions
+- each question is an aggregate
+- page display is just the questions from the current question set, with answers, correct, etc
+- score for each page, and overall total
+
+    questionsets = input
+    questionSetsWithAnswers = fromEach(questionsets, {
+                                                        questions: fromEach(in, in + {entered: input("q"+in.id),
+                                                                         correct: entered and entered == in.answer},
+                                                        answeredQuestions: select(questions, in.entered),
+                                                        score: sum(fromEach(answeredQuestions, in.score))
+                                                     }                    )
+    completedQuestionSets = select(questionSetsWithAnswers, forAll(in.questions, in.entered));
+
+    totalScore = sum(fromEach(questionSetsWithAnswers, in.score));
+    allAnswered = count(completedQuestionSets) == count(questionSets);
+
+- Problems:
+  - confusion over in
+  - cannot refer to outer level from inner eg if wanted input id to be questionset id (if it had one) plus question id
+  - maybe over input() - does it matter whether a given input is currently on page or not?
+  - unclear due to nested expressions
+- Possible improvements:
+    - would be much clearer with user-defined functions as the transform function in the fromEach
+    - don't allow sequences as top-level items - strange restriction?
+    - name the variable in transform functions
+    - make the variable implicit - no need for in
+- Rare to have this situation with list directly containing lists - inner list usually part of an aggregate eg round number/name in this example
+
+- With named variables
+
+    questionsets = input
+    questionSetsWithAnswers = fromEach(questionsets qs, {
+                                                        questions: fromEach(qs q, q + {entered: input("q" + qs.id + "_" + q.id),
+                                                                         correct: entered and entered == q.answer},
+                                                        answeredQuestions: select(questions q, q.entered),
+                                                        score: sum(fromEach(answeredQuestions aq, aq.score))
+                                                     }                    )
+    completedQuestionSets = select(questionSetsWithAnswers qs , forAll(qs.questions q, q.entered));
+
+    totalScore = sum(fromEach(questionSetsWithAnswers qs, qs.score));
+    allAnswered = count(completedQuestionSets) == count(questionSets);
+
+- With no variables
+
+    questionsets = input
+    questionSetsWithAnswers = fromEach(questionsets, {
+                                                        questions: fromEach(??, {entered: input("q"+q.id),
+                                                                         correct: entered and entered == q.answer},
+                                                        answeredQuestions: select(questions, entered),
+                                                        score: sum(fromEach(answeredQuestions, score))
+                                                     }                    )
+    completedQuestionSets = select(questionSetsWithAnswers , forAll(questions, entered));
+
+    totalScore = sum(fromEach(questionSetsWithAnswers, score));
+    allAnswered = count(completedQuestionSets) == count(questionSets);
+
+Bookkeeping
+-----------
+
+    newAccounts = input
+    transactions = input
+
+    accounts = collect(newAccounts)
+
+    transactionPostings = collect(fromEach(transactions, the.postings))
+
+    accountsWithPostings = fromEach(accounts account, account + {
+     postings: select(transactionPostings posting, posting.accountId == account.id),
+     debits: select(postings p, p.type = 'debit'),
+     credits: select(postings p, p.type = 'credit'),
+     balance: sum(fromEach(credits, the.amount)) - sum(fromEach(debits, the.amount))
+     debitBalance: ifElse(balance < 0, 0 - balance, none),
+     creditBalance: ifElse(balance > 0, balance, none)
+    })
+
+    trialBalance = {
+        accounts: fromEach(select(sheet.accounts, balance <> 0), {name: the.name, debitBalance: the.debitBalance, creditBalance: the.creditBalance})
+        totals: {debitTotal: sum(accounts.debitBalance), creditTotal: sum(accounts.creditBalance)}
+    }
+
+
+- collect needs to accept single or sequence, and flatten OR use concat around it
+- if want an aggregate to have a member the same as a global function, confusion with local reference - qualify one or other?
+- needs:
+  - collect
+  - transform functions applied the same way to streams and sequences
+  - input mechanism
+  - expression variable naming so can select postings matching account
+- useful:
+  - aggregate members auto-named from an expression eg {the.name, p.balance}

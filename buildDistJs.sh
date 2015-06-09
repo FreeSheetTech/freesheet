@@ -3,6 +3,7 @@
 mkdir -p dist
 
 node_modules/.bin/browserify -o dist/freesheet.js \
+  -r lodash \
   -r ./target/coffeejs/parser/TextParser.js:text-parser \
   -r ./target/coffeejs/runtime/ReactiveRunner.js:reactive-runner \
   -r ./target/coffeejs/runtime/TextLoader.js:text-loader \

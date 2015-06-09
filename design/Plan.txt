@@ -47,12 +47,13 @@ Immediate to do
 - Streams stopped when dependents removed - eg now() and map to elapsed
     - boolean expressions
     - simplified references in aggregates
-- merge aggregate with + operator
+    - merge aggregate with + operator
     - none for null 
 - worksheet entry/display improvements
 - styling in pages
 - documentation
 - working in elmon or other site
+- auto-storage
 
 Future steps
 ------------

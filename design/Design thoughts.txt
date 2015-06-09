@@ -41,13 +41,6 @@ Thoughts
 - Testing with mocks: could be necessary, substitute other functions called with mocks
 - Stubbing syntax: just list of functions to stub
 - Connector block worksheets could help to wire reused functions to a particular page
-- A worksheet is a function mapping a set of input event sequences to a set of outputs
-- Or maybe a single sequence of input event combinations to a single sequence of output event combinations
-- Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
-- Connects up with the idea of state being the history of an object
-- Current value is init state with every update folded in
-- May need to snapshot state at intervals - manual or auto, each year or after every update?
-- Which connects up with setting up test data by performing sequence of operations on the system
 - Need to be able to use functions as first class objects - it is FP, after all
 - Do functions have to be defined separately or can they be nested within another sheet?
 - How do things like filtering on input or adding a value to a column
@@ -63,6 +56,7 @@ Thoughts
 - A function is defined by a named worksheet and can then be referenced in formulas
 - A function from one simple value to another might be cumbersome to define as a worksheet
 - Need syntax to define inputs that must be provided
+- Inputs could specify the data items and types required
 - Functions used in foreach expressions - do they take stream of input values, and can they do aggregation as they go?
 - Definition and instance separation - named worksheets at top level like objects, what about when used in formulas in many places
 - How to implement reuse in different places
@@ -149,38 +143,7 @@ Thoughts
 - Specification language: process AST to translate into English-like description, or graphical form
 - Rules engine - way for users to change business rules in a system
 - Emphasises steady values (signal) over changes (event) - different to most FRP systems
-
-Sequences and objects
----------------------
-- Need notation to refer to elements of maps and lists in basic formula syntax
-- Some list operators need static lists eg sorting may need IxJS
-- Dot operator creates a stream with pluck for one item
-- Need object expressions
-- Should use a function instead of special brackets eg LIST(a, 10, d * 4) and GROUP(a: 10, b: d * 4) - special syntax - more familiar
-- Need to filter as well as transform
-- BUT for simple case, non-reusable, can you just refer to the input value by name?
-- Sequences automatically have expression applied to every element
-- As all functions have stream inputs and outputs, if you apply it to a single value, get a single value, to stream you get a stream
-- BUT need to be have aggregate expressions applied to the whole list
-- Danger - if have stream that supplies a list for each value, what are you iterating over/aggregating on
-- If want a short name, just define it!
-- For dealing with lists (repeating data groups), need a foreach mechanism as well as aggregation
-- Lists can be treated similarly to streams in some ways - many operations apply to both
-- Functions applied to lists may be simpler than or different to those applied to sets of streams
-  - only one input stream and one output stream
-- Can list functions/expressions still pick up other values like inputs or times?
-- Poss: No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
-- Could use stream functions for streams and sequences, but say which you are doing?
-
-
-Transform functions for sequences and objects
----------------------------------------------
-- Easily pass through individual parts or all input values so can add properties
-- Need to apply object expression to an input
-- Input is the current scope of the expression
-- Need a way to refer to this OR to name it in the expression
-- Where need to pass a function to another, it could be just an expr with a special var to mean 'the target item' - maybe 'it'
-- Must work for an 'add one' case as well as transforming a data structure
+- Could view sheet/program as a function from a sequence of events (on many streams) to an output.  Then don't need to worry about individual events.
 
 Local values within expressions
 -------------------------------
@@ -301,42 +264,6 @@ Reusing functions
 - If users can create impure worksheets, they won't be bothered to clean them up for reuse
 - Testing much easier with pure worksheets
 
-Transform and aggregation functions
------------------------------------
-- Transform is sequence -> sequence
-- Aggregation is sequence -> value
-- Both may apply either to a stream or to sequence values delivered by a stream
-- In many cases obvious which you want, in others not
-- FRP map + function is elided by this language
--
-- Users want to use same functions
-- Function providers want to reuse them
-- Possible approaches:
-  - Try to guess according to way it is used
-  - Automatically generate two different function names
-  - Assume apply to sequence value, use a modifier like foreach to apply to the stream
-  - Assume apply to the stream, use a modifier like valueOf to apply to individual values
-- Normal assumption is that functions apply to values
-- Applying across stream values is an extension to spreadsheet paradigm so should be different
-- Have a function like 'itemsOf' to mean 'treat as a stream, not individual values'
-  - eg count(questions) vs count(itemsof(questions))
-- How use same function to do running total of stream values and all values of a sequence?
-- Stream from sequence ends, but asynchronous.  Use special scheduler?
-- Can we write all functions in stream style and have them automatically applied to sequences by framework?
-- How know which code to generate?
-- Transform functions - can also be applied to stream or sequence
-  - eg select(itemsof(answers), it > 5)
-- Does this mean a change from functions being stream functions to just being sequence functions applied to stream or sequence?
-- Any way to make itemsOf automatically present something different to the caller?
-- Pros of different function names:
-  - fewer parentheses
-  - clearer that you have two functions for different purposes
-  - only certain functions can be applied to sequences
-  - obvious which are stream functions
-  - if multiple arguments, all need to be stream or value, so would need multiple itemsOf and would need to be the same
-  - some functions may be stream only or sequence only
-- SO - don't change anything right now
-
 Managing subscriptions and user functions
 -----------------------------------------
 - Need to handle non-existent user functions named in other functions - show error value - instead of null used now
@@ -386,3 +313,50 @@ Teaching people to use it
 - In tutorial games, time how long it takes people to answer questions so you know which are the tough ones
 - Compare to familiar things eg big expressions vs separate defs -> one long sentence in English vs separate definitions
 - You are just saying what things mean, and you need to learn a few words
+
+Domain modelling
+----------------
+- A worksheet is a function mapping a set of input event sequences to a set of outputs
+- Or maybe a single sequence of input event combinations to a single sequence of output event combinations
+- Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
+- Connects up with the idea of state being the history of an object
+- Current value is init state with every update folded in
+- May need to snapshot state at intervals - manual or auto, each year or after every update?
+- Which connects up with setting up test data by performing sequence of operations on the system
+- Any system can be seen as a function from a sequence of events to a set of outputs
+- The model could be seen as a set of functions, some with params, giving individual outputs
+- Or could view as event sequence plus output selector plus input params to output
+- If have played a sequence of events, gives a new model function based on events to that point - like currying
+- Or could see some functions as updaters that yield a new model
+- Some special cases of models don't depend on history of events, only current inputs, but rare
+- In general, data and functions can be equivalent (eg map vs function)
+- So state represented as data can also be represented as functions
+- Example: in bookkeeping system, balances on accounts are total of postings
+- Entity functions: idea that will usually define some intermediate functions that represent entities like Account
+- These entity functions are good candidates for caching/persistence, so don't have to recreate from scratch on every calculation
+- EFs could be marked to be persisted automatically
+- EFs can form a bridge to traditional database world
+- EFs can substitute their cached value when needed
+- Some inputs may become EFs directly eg Transactions
+
+Modules
+-------
+- Useful for design and test
+- Output of one module usually input of another
+- Can be sheets in a workbook
+- Programming env shows in different tabs - like Excel or IDE
+- For constants, reference data, I18n constants
+
+Auto storage
+------------
+- Would allow use of FS as one part of a system, other parts read the DB
+- Meteor could use existing client side update mechanisms
+- Updates would have to be done by calls, not act on local collections
+- Need to detect which entities changed eg which account to update when new posting
+
+
+
+Random stuff
+------------
+- Functional test that auto compares data from api with data on page, finding it by class names and ids
+- Template helpers that auto-gen tables from data
