@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo Compiling coffeescript
+
 coffee --map -o target/coffeejs/ast -c src/main/ast/*.coffee
 coffee --map -o target/coffeejs/code -c src/main/code/*.coffee
 coffee --map -o target/coffeejs/freesheet -c src/main/freesheet/*.coffee

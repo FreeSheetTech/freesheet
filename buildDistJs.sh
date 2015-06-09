@@ -1,8 +1,11 @@
 #!/bin/bash
 
-mkdir -p dist
+DIST_FILE=dist/freesheet.js
+echo Building distribution file $DIST_FILE
 
-node_modules/.bin/browserify -o dist/freesheet.js \
+mkdir -p $(dirname $DIST_FILE)
+
+node_modules/.bin/browserify -o $DIST_FILE \
   -r lodash \
   -r ./target/coffeejs/parser/TextParser.js:text-parser \
   -r ./target/coffeejs/runtime/ReactiveRunner.js:reactive-runner \

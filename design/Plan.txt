@@ -49,7 +49,7 @@ Immediate to do
     - simplified references in aggregates
     - merge aggregate with + operator
     - none for null 
-- worksheet entry/display improvements
+    - worksheet display improvements
 - styling in pages
 - documentation
 - working in elmon or other site
