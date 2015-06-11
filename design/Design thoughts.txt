@@ -365,6 +365,19 @@ Sum vs fold
 - Sum-type more flexible and easier to write
 - Fold-type closer to current ways of thinking about state, easier to persist
 
+Inputs
+------
+- Simple option: have an input function eg answers = input("answers")
+- BUT not DRY, name could differ, could use inside formulas, don't know all names until called, runner special case
+- Language option: name = input
+- AST: Input object
+- Parser: new case for function definition top-level expr, but not anywhere else
+- Runner: call addUserFunction, create input name mapped to user subject
+- Runner: getInputs -> List[String]
+- Runner: sendInput(name, value)
+- Sheet: delegate all above
+- Worksheet: 4th column with button.  Click button for pop-up dialog to enter new value
+
 Modules
 -------
 - Useful for design and test
@@ -381,6 +394,11 @@ Auto storage
 - Need to detect which entities changed eg which account to update when new posting
 - Could start by saving/loading all event history, recreating state, and learn from that
 
+Design philosophy (or just how it turned out)
+---------------------------------------------
+- Flexible parts do could have use different syntax, different runners, different worksheets, etc
+- AST exposed, use for dev tools
+- Could gen AST differently
 
 Random stuff
 ------------
