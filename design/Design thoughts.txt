@@ -144,6 +144,7 @@ Thoughts
 - Rules engine - way for users to change business rules in a system
 - Emphasises steady values (signal) over changes (event) - different to most FRP systems
 - Could view sheet/program as a function from a sequence of events (on many streams) to an output.  Then don't need to worry about individual events.
+- Should inputs be regarded as events or collections of events or just a signal ie do you need to say collect() or latest()?
 
 Local values within expressions
 -------------------------------
@@ -316,14 +317,14 @@ Teaching people to use it
 
 Domain modelling
 ----------------
-- A worksheet is a function mapping a set of input event sequences to a set of outputs
+- A worksheet is a function mapping a set of input event sequences to a set of output event sequences
 - Or maybe a single sequence of input event combinations to a single sequence of output event combinations
 - Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
 - Connects up with the idea of state being the history of an object
 - Current value is init state with every update folded in
 - May need to snapshot state at intervals - manual or auto, each year or after every update?
 - Which connects up with setting up test data by performing sequence of operations on the system
-- Any system can be seen as a function from a sequence of events to a set of outputs
+- Any system can be seen as a function from a sequence of events to a set of outputs and/or a set of output event sequences
 - The model could be seen as a set of functions, some with params, giving individual outputs
 - Or could view as event sequence plus output selector plus input params to output
 - If have played a sequence of events, gives a new model function based on events to that point - like currying
@@ -339,6 +340,31 @@ Domain modelling
 - EFs can substitute their cached value when needed
 - Some inputs may become EFs directly eg Transactions
 
+Output events and output functions
+----------------------------------
+- Input event sequence will give a certain output event sequence plus a set of functions that give certain results when called with certain params
+
+
+State as history
+----------------
+- Common idea - database inserts/updates/deletes or tran log from day 1, git repo commits, current state of a house
+- History saved anyway in many systems
+- Need ability to snapshot and truncate history in some systems
+- To persist, need to store history OR store current state of EFs, or some combination
+- History of input events should be implicit - don't need to explicitly collect?
+- Testing relies on specifying a sequence of events and checking the resulting state
+- Should be able to add a new function that depends on history and have it automatically calculated
+  - leads to conclusion that all history must be kept, so an input is always a stream
+- Some functions will act just on the latest value of the stream, some on whole stream
+
+Sum vs fold
+-----------
+- Competing views:
+  - state as functions with sequence of input events as input (sum)
+  - state as data with functions with previous state and event as input  (fold)
+- Sum-type more flexible and easier to write
+- Fold-type closer to current ways of thinking about state, easier to persist
+
 Modules
 -------
 - Useful for design and test
@@ -353,10 +379,12 @@ Auto storage
 - Meteor could use existing client side update mechanisms
 - Updates would have to be done by calls, not act on local collections
 - Need to detect which entities changed eg which account to update when new posting
-
+- Could start by saving/loading all event history, recreating state, and learn from that
 
 
 Random stuff
 ------------
 - Functional test that auto compares data from api with data on page, finding it by class names and ids
 - Template helpers that auto-gen tables from data
+- Client app could be sequence of inputs and output updates
+- Separate client app sequences from view for testing

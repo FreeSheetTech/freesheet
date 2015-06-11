@@ -68,6 +68,16 @@ Transform and aggregation functions
   - some functions may be stream only or sequence only
 - SO - don't change anything right now
 
+Transform functions 3
+---------------------
+- Regard inputs as single values (each value may be an aggregate or even a sequence)
+- To get a sequence from them, use collect?
+- The sequence output by collect grows each time another input value arrives
+- Then can use aggregation and transform functions on that sequence
+- OR aggregation and transform functions act in two ways: on a sequence, and as filters on a stream
+- If aggregation function is always written as a fold, and transform/select as a function acting on one object, then framework applies either way
+
+
 In domain modelling
 -------------------
 - With domain modelling, will need functions to act on event sequences
@@ -174,9 +184,9 @@ Bookkeeping
     newAccounts = input
     transactions = input
 
-    accounts = collect(newAccounts)
+    accounts = newAccounts     # or collect(newAccounts)
 
-    transactionPostings = collect(fromEach(transactions, the.postings))
+    transactionPostings = fromEach(transactions, the.postings)  # or collect(fromEach(transactions, the.postings))
 
     accountsWithPostings = fromEach(accounts account, account + {
      postings: select(transactionPostings posting, posting.accountId == account.id),
@@ -202,3 +212,4 @@ Bookkeeping
   - expression variable naming so can select postings matching account
 - useful:
   - aggregate members auto-named from an expression eg {the.name, p.balance}
+- also need a snapshot and restore mechanism to be usable

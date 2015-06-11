@@ -1,0 +1,48 @@
+Input and output mechanism
+==========================
+
+- Need to link to sources, like another module's outputs
+- Need to be able to put an input into a worksheet and see the result
+- Need to be able to see all the inputs that have happened and the output events created
+- Mark values as output values to save history, whereas others just have current value?
+- See output event history
+- May have an input validation module that works on page inputs and sends events to core module (like old batch systems)
+- Will need to snapshot state of some inputs when an event occurs eg submit clicked
+- Linked with testing
+- Linked with event history
+- Runner has history besides current state
+- Rewind and step through would be good
+
+Runner
+------
+- Could provide named streams to it in same way as add user functions
+- Could save everything that comes in on each input in a list
+- Also need a merged list of all inputs
+- Timings on each input needed for some things
+- Outputs also need to be saved in a list
+- Link outputs to the input event that caused them
+- Rewind - would need to replay to that point
+- Could change inputs if rewind, play to change, do change, continue
+- May need different schedulers where timing effects involved
+- OR could make it client's responsibility to save events
+- OR make it another layer around the runner - keep runner simpler, separate concerns
+- BUT then runner can't calc a new function added BUT is this really needed in core runner?
+
+
+Worksheet
+---------
+- Need a way to add an input
+- Need a way to view inputs
+- Need a way to rewind or replay inputs
+- Need a way to view outputs
+- Also useful to view history of non-output streams for debugging
+- Poss: tables to left for input and right for output, with scrolling, same rows as worksheet
+
+
+Testing
+-------
+- Give a merged sequence of input events
+- OR a set of separate input event sequences with relative timing
+- Give an expected sequence of output events
+- Save canned sequences of input events and pull in
+- Timings on input events, relative to previous
