@@ -35,6 +35,8 @@ module.exports = class Sheet
   formulaText: (name) -> @loader.getFunctionAsText name
   formulas: -> @loader.functionDefinitions()
   formulasAndValues: -> @loader.functionDefinitionsAndValues()
+  inputs: -> @runner.getInputs()
+  input: (name, value) -> @runner.sendInput name, value
   addFunctions: (functionMap) -> @runner.addProvidedFunctions functionMap
   onValueChange: (callback) -> @runner.onValueChange callback
   onFormulaChange: (callback) -> @functionChanges.subscribe (updateArgs) -> callback.apply(null, updateArgs)
