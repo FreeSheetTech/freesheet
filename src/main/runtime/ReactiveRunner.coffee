@@ -60,6 +60,8 @@ module.exports = class ReactiveRunner
 
   getInputs: (name) -> (k for k, v of @inputStreams)
 
+  sendInput: (name, value) -> @_inputStream(name).onNext value
+
   #  private functions
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]

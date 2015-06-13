@@ -26,6 +26,7 @@ describe 'ReactiveRunner runs', ->
     (v for k, v of map)
   parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
   removeUserFunction = (name) -> runner.removeUserFunction name
+  sendInput = (name, value) -> runner.sendInput name, value
 
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
@@ -205,6 +206,16 @@ describe 'ReactiveRunner runs', ->
 
       runner.getInputs().should.eql ['in1', 'in2']
       changes.should.eql [{in1: null}, {in2: null}]
+
+    it 'update other values when a new input sent', ->
+      parseUserFunctions 'materials = input; labour = input; taxRate = 0.2'
+      parseUserFunctions 'total = (materials + labour) * (1 + taxRate)'
+
+      sendInput 'materials', 100
+      sendInput 'labour', 200
+
+      changes.should.eql [{materials: null}, {labour:null}, {taxRate: 0.2}, {total: 0}, {materials: 100}, {total: 120}, {labour: 200}, {total: 360}]
+
 
 
   describe 'errors in expression evaluation', ->
