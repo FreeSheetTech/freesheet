@@ -27,4 +27,8 @@ class AggregationSelector extends Expression
   constructor: (text, @aggregation, @elementName) ->
     super text, [aggregation]
 
-module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector}
+class Input extends Expression
+  constructor: (@inputName) ->
+    super "input(#{inputName})"
+
+module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector, Input}

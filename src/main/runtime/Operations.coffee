@@ -5,7 +5,7 @@ Period = require '../functions/Period'
 
 module.exports = class Operations
 
-  constructor: (@name) ->
+  constructor: (@name, @getInput) ->
 
   checkArgs = (args) ->
     for a in args
@@ -60,3 +60,4 @@ module.exports = class Operations
 
   combine: (streams..., combineFunction) -> Rx.Observable.combineLatest streams, @_errorCheck(combineFunction)
   subject: (value) -> new Rx.BehaviorSubject @_valueCheck value
+  input: (name) -> @getInput name

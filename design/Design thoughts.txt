@@ -206,6 +206,7 @@ Programming environment
 - Click/hover to see documentation for functions/parameters
 - Choose from functions available
 - Worksheet tool needs AST to give help and debugging tools
+- Could inject a value direct into any defined name in the same way as adding an input to see effect or test partially completed worksheet
 
 Named values
 ------------
@@ -343,6 +344,31 @@ Domain modelling
 Output events and output functions
 ----------------------------------
 - Input event sequence will give a certain output event sequence plus a set of functions that give certain results when called with certain params
+- OR there is a set of functions that can be called to get an output value (may be complex)
+- the output value updates as more input events arrive
+- if the output function has params, get a different instance of the updating output view for each distinct set of params
+- The output value instance is actually a sort of mini-worksheet it self
+- A function defined in a sheet is only referentially transparent if it does not depend on any other changing values in the worksheet
+- SO - should a something like a P&L report with from and to dates and complex output structure be a function or a separate worksheet?
+    - Function with params is logically what it is
+    - Output values updates like a worksheet
+    - Params coud be regarded as worksheet inputs
+    - Complex to write without local definitions
+    - May want more than one instance around at once
+    - Balance sheet with single instance fits fairly well - separate connected module
+    - Would be tedious to have to make every function with an aggregate output a separate worksheet
+    - Worksheet can have independently observable output values
+
+
+Worksheet instances
+-------------------
+- A worksheet can have multiple instances
+- No point in having multiple instances if no inputs
+- A worksheet may represent something with many instances, like an object in a game
+- A worksheet could create other sheet instances
+- A test worksheet uses or includes the worksheet under test
+
+
 
 
 State as history
@@ -356,6 +382,8 @@ State as history
 - Should be able to add a new function that depends on history and have it automatically calculated
   - leads to conclusion that all history must be kept, so an input is always a stream
 - Some functions will act just on the latest value of the stream, some on whole stream
+- How express CRUD functionally?
+
 
 Sum vs fold
 -----------
@@ -377,6 +405,10 @@ Inputs
 - Runner: sendInput(name, value)
 - Sheet: delegate all above
 - Worksheet: 4th column with button.  Click button for pop-up dialog to enter new value
+- Probably useful to add type info to the input
+- If inputs are typed, can the types of everything else in the worksheet be inferred?
+- Documents what expected, allows auto validation, removes a big source of errors
+- Any reason why inputs cannot be used as outputs like any other function?
 
 Modules
 -------
@@ -393,6 +425,13 @@ Auto storage
 - Updates would have to be done by calls, not act on local collections
 - Need to detect which entities changed eg which account to update when new posting
 - Could start by saving/loading all event history, recreating state, and learn from that
+
+Testing
+-------
+- Tests as connected worksheets driving another one
+- TDD by setting scenarios in worksheet then filling in
+- A test is a function from a sequence of inputs and a sequence of expected outputs to a result comparing the actual to the expected
+
 
 Design philosophy (or just how it turned out)
 ---------------------------------------------

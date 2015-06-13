@@ -12,6 +12,7 @@ module.exports = class ReactiveRunner
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
+    @inputStreams = {}
 
   # TODO  addProvidedFunction and addProvidedStream do the same thing
   addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
@@ -57,6 +58,8 @@ module.exports = class ReactiveRunner
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
+  getInputs: (name) -> (k for k, v of @inputStreams)
+
   #  private functions
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
@@ -71,7 +74,7 @@ module.exports = class ReactiveRunner
     {theFunction, functionNames} = JsCodeGenerator.exprFunction func.expr, @_functionInfo()
     ctx = {}
     ctx[n] = @_functionArg(n) for n in functionNames
-    args = [new Operations(func.name), ctx]
+    args = [new Operations(func.name, @_inputStream), ctx]
     theFunction.apply null, args
 
   _functionInfo: ->
@@ -90,3 +93,5 @@ module.exports = class ReactiveRunner
     if func instanceof Rx.Observable or func instanceof Rx.Subject then func
     else
       if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
+
+  _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.Subject)

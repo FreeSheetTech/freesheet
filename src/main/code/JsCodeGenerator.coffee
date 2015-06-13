@@ -1,4 +1,4 @@
-{Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
+{Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
 _ = require 'lodash'
 
 class Name
@@ -38,6 +38,7 @@ subjectCode = (exprCode) -> "operations.subject(#{exprCode})"
 
 isStreamFunctionCall = (expr, functionInfo) -> expr instanceof FunctionCall and functionInfo[expr.functionName]?.kind == 'stream'
 isNoArgsFunctionCall = (expr) -> expr instanceof FunctionCall and expr.children.length == 0
+isInput = (expr) -> expr instanceof Input
 
 fromContext = (name) ->
   switch
@@ -52,6 +53,8 @@ streamCode = (expr, functionInfo, code, combineNames) ->
   if isStreamFunctionCall(expr, functionInfo)
     withoutContext(code)
   else if isNoArgsFunctionCall(expr)
+    code
+  else if isInput(expr)
     code
   else if combineNames.length
      combineCode(combineNames, withoutContext(code))
@@ -164,13 +167,15 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
       accumulateCombineName new Name lsName, true
       fromContext lsName
 
-
     when expr instanceof FunctionCall
       functionName = expr.functionName
       accumulateFunctionName functionName
       accumulateCombineName new Name functionName
       args = (getCodeAndAccumulateFunctions(e) for e in expr.children)
       fromContext(functionName) + argList args
+
+    when expr instanceof Input
+      "operations.input(\"#{expr.inputName}\")"
 
     else
       throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)

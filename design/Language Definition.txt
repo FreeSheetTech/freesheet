@@ -52,7 +52,9 @@ Knows its parent expression?
 
 Inputs and Outputs
 ==================
-- Worksheet has named inputs   eg input size; input type
+- Worksheet has named inputs
+- These are defined like no-args functions with the keyword 'input
+- eg size = input; taxRate = input
 
 
 Representations

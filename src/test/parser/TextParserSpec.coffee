@@ -1,6 +1,6 @@
 should = require 'should'
 TextParser = require './TextParser'
-{Literal, Sequence, Aggregation, FunctionCall, AggregationSelector} = require '../ast/Expressions'
+{Literal, Sequence, Aggregation, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
 {UserFunction, ArgumentDefinition} = require '../ast/FunctionDefinition'
 
 
@@ -217,6 +217,15 @@ describe 'TextParser parses', ->
       functionQ.error.column.should.equal 21
       functionQ.error.columnInExpr.should.equal 17
 
+    it 'for an input', ->
+      def = functionFor('myInput = input')
+      def.expr.should.be.instanceof Input
+      def.should.eql new UserFunction('myInput', [], new Input("myInput"))
+
+    it 'for a function name that starts with input', ->
+      def = functionFor('myFunction = inputValidated')
+      def.expr.should.be.instanceof FunctionCall
+      def.should.eql new UserFunction('myFunction', [], namedValueCall('inputValidated'))
 
   describe 'a map of function definitions', ->
 

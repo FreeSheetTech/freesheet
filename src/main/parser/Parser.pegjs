@@ -1,17 +1,25 @@
 {
     var exprs = require('../ast/Expressions'), Literal = exprs.Literal, Sequence = exprs.Sequence,
                                                 Aggregation = exprs.Aggregation, FunctionCall = exprs.FunctionCall
-                                                InfixExpression = exprs.InfixExpression, AggregationSelector = exprs.AggregationSelector;
+                                                InfixExpression = exprs.InfixExpression, AggregationSelector = exprs.AggregationSelector,
+                                                Input = exprs.Input;
 
     var funcs = require('../ast/FunctionDefinition'), UserFunction = funcs.UserFunction;
 
     function infixExpr(operator, args) { return new InfixExpression(text().trim(), operator, args); }
+
+    function exprOrInput(expr, functionName) {
+        if (expr instanceof Input) {
+            return new Input(functionName);
+        }
+        return expr;
+    }
 }
 
 functionDefinitionList = functions:(functionDefinition __)+ { return functions.map(function(pair) { return pair[0]; }) ; }  / __ EOF { return []; }
 
 functionDefinition = noArgsFunction / argsFunction
-noArgsFunction = _ functionName:identifier _ "=" _ expr:expression EOS { return new UserFunction(functionName, [], expr); }
+noArgsFunction = _ functionName:identifier _ "=" _ expr:functionExpressionOrInput EOS { return new UserFunction(functionName, [], exprOrInput(expr, functionName)); }
 argsFunction = _ functionName:identifier  _ "(" _ argNames:identifierList _ ")"_ "=" expr:expression EOS { return new UserFunction(functionName, argNames, expr); }
 identifierList = items:(
                      first:identifier
@@ -20,6 +28,10 @@ identifierList = items:(
                    )? { return result = items !== null ? items : []; }
 
 
+
+functionExpressionOrInput = input / expression
+functionExpression = expression  { return expr; }
+input = _ "input" !identifierPart _ { return new Input(); }
 
 expression = _ expr:anyExpression _  { return expr; }
 

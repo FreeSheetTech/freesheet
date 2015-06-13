@@ -197,6 +197,16 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
 
+  describe 'inputs', ->
+
+    it 'create a named input when add user function with input expr', ->
+      parseUserFunctions 'in1 = input'
+      parseUserFunctions 'in2 = input'
+
+      runner.getInputs().should.eql ['in1', 'in2']
+      changes.should.eql [{in1: null}, {in2: null}]
+
+
   describe 'errors in expression evaluation', ->
 
     it 'create a subtype of Error', ->

@@ -18,3 +18,5 @@ class Sequence extends Expression
 class Aggregation extends Expression
 
 class FunctionCall extends Expression
+
+class Input extends Expression
