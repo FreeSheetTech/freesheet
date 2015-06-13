@@ -152,6 +152,12 @@ describe 'JsCodeGenerator', ->
       code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return function() { var basicTime = (_in).time,\n    fullTime = operations.add(basicTime, 2),\n    maxTime = operations.add(fullTime, 3);\nreturn {basicTime: basicTime, fullTime: fullTime, maxTime: maxTime}; }() }); });'
       functionNames.should.eql ['fromEach', 'games']
 
+    it 'gets an input', ->
+      expr = new Input("anInput")
+      genBodyFor expr
+      code.should.eql 'return operations.input("anInput");'
+
+
 
   describe 'Generates code for calls to stream functions', ->
 
