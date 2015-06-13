@@ -30,5 +30,6 @@ class AggregationSelector extends Expression
 class Input extends Expression
   constructor: (@inputName) ->
     super "input(#{inputName})"
+    @isInput = true
 
 module.exports = {Expression, Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector, Input}

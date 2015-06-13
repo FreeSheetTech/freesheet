@@ -220,6 +220,7 @@ describe 'TextParser parses', ->
     it 'for an input', ->
       def = functionFor('myInput = input')
       def.expr.should.be.instanceof Input
+      def.expr.isInput.should.equal true
       def.should.eql new UserFunction('myInput', [], new Input("myInput"))
 
     it 'for a function name that starts with input', ->
