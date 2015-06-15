@@ -216,6 +216,13 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{materials: null}, {labour:null}, {taxRate: 0.2}, {total: 0}, {materials: 100}, {total: 120}, {labour: 200}, {total: 360}]
 
+    it 'send a null when a formula is updated to an input', ->
+      parseUserFunctions 'in1 = 20'
+      parseUserFunctions 'in1 = input'
+
+      runner.getInputs().should.eql ['in1']
+      changes.should.eql [{in1: 20}, {in1: null}]
+
     it 'update other values when a debug input sent to any named value', ->
       parseUserFunctions 'materials = none; taxRate = 0.2'
       parseUserFunctions 'total = materials * (1 + taxRate)'

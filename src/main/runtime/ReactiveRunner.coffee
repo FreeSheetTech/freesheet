@@ -104,4 +104,4 @@ module.exports = class ReactiveRunner
     else
       if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
 
-  _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.Subject)
+  _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.BehaviorSubject(null))
