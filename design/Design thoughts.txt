@@ -207,6 +207,22 @@ Programming environment
 - Choose from functions available
 - Worksheet tool needs AST to give help and debugging tools
 - Could inject a value direct into any defined name in the same way as adding an input to see effect or test partially completed worksheet
+- Enter inputs and see history build up
+- See history of inputs from other sheets
+- Could have grid at left showing inputs for each input row
+- Only input rows have it and one row used per column
+- Litte value in showing values in input grid
+- Could have dots in input grid with hover and show output States when click on it
+- Would need to show intermediate states at that point for consistency
+- Could just have history col to right of values shared by inputs and outputs as they are in Different rows
+- Do this later - time travel debugger prob a nice to have
+- Alternate view is vertical list of input events with name and value
+- Click on each to see state at that point and highlight changes
+- For large arrays of objects, show as table if seem to have "similar" keys in each object
+- Display headings and 2-3 rows, with expansion options to see all, maybe paginated
+- Inputs defined at top of worksheet, can enter values for testing in col 2
+- Good to keep worksheet similar to text: preserve blank lines and comments, but formulas may span several lines and parser ignores them
+
 
 Named values
 ------------
@@ -224,12 +240,6 @@ Connection to page
 - Link references in page via val helper, or via hook into lookup
 - Show undefined formulas in worksheet on page
 
-Worksheets
-----------
-- For large arrays of objects, show as table if seem to have "similar" keys in each object
-- Display headings and 2-3 rows, with expansion options to see all, maybe paginated
-- Inputs defined at top of worksheet, can enter values for testing in col 2
-- Good to keep worksheet similar to text: preserve blank lines and comments, but formulas may span several lines and parser ignores them
 
 Issues
 ------
@@ -265,6 +275,9 @@ Reusing functions
 - If all worksheets are pure, they will be far easier to re-use
 - If users can create impure worksheets, they won't be bothered to clean them up for reuse
 - Testing much easier with pure worksheets
+- How import functions?
+- Are there sheets which just have functions for reuse, no input/output?
+
 
 Managing subscriptions and user functions
 -----------------------------------------
@@ -319,8 +332,15 @@ Teaching people to use it
 Domain modelling
 ----------------
 - A worksheet is a function mapping a set of input event sequences to a set of output event sequences
-- Or maybe a single sequence of input event combinations to a single sequence of output event combinations
+- Or maybe a single sequence of input events to a single sequence of output event combinations
 - Actually a function mapping these things plus a sequence of formula settings to outputs, but more useful to assume those all there
+- Very important: which output events are there after each input event - how define that?
+  - possible: sequence of input events maps to a sequence of event sequences of the same length, with zero or more output event sequences
+- Needs to be output events, not just values, because you need to know when that value occurred
+- Events need to be timed as that will affect the result in many systems - so each event has a time
+- Time itself will be part of the input event sequence
+- Or view a system as a function from a sequence of prior events, plus one more event, to a sequence of output events
+- Output event that happens at a certain time after an input actually depends on the time event, with other input part of prior sequence
 - Connects up with the idea of state being the history of an object
 - Current value is init state with every update folded in
 - May need to snapshot state at intervals - manual or auto, each year or after every update?
@@ -343,6 +363,9 @@ Domain modelling
 
 Output events and output functions
 ----------------------------------
+- One input At a time, all outputs
+- The outputs that change on each input are significant but need all of them
+- Non output values still useful for debugging
 - Input event sequence will give a certain output event sequence plus a set of functions that give certain results when called with certain params
 - OR there is a set of functions that can be called to get an output value (may be complex)
 - the output value updates as more input events arrive
@@ -358,6 +381,11 @@ Output events and output functions
     - Balance sheet with single instance fits fairly well - separate connected module
     - Would be tedious to have to make every function with an aggregate output a separate worksheet
     - Worksheet can have independently observable output values
+- ** Functions give you a reactive view
+- The view may only be of a single scalar value
+- If the function takes no parameters, equivalent to a view on one of the output event streams
+- Output views only exist if a client has created them, as v large number of parameterised views possible
+- Output views like additional reactive functions attached to main one
 
 
 Worksheet instances
@@ -367,6 +395,9 @@ Worksheet instances
 - A worksheet may represent something with many instances, like an object in a game
 - A worksheet could create other sheet instances
 - A test worksheet uses or includes the worksheet under test
+- Definition vs instance/scenario - not there in excel - teaching point
+- Scenario is a sequence of inputs and corresponding output signal sets
+- Should sheets in a workbook know about each other?
 
 
 
@@ -383,6 +414,11 @@ State as history
   - leads to conclusion that all history must be kept, so an input is always a stream
 - Some functions will act just on the latest value of the stream, some on whole stream
 - How express CRUD functionally?
+- Sequence function view valid for any system not just sheets IF self contained modules
+- Chess game is classic state = sum history example. Or football league.  Or FA Cup
+- Football league order less significant.  FA Cup v much so.
+- How express FA Cup functionally.
+
 
 
 Sum vs fold
@@ -409,6 +445,9 @@ Inputs
 - If inputs are typed, can the types of everything else in the worksheet be inferred?
 - Documents what expected, allows auto validation, removes a big source of errors
 - Any reason why inputs cannot be used as outputs like any other function?
+- Inputs may be outputs of other sheets
+- What difference between calling functions in other sheets (if you can) and inputs from other sheets?
+
 
 Modules
 -------
@@ -431,10 +470,16 @@ Testing
 - Tests as connected worksheets driving another one
 - TDD by setting scenarios in worksheet then filling in
 - A test is a function from a sequence of inputs and a sequence of expected outputs to a result comparing the actual to the expected
+- Test is a scenario plus expected output states for some of the inputs - often just the last
+- Tests will want comments for single or groups of inputs
+- Tests may apply to one sheet or whole app
 
 
 Design philosophy (or just how it turned out)
 ---------------------------------------------
+- Lego - simple but v flexible, can attach special parts
+  - tool-free, glue-free
+  - nearly as strong as making from raw materials
 - Flexible parts do could have use different syntax, different runners, different worksheets, etc
 - AST exposed, use for dev tools
 - Could gen AST differently
@@ -445,3 +490,10 @@ Random stuff
 - Template helpers that auto-gen tables from data
 - Client app could be sequence of inputs and output updates
 - Separate client app sequences from view for testing
+
+FA Cup simulation
+-----------------
+- Does draw randomly
+- You enter chances of each team, it then adds a random factor to decide score
+- Does draw when each round complete, repeat
+- Timed pop-up of each match

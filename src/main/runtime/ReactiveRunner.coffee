@@ -60,7 +60,15 @@ module.exports = class ReactiveRunner
 
   getInputs: (name) -> (k for k, v of @inputStreams)
 
-  sendInput: (name, value) -> @_inputStream(name).onNext value
+  sendInput: (name, value) ->
+    stream = @inputStreams[name]
+    throw   new Error 'Unknown input name' unless stream
+    stream.onNext value
+
+  sendDebugInput: (name, value) ->
+    stream = @_userFunctionSubject(name)
+    throw new Error 'Unknown name' unless stream
+    stream.onNext value
 
   #  private functions
 

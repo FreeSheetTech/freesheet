@@ -216,7 +216,20 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{materials: null}, {labour:null}, {taxRate: 0.2}, {total: 0}, {materials: 100}, {total: 120}, {labour: 200}, {total: 360}]
 
+    it 'update other values when a debug input sent to any named value', ->
+      parseUserFunctions 'materials = none; taxRate = 0.2'
+      parseUserFunctions 'total = materials * (1 + taxRate)'
 
+      runner.sendDebugInput 'materials', 100
+      runner.sendDebugInput 'taxRate', 0.3
+
+      changes.should.eql [{materials: null}, {taxRate: 0.2}, {total: 0}, {materials: 100}, {total: 120}, {taxRate: 0.3}, {total: 130}]
+
+    it 'throw exception for inputs to unknown subjects', ->
+      parseUserFunctions 'materials = input; taxRate = 0.2'
+
+      (-> sendInput 'taxRate', 10).should.throw /Unknown input name/
+      (-> runner.sendDebugInput 'unknown', 10).should.throw /Unknown name/
 
   describe 'errors in expression evaluation', ->
 
