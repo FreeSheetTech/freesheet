@@ -4,6 +4,7 @@ JsCodeGenerator = require '../code/JsCodeGenerator'
 Period = require '../functions/Period'
 {CalculationError} = require '../error/Errors'
 Operations = require './Operations'
+_ = require 'lodash'
 
 module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
@@ -12,6 +13,7 @@ module.exports = class ReactiveRunner
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
+    @userFunctionImpls = {}
     @inputStreams = {}
 
   # TODO  addProvidedFunction and addProvidedStream do the same thing
@@ -27,7 +29,9 @@ module.exports = class ReactiveRunner
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    source = @_userFunctionStream funcDef
+    functionImpl = JsCodeGenerator.exprFunction funcDef.expr, @_functionInfo()
+    @userFunctionImpls[name] = functionImpl
+    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(null))
     subj.sourceSub?.dispose()
@@ -70,6 +74,14 @@ module.exports = class ReactiveRunner
     throw new Error 'Unknown name' unless stream
     stream.onNext value
 
+  functionsUsedBy: (name) ->
+    funcImpl = @userFunctionImpls[name]
+    throw new Error 'Unknown function name' unless funcImpl
+    functionsCalledByThisFunction =
+    functionsCalledByEachChild = (functionsUsedBy)
+
+
+
   #  private functions
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
@@ -80,8 +92,8 @@ module.exports = class ReactiveRunner
       @valueChanges.onNext [name, value]
     subj
 
-  _userFunctionStream: (func) ->
-    {theFunction, functionNames} = JsCodeGenerator.exprFunction func.expr, @_functionInfo()
+  _userFunctionStream: (func, theFunction, functionNames) ->
+    if _.includes(functionNames, func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
     ctx = {}
     ctx[n] = @_functionArg(n) for n in functionNames
     args = [new Operations(func.name, @_inputStream), ctx]

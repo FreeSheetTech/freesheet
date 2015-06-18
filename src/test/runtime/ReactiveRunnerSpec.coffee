@@ -266,6 +266,17 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'num = 10 - "xxx"'
       changes.should.eql [{num: error 'num', 'Invalid values in calculation'}]
 
+    it 'direct circular expression', ->
+      parseUserFunctions 'x = 10'
+      parseUserFunctions 'x = x.y'
+      changes.should.eql [{x:10}, {x: error 'x', 'Formula uses itself' }]
+
+    it 'indirect circular expression', ->
+      parseUserFunctions 'y = 10'
+      parseUserFunctions 'x = y'
+      parseUserFunctions 'y = x'
+      changes.should.eql [{y:10}, {x:10}, {y: error 'y', 'Formula uses itself' }]
+
   describe 'expressions as function arguments with sequences', ->
     it 'transforms all elements of a sequence to a literal', ->
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'

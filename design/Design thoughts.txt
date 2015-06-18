@@ -133,6 +133,7 @@ Thoughts
 - Can UserFunctions always use streams, built-in need to specify?
 - Can we/should we call no-arg functions without brackets - optional or not?
 - Recursive functions: allowed? how handle them?
+- Will need stack overflow protection - maybe time of last input and how many times been through a function for same input
 - May want a non-reactive implementation of all functions
 - May want a non-reactive implementation of functions that are only used within other reactive functions BUT lose the debugging
 - You really need user testing to know if real non-technical users will find this easy
@@ -222,6 +223,7 @@ Programming environment
 - Display headings and 2-3 rows, with expansion options to see all, maybe paginated
 - Inputs defined at top of worksheet, can enter values for testing in col 2
 - Good to keep worksheet similar to text: preserve blank lines and comments, but formulas may span several lines and parser ignores them
+- Static analysis: tree of all functions that feed into this one
 
 
 Named values
