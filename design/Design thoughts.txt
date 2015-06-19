@@ -224,6 +224,8 @@ Programming environment
 - Inputs defined at top of worksheet, can enter values for testing in col 2
 - Good to keep worksheet similar to text: preserve blank lines and comments, but formulas may span several lines and parser ignores them
 - Static analysis: tree of all functions that feed into this one
+- Enter complex formulas in a nested table format
+
 
 
 Named values
@@ -330,6 +332,11 @@ Teaching people to use it
 - In tutorial games, time how long it takes people to answer questions so you know which are the tough ones
 - Compare to familiar things eg big expressions vs separate defs -> one long sentence in English vs separate definitions
 - You are just saying what things mean, and you need to learn a few words
+- Examples with step-by-step instructions for those that want them
+- Like Lego/Meccano construction examples
+- How you think about the problem, what questions to ask
+- Cross-ref with HowTos and techniques and reference info
+
 
 Domain modelling
 ----------------
@@ -430,6 +437,7 @@ Sum vs fold
   - state as data with functions with previous state and event as input  (fold)
 - Sum-type more flexible and easier to write
 - Fold-type closer to current ways of thinking about state, easier to persist
+- Everything is a fold in the end even smaller more fcused functions - even sum
 
 Inputs
 ------
@@ -449,6 +457,14 @@ Inputs
 - Any reason why inputs cannot be used as outputs like any other function?
 - Inputs may be outputs of other sheets
 - What difference between calling functions in other sheets (if you can) and inputs from other sheets?
+- 'input stored' keyword to mean the input is built up into a list
+- Save with sheet - as JSON at end of text file
+- OR save inputs separately
+- State = history = input list!
+- But inputs may also come from external data sources like web documents
+- How specify that?
+- Or is the input just the URL, and use a getData function
+- What difference between inputs and parameters? Essentially none, but different emphasis?
 
 
 Modules

@@ -75,11 +75,19 @@ module.exports = class ReactiveRunner
     stream.onNext value
 
   functionsUsedBy: (name) ->
+    functions = []
+    @_collectFunctions name, functions
+    functions
+
+  _collectFunctions: (name, functions) ->
+    return if not @userFunctions[name]
     funcImpl = @userFunctionImpls[name]
     throw new Error 'Unknown function name' unless funcImpl
-    functionsCalledByThisFunction =
-    functionsCalledByEachChild = (functionsUsedBy)
-
+    functionsCalledByThisFunction = funcImpl.functionNames
+    for n in funcImpl.functionNames
+      if not _.includes functions n
+        functions.push n
+        Array.prototype.push.apply(functions, @_collectFunctions(n, functions));
 
 
   #  private functions
@@ -94,6 +102,7 @@ module.exports = class ReactiveRunner
 
   _userFunctionStream: (func, theFunction, functionNames) ->
     if _.includes(functionNames, func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
+    if _.includes(@functionsUsedBy(func.name), func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
     ctx = {}
     ctx[n] = @_functionArg(n) for n in functionNames
     args = [new Operations(func.name, @_inputStream), ctx]
