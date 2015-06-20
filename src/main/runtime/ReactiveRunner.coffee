@@ -50,7 +50,9 @@ module.exports = class ReactiveRunner
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
       for subjName, subj of @userFunctionSubjects
-        if not subj.hasObservers() then delete @userFunctionSubjects[subjName]
+        if not subj.hasObservers()
+          delete @userFunctionSubjects[subjName]
+          delete @userFunctionImpls[subjName]
 
   onValueChange: (callback, name) ->
     if name

@@ -540,6 +540,8 @@ describe 'ReactiveRunner runs', ->
       removeUserFunction 'greetings'
       runner.userFunctionSubjects.should.not.have.property('aliens')
       runner.userFunctionSubjects.should.not.have.property('greetings')
+      runner.userFunctionImpls.should.not.have.property('aliens')
+      runner.userFunctionImpls.should.not.have.property('greetings')
 
 
 #  it 'function with one arg which is a literal', ->

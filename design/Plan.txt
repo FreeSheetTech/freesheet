@@ -50,7 +50,7 @@ To do
     - Scoping rules - including object expressions
     - Core functions
     - Error handling
-- Cyclic references
+    - Cyclic references
     - Date and time period arithmetic
 - Streams stopped when dependents removed - eg now() and map to elapsed
     - boolean expressions

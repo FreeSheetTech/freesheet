@@ -16,7 +16,11 @@ module.exports = class Sheet
     @functionChanges = new Rx.Subject()
 
 
-  clear: -> @loader.clear()
+  clear: ->
+    defs = @loader.functionDefinitions()
+    @loader.clear()
+    @functionChanges.onNext ['remove', d.name] for  d in defs
+
   load: (text) -> @loader.loadDefinitions text
   text: -> @loader.asText()
   update: (name, definition, oldName, beforeName) ->
