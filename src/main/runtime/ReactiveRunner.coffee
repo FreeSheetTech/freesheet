@@ -43,6 +43,7 @@ module.exports = class ReactiveRunner
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
   removeUserFunction: (functionName) ->
+    delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
       subj.onNext(null)
       subj.sourceSub?.dispose()
@@ -79,7 +80,7 @@ module.exports = class ReactiveRunner
   functionsUsedBy: (name, functionsCollectedSoFar = []) ->
     return functionsCollectedSoFar if not @userFunctions[name]
     funcImpl = @userFunctionImpls[name]
-    throw new Error 'Unknown function name' unless funcImpl
+    throw new Error "Unknown function name: #{name}" unless funcImpl
     newFunctions = (n for n in funcImpl.functionNames when not _.includes functionsCollectedSoFar, n)
     functionsPlusNew = functionsCollectedSoFar.concat newFunctions
     newCalledFunctions = _.flatten(@functionsUsedBy(n, functionsPlusNew) for n in newFunctions)

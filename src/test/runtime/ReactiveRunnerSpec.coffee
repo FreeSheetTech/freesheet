@@ -478,6 +478,11 @@ describe 'ReactiveRunner runs', ->
 
   describe 'removes named functions so that', ->
 
+    it 'is no longer in the functions collection', ->
+      parseUserFunctions 'a = 10; b = 20'
+      removeUserFunction 'a'
+      runner.userFunctions.should.not.have.property 'a'
+
     it 'all changes sends a null and no longer invokes callback', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
@@ -525,7 +530,43 @@ describe 'ReactiveRunner runs', ->
       namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings:'Hi null'}]
       changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens:null}, {greetings:'Hi null'}]
 
-#      test of internals
+    it 'can add a function with the same name as one removed', ->
+      parseUserFunctions 'a = 10; b = 20; c = a * b'
+      removeUserFunction 'c'
+      parseUserFunctions 'c = a + b'
+
+      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {c: null}, {c: 30}]
+
+    it 'can add a function with the same name after removing all functions', ->
+      parseUserFunctions 'a = 10; b = 20; c = a * b'
+      removeUserFunction 'a'
+      removeUserFunction 'b'
+      removeUserFunction 'c'
+      parseUserFunctions 'a = 10; b = 20; c = a + b'
+
+      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {a: null}, {c: 0}, {b: null}, {c: 0}, {c: null}, {a: 10}, {b: 20}, {c: 30}]
+
+    it 'can add a function with the same name and forward reference after removing all functions', ->
+      parseUserFunctions 'c = a * 2; a = 10'
+      removeUserFunction 'c'
+      removeUserFunction 'a'
+      parseUserFunctions 'c = a + 2; a = 10'
+
+      changes.should.eql [
+        { "a": error('a', 'Unknown name')}
+        { "c": error('a', 'Unknown name')}
+        { "a": 10}
+        { "c": 20}
+        { "c": null}
+        { "a": null}
+        { "a": error('a', 'Unknown name')}
+        { "c": error('a', 'Unknown name')}
+        { "a": 10}
+        { "c": 12}
+      ]
+
+
+    #      test of internals
     it 'cleans up user function subjects when no longer used', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
