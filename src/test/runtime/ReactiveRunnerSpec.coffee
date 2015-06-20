@@ -275,7 +275,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'y = 10'
       parseUserFunctions 'x = y'
       parseUserFunctions 'y = x'
-      changes.should.eql [{y:10}, {x:10}, {y: error 'y', 'Formula uses itself' }]
+      changes.should.eql [{y:10}, {x:10}, {y: error 'y', 'Formula uses itself through another formula' }, {x: error 'y', 'Formula uses itself through another formula' }]
 
   describe 'expressions as function arguments with sequences', ->
     it 'transforms all elements of a sequence to a literal', ->
