@@ -74,20 +74,14 @@ module.exports = class ReactiveRunner
     throw new Error 'Unknown name' unless stream
     stream.onNext value
 
-  functionsUsedBy: (name) ->
-    functions = []
-    @_collectFunctions name, functions
-    functions
-
-  _collectFunctions: (name, functions) ->
-    return if not @userFunctions[name]
+  functionsUsedBy: (name, functionsCollectedSoFar = []) ->
+    return functionsCollectedSoFar if not @userFunctions[name]
     funcImpl = @userFunctionImpls[name]
     throw new Error 'Unknown function name' unless funcImpl
-    for n in funcImpl.functionNames
-      if not _.includes functions, n
-        functions.push n
-        Array.prototype.push.apply(functions, @_collectFunctions(n, functions));
-
+    newFunctions = (n for n in funcImpl.functionNames when not _.includes functionsCollectedSoFar, n)
+    functionsPlusNew = functionsCollectedSoFar.concat newFunctions
+    newCalledFunctions = _.flatten(@functionsUsedBy(n, functionsPlusNew) for n in newFunctions)
+    functionsPlusNew.concat _.uniq(newCalledFunctions)
 
   #  private functions
 
