@@ -405,16 +405,28 @@ Worksheet instances
 - A worksheet could create other sheet instances
 - A test worksheet uses or includes the worksheet under test
 - Definition vs instance/scenario - not there in excel - teaching point
+- An instance is a definition plus a set of inputs
+- Need to save instances as well as sheets
 - Scenario is a sequence of inputs and corresponding output signal sets
 - Should sheets in a workbook know about each other?
 
-
+Instances and inputs
+--------------------
+- Some sheets may not need any previous data and just take event inputs, so all instances the same
+- Some sheets may have only single-value inputs
+- Some sheets may need a large input history
+- Difficult to work with two files at once
+- Idea of templates in word processors and presentation apps
+- Access DBs saved data with definition
+- Maybe need a Save as Template option - just delete the inputs
+- May want to load from web and supply single value inputs as query params
 
 
 State as history
 ----------------
 - Common idea - database inserts/updates/deletes or tran log from day 1, git repo commits, current state of a house
 - History saved anyway in many systems
+- Like Fowler's Event Sourcing
 - Need ability to snapshot and truncate history in some systems
 - To persist, need to store history OR store current state of EFs, or some combination
 - History of input events should be implicit - don't need to explicitly collect?
@@ -465,7 +477,19 @@ Inputs
 - How specify that?
 - Or is the input just the URL, and use a getData function
 - What difference between inputs and parameters? Essentially none, but different emphasis?
+- Or inputs for settings and non-stored input events - again could treat the same, but different emphasis
+- An input could be a URL of the actual data - how does this fit with functional model?
+- Should regard data retrieved from URL as the input, and the URL is just a way of specifying it
 
+
+Web service
+-----------
+- Could run a sheet as a web service
+- POSTs are sent to named inputs
+- GETs are for named values or named functions when can have params
+- Control channel to upload or change or view the worksheet while running
+- Important to be able to see the sheet in real time while running
+- Could send out changes via DDP or other pub/sub mechanism
 
 Modules
 -------

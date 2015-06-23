@@ -33,11 +33,19 @@ Standalone web page
 - Worksheet hidden/not created in normal mode
 - Worksheet events on definition change so can do something to save the change
 
+Desktop document
+----------------
+- Data saved with document
+- Open file loads data with it
+- Copy without data to create empty document - template
+
 
 How would you do...
 -------------------
 - A space invaders game
 - A sequence of pages in an adventure game
+- An accounting system
+- A SRS system
 
 How can it be easy to...
 ------------------------
@@ -83,9 +91,42 @@ Use cases
 - Accounting system with some fixed parts and some user-modifiable parts
 - User-modifiable worksheets and application worksheets
 - Web app - each function is an endpoint - one sheet instance per request
+- Web app - each function is an endpoint - one sheet instance with stored inputs for all requests, saving state
 - Worksheets where only formulas can be changed
 - Runtime Environments: server/node, web page, standalone
 - Programming environments: IDE, browser, standalone
+
+How people could make use of it
+-------------------------------
+- Create a local worksheet with included data storage for use with own data
+- Create a local web page with embedded worksheet and included data storage as a local document for use with own data
+- Create a page on a website with embedded worksheet  for other people to access - no data
+- Create a page on a website with embedded worksheet  for other people to access with - shared persistent data
+- Create a page on a website with embedded worksheet  for other people to access with - individual persistent data
+- Create a server side worksheet with persistent data
+
+Who might use it
+----------------
+- Non-techies who want a calculation
+- Non-techies who want a local app for their own use
+- Non-techies who want to publish a web page
+- Techies who can write HTML
+- Techies who can manage their own website
+- Techies making a server-based app
+
+Really simple user experience
+-----------------------------
+
+- Go to website
+- See blank page with web page section and worksheet
+- OR see getting started examples
+- Instructions and reference beside the working page
+- Edit worksheet and web page
+- See results immediately
+- Click buttons etc and use page live
+- Store inputs in an element within the page
+- Save whole page content to disk
+- Save whole page content to Drive
 
 
 Making it known
