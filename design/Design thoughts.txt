@@ -424,6 +424,7 @@ Instances and inputs
 
 State as history
 ----------------
+- Proposal: any system can be represented as a function from sequence of input events to sequence of sets of output events
 - Common idea - database inserts/updates/deletes or tran log from day 1, git repo commits, current state of a house
 - History saved anyway in many systems
 - Like Fowler's Event Sourcing
@@ -439,6 +440,10 @@ State as history
 - Chess game is classic state = sum history example. Or football league.  Or FA Cup
 - Football league order less significant.  FA Cup v much so.
 - How express FA Cup functionally.
+- May be useful to have intermediate functions that summarise inputs to make output calcs easier eg balances feeding P&L, BS, TB
+  - these intermediate functions sit in same place as the state
+- Even if can't implement that way, functional def acts as an invariant
+  - could be used as for testing or integrity checking
 
 
 
