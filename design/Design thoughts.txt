@@ -456,35 +456,6 @@ Sum vs fold
 - Fold-type closer to current ways of thinking about state, easier to persist
 - Everything is a fold in the end even smaller more fcused functions - even sum
 
-Inputs
-------
-- Simple option: have an input function eg answers = input("answers")
-- BUT not DRY, name could differ, could use inside formulas, don't know all names until called, runner special case
-- Language option: name = input
-- AST: Input object
-- Parser: new case for function definition top-level expr, but not anywhere else
-- Runner: call addUserFunction, create input name mapped to user subject
-- Runner: getInputs -> List[String]
-- Runner: sendInput(name, value)
-- Sheet: delegate all above
-- Worksheet: 4th column with button.  Click button for pop-up dialog to enter new value
-- Probably useful to add type info to the input
-- If inputs are typed, can the types of everything else in the worksheet be inferred?
-- Documents what expected, allows auto validation, removes a big source of errors
-- Any reason why inputs cannot be used as outputs like any other function?
-- Inputs may be outputs of other sheets
-- What difference between calling functions in other sheets (if you can) and inputs from other sheets?
-- 'input stored' keyword to mean the input is built up into a list
-- Save with sheet - as JSON at end of text file
-- OR save inputs separately
-- State = history = input list!
-- But inputs may also come from external data sources like web documents
-- How specify that?
-- Or is the input just the URL, and use a getData function
-- What difference between inputs and parameters? Essentially none, but different emphasis?
-- Or inputs for settings and non-stored input events - again could treat the same, but different emphasis
-- An input could be a URL of the actual data - how does this fit with functional model?
-- Should regard data retrieved from URL as the input, and the URL is just a way of specifying it
 
 
 Web service

@@ -1,6 +1,37 @@
 Input and output mechanism
 ==========================
 
+Inputs
+------
+- Simple option: have an input function eg answers = input("answers")
+- BUT not DRY, name could differ, could use inside formulas, don't know all names until called, runner special case
+- Language option: name = input
+- AST: Input object
+- Parser: new case for function definition top-level expr, but not anywhere else
+- Runner: call addUserFunction, create input name mapped to user subject
+- Runner: getInputs -> List[String]
+- Runner: sendInput(name, value)
+- Sheet: delegate all above
+- Worksheet: 4th column with button.  Click button for pop-up dialog to enter new value
+- Probably useful to add type info to the input
+- If inputs are typed, can the types of everything else in the worksheet be inferred?
+- Documents what expected, allows auto validation, removes a big source of errors
+- Any reason why inputs cannot be used as outputs like any other function?
+- Inputs may be outputs of other sheets
+- What difference between calling functions in other sheets (if you can) and inputs from other sheets?
+- 'input stored' keyword to mean the input is built up into a list
+- Save with sheet - as JSON at end of text file
+- OR save inputs separately
+- State = history = input list!
+- But inputs may also come from external data sources like web documents
+- How specify that?
+- Or is the input just the URL, and use a getData function
+- What difference between inputs and parameters? Essentially none, but different emphasis?
+- Or inputs for settings and non-stored input events - again could treat the same, but different emphasis
+- An input could be a URL of the actual data - how does this fit with functional model?
+- Should regard data retrieved from URL as the input, and the URL is just a way of specifying it
+
+
 - Need to link to sources, like another module's outputs
 - Need to be able to put an input into a worksheet and see the result
 - Need to be able to see all the inputs that have happened and the output events created
@@ -46,3 +77,61 @@ Testing
 - Give an expected sequence of output events
 - Save canned sequences of input events and pull in
 - Timings on input events, relative to previous
+
+Stores
+------
+- State != model
+- Store is for 'state' derived from inputs
+- Not all inputs will affect state eg button clicks
+- Model will include input-derived parts and parts from other data sources
+- Inputs to sheet may come from an external data source like a web api
+- Those will vary over time, so must be inputs to keep sheet ref transparent
+- Sheets for different purposes need different kinds of store
+- May want to connect same sheet to different data stores
+- Sheet store: bound to sheet - when using as a local document manipulated as a file
+- Local store: bound to browser where use sheet
+- Remote individual store: data for one user, on web
+- Remote global store: data for all users, on web
+- Remote individual/global store with local storage cache
+- Local store just sends on input events
+- Input events use timestamp of data they were based on?
+- Just one store?  What if need diff storage for different inputs? Eg user shortcuts and global data in accounting system
+
+
+
+Linksheets
+----------
+
+- Inputs bound to worksheets by connector sheets
+- May need manipulation to adapt data source to what expected - so need calculations
+- Can you restrict connector sheets so have to use a worksheet, or could you do whole calculation in a connector sheet?
+- How work with input and output?  Separate sheets?  Different parts of sheet?
+- Easier to understand if same format as worksheets?
+- Easier to understand if different?
+- Linksheets
+- Autogenerate for inputs (and outputs?) on a worksheet
+- May want multiple uses of one output on worksheet
+- Need auto output for page templates
+- Link to one worksheet by id
+- Can define other names as may need to adapt/combine inputs
+- Linksheet Inputs: name of input, formula producing value - can use i/o formulas referencing inputs eg from page or web
+- Input formulas can only reference functions in the linksheet
+- Linksheet outputs: functions with side-effects - do they need names?  What are the values?
+- Can outputs *only* reference values from the worksheet?  If can ref values in linksheet, can do everything in the linksheet
+- Can linksheet values be used in page? If not, forces you to use a worksheet.
+- Is store specified with linksheet or worksheet?
+- Is store specified for each input or for whole sheet?
+- Kitchen/store hygiene analogy
+- Outputs can be done later so long as have default output to page
+- Are outputs other than to UI rare enough that can attach in separate output sheet, different to link sheet?
+- Time: that's an input, as it varies
+
+- Linksheet has to:
+  - Know which worksheet it is connected to
+  - Get inputs via input functions
+  - Send input events to worksheet
+  - Store input events if they need to be stored
+  - Replay input events from the store on startup
+
+- What about storing result of quiz long term?  Two worksheets - one for UI, one for learning results?
+- Or just different 'layers' of formulas within sheet that feed each other

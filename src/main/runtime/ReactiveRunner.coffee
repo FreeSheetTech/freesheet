@@ -10,6 +10,8 @@ module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
   @STREAM = 'stream'
 
+  isRxObservable = (func) -> typeof func.subscribe == 'function'
+
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
@@ -117,7 +119,7 @@ module.exports = class ReactiveRunner
       else @_unknownUserFunctionSubject name
 
   _providedFunctionStream: (func) ->
-    if func instanceof Rx.Observable or func instanceof Rx.Subject then func
+    if isRxObservable(func) then func
     else
       if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
 

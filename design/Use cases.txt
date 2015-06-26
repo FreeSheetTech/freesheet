@@ -128,6 +128,22 @@ Really simple user experience
 - Save whole page content to disk
 - Save whole page content to Drive
 
+SRS system
+----------------
+- Model Inputs:
+   - fact to learn - stored
+   - attempt - stored
+   - repetition config - stored but only most recent needed
+   - time - immediate
+- Model outputs:
+  - facts to attempt now
+
+- UI outputs:
+  - facts to attempt now
+- UI inputs:
+  -  text input related to fact -> attempt
+
+
 
 Making it known
 ---------------
