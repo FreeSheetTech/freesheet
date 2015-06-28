@@ -180,6 +180,7 @@ Time
 - if it changed every millisecond, would be too much computation
 - now() updates every second
 - Later: have different resolutions of now() eg now(100) to update every 100 ms
+- For countdowns, better to have a stream that stops to reduce CPU usage
 
 
 Programming environment

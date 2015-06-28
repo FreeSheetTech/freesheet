@@ -1,0 +1,23 @@
+Multiple worksheets
+===================
+
+Purpose
+-------
+- Modularisation
+- Re-use
+- Clean and dirty sheets
+- Connecting other types of observable into sheets
+
+
+Mechanism
+---------
+- Possible syntax:
+    - Sheet(name) function, then . operator
+    - FromSheet(sheetName, valueName)
+
+Implementation
+--------------
+- ReactiveRunner is added to RunnerEnvironment
+- RunnerEnvironment has named sheets in it
+- RunnerEnvironment gives runner a function to call back to it for a named value in a named sheet, get a stream
+

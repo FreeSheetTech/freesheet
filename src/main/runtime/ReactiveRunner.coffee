@@ -9,8 +9,10 @@ _ = require 'lodash'
 module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
   @STREAM = 'stream'
+  @STREAM_RETURN = 'streamReturn'
 
   isRxObservable = (func) -> typeof func.subscribe == 'function'
+  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.STREAM_RETURN
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -27,6 +29,8 @@ module.exports = class ReactiveRunner
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
   addProvidedStreamFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM; @providedFunctions[name] = fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
+  addProvidedStreamReturnFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM_RETURN; @providedFunctions[name] = fn
+  addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
     name = funcDef.name
@@ -114,7 +118,7 @@ module.exports = class ReactiveRunner
   _functionArg: (name) ->
     switch
       when func = @userFunctions[name] then @_userFunctionSubject name
-      when (func = @providedFunctions[name])? and func.kind == ReactiveRunner.STREAM then func
+      when (func = @providedFunctions[name])? and returnsStream(func) then func
       when func = @providedFunctions[name] then @_providedFunctionStream func
       else @_unknownUserFunctionSubject name
 

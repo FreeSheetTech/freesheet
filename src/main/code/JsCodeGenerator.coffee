@@ -92,6 +92,7 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
 
   isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transform'
   isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
+  isStreamReturnFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'streamReturn'
 
   getCodeAndAccumulateFunctions = (expr, localNames) ->
     allLocalNames = incomingLocalNames[..].concat localNames
@@ -161,6 +162,16 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
       functionName = expr.functionName
       accumulateFunctionName functionName
       args = (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
+      lsCode = fromContext functionName + argList args
+      lsName = localStreamName functionName
+      accumulateLocalStream lsName, lsCode
+      accumulateCombineName new Name lsName, true
+      fromContext lsName
+
+    when expr instanceof FunctionCall and isStreamReturnFunction expr
+      functionName = expr.functionName
+      accumulateFunctionName functionName
+      args = (getCodeAndAccumulateFunctions(e) for e in expr.children)
       lsCode = fromContext functionName + argList args
       lsName = localStreamName functionName
       accumulateLocalStream lsName, lsCode

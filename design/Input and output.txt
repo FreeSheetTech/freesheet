@@ -97,7 +97,13 @@ Stores
 - Input events use timestamp of data they were based on?
 - Just one store?  What if need diff storage for different inputs? Eg user shortcuts and global data in accounting system
 
-
+Caching
+-------
+- May want to cache certain important functions that form the model
+- May want to persist that cache
+- Is this done by the sheet or externally, and tell the sheet it has a cache?
+- Cache may include many calc values of which only want one at a time
+- Some way of feeding in accumulated values to a stream which then takes new inputs and sends out new values to the cache
 
 Linksheets
 ----------
@@ -112,7 +118,7 @@ Linksheets
 - Autogenerate for inputs (and outputs?) on a worksheet
 - May want multiple uses of one output on worksheet
 - Need auto output for page templates
-- Link to one worksheet by id
+- Link to one worksheet by id?  Or pull from downstream worksheet?
 - Can define other names as may need to adapt/combine inputs
 - Linksheet Inputs: name of input, formula producing value - can use i/o formulas referencing inputs eg from page or web
 - Input formulas can only reference functions in the linksheet

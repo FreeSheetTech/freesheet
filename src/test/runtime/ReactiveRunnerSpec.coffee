@@ -20,6 +20,7 @@ describe 'ReactiveRunner runs', ->
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
+  providedStreamReturnFunctions = (functionMap) -> runner.addProvidedStreamReturnFunctions functionMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
@@ -377,6 +378,17 @@ describe 'ReactiveRunner runs', ->
       inputSubj.onNext 40
 
       changesFor("tot").should.eql [null, 20, 50, 90]
+
+    it 'uses a stream return function', ->
+      providedStreamReturnFunctions
+        widgetFactor: (a) -> inputSubj.map (x) -> x + a
+      parseUserFunctions 'wf = widgetFactor(3)'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+      inputSubj.onNext 40
+
+      changesFor("wf").should.eql [null, 23, 33, 43]
 
 
   describe 'updates dependent expressions and notifies changes', ->

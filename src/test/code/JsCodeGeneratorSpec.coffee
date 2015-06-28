@@ -201,6 +201,17 @@ describe 'JsCodeGenerator', ->
       functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'average', 'd', 'e']
 
 
+  describe 'Generates code for calls to stream return functions', ->
+
+    functionInfo =
+      widgetCount: {kind: 'streamReturn'}
+
+    it 'with one literal argument', ->
+      genBodyFor new FunctionCall('widgetCount("a string")', 'widgetCount', [aString]), functionInfo
+      code.should.eql 'var widgetCount_1 = _ctx.widgetCount("a string");\nreturn operations.combine(widgetCount_1, function(widgetCount_1) { return widgetCount_1; });'
+      functionNames.should.eql ['widgetCount']
+
+
   describe 'stores function calls', ->
 
     it 'only the first time found', ->
