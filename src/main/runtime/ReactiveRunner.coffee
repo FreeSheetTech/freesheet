@@ -83,6 +83,8 @@ module.exports = class ReactiveRunner
     throw new Error 'Unknown name' unless stream
     stream.onNext value
 
+  hasUserFunction: (name) -> @_userFunctionSubject(name)?
+
   functionsUsedBy: (name, functionsCollectedSoFar = []) ->
     return functionsCollectedSoFar if not @userFunctions[name]
     funcImpl = @userFunctionImpls[name]
@@ -91,6 +93,7 @@ module.exports = class ReactiveRunner
     functionsPlusNew = functionsCollectedSoFar.concat newFunctions
     newCalledFunctions = _.flatten(@functionsUsedBy(n, functionsPlusNew) for n in newFunctions)
     functionsPlusNew.concat _.uniq(newCalledFunctions)
+
 
   #  private functions
 

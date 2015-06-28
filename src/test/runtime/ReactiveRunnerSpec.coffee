@@ -152,7 +152,9 @@ describe 'ReactiveRunner runs', ->
 
 
     it 'function with no args returning constant', ->
+      runner.hasUserFunction('theAs').should.eql false
       parseUserFunctions ''' theAs = "aaaAAA" '''
+      runner.hasUserFunction('theAs').should.eql true
       changes.should.eql [{theAs: "aaaAAA"}]
 
     it 'function with no args returning constant calculated addition expression', ->
