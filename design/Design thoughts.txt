@@ -282,6 +282,7 @@ Reusing functions
 - Testing much easier with pure worksheets
 - How import functions?
 - Are there sheets which just have functions for reuse, no input/output?
+- A function with params that also depends on internal values in a sheet can be re-used in other sheets: client gets a stream of changing functions
 
 
 Managing subscriptions and user functions
@@ -402,6 +403,8 @@ Worksheet instances
 -------------------
 - A worksheet can have multiple instances
 - No point in having multiple instances if no inputs
+- SO having inputs means a worksheet is only instantiated when inputs supplied, can do so many times
+- Worksheet with instances could represent reports for different input criteria
 - A worksheet may represent something with many instances, like an object in a game
 - A worksheet could create other sheet instances
 - A test worksheet uses or includes the worksheet under test
@@ -445,6 +448,7 @@ State as history
   - these intermediate functions sit in same place as the state
 - Even if can't implement that way, functional def acts as an invariant
   - could be used as for testing or integrity checking
+
 
 
 

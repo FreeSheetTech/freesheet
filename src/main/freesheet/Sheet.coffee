@@ -10,8 +10,9 @@ module.exports = class Sheet
 
   errorText = (error) -> "Error in formula on line #{error.line} at position #{error.columnInExpr}"
 
-  constructor: (@name) ->
+  constructor: (@name, @environment) ->
     @runner = new ReactiveRunner()
+    @environment?.add @name, @runner
     @loader = new TextLoader(@runner)
     @functionChanges = new Rx.Subject()
 

@@ -1,5 +1,6 @@
 should = require 'should'
 Sheet = require './Sheet'
+Freesheet = require './Freesheet'
 
 describe 'Sheet', ->
 
@@ -42,3 +43,12 @@ describe 'Sheet', ->
     it 'for error', ->
       sheet.update 'fn1', '10('
       functionChanges.should.eql [['error', 'fn1', '10(', 'Error in formula on line 1 at position 3' ]]
+
+  describe 'Freesheet facade', ->
+    it 'connects sheet to environment', ->
+      s1 = Freesheet.createSheet('sheet1')
+      s2 = Freesheet.createSheet('sheet2')
+      s1.update 'fn1', '10'
+      s2.update 'fn1FromS1', 'fromSheet("sheet1", "fn1")'
+      s2.formulasAndValues()[0].value.should.eql 10
+

@@ -96,6 +96,9 @@ Stores
 - Local store just sends on input events
 - Input events use timestamp of data they were based on?
 - Just one store?  What if need diff storage for different inputs? Eg user shortcuts and global data in accounting system
+- Stored function - passes on after storing to a specified type of store
+- Pulls stored stuff back in
+- Stored could be used for calculated results as a cache too
 
 Caching
 -------
@@ -104,6 +107,14 @@ Caching
 - Is this done by the sheet or externally, and tell the sheet it has a cache?
 - Cache may include many calc values of which only want one at a time
 - Some way of feeding in accumulated values to a stream which then takes new inputs and sends out new values to the cache
+
+Outputs
+-------
+- Outputs could just be called functions in 'dirty' sheets
+- Results of the functions could be error or unit
+ - Have (out-of-band?) info attached that shows whether a new or a stored value - useful for output functions
+ - Have a treat-as-new function to strip this and replay everything
+
 
 Linksheets
 ----------
