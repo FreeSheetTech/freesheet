@@ -11,6 +11,8 @@ module.exports = class RunnerEnvironment
     @runners[name] = runner
     runner.addProvidedStreamReturnFunction('fromSheet', @_fromSheetFn)
 
+  destroy: -> r.destroy() for k, r of @runners
+
   _fromSheetFn: (sheetName, functionName) =>
     runner = @runners[sheetName]
     if not runner then return new Rx.BehaviorSubject(new CalculationError(null, "Sheet #{sheetName} could not be found"))

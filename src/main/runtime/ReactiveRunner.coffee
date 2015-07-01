@@ -95,6 +95,8 @@ module.exports = class ReactiveRunner
     functionsPlusNew.concat _.uniq(newCalledFunctions)
 
 
+  destroy: ->  # TODO unsubscribe everything...
+
   #  private functions
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]

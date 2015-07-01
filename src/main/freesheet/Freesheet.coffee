@@ -6,18 +6,22 @@ RunnerEnvironment = require '../runtime/RunnerEnvironment'
 CoreFunctions = require '../functions/CoreFunctions'
 TimeFunctions = require '../functions/TimeFunctions'
 
-sheets = []
-environment = new RunnerEnvironment()
+module.exports = class Freesheet
 
-findSheet = (name) -> (s for s in sheets when s.name == name)[0]
+  constructor: ->
+    @_sheets = []
+    @_environment = new RunnerEnvironment()
 
-module.exports = {
-  sheets: (name = null) -> if name then findSheet(name) else sheets[..]
+  sheets: (name) ->
+    if name
+      (s for s in @_sheets when s.name == name)[0]
+    else @_sheets[..]
 
   createSheet: (name) ->
-    sheet = new Sheet(name, environment)
+    sheet = new Sheet(name, @_environment)
     sheet.addFunctions CoreFunctions
     sheet.addFunctions TimeFunctions
-    sheets.push sheet
+    @_sheets.push sheet
     sheet
-}
+
+  destroy: -> @_environment.destroy()

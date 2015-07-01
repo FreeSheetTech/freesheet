@@ -45,10 +45,12 @@ describe 'Sheet', ->
       functionChanges.should.eql [['error', 'fn1', '10(', 'Error in formula on line 1 at position 3' ]]
 
   describe 'Freesheet facade', ->
-    it 'connects sheet to environment', ->
-      s1 = Freesheet.createSheet('sheet1')
-      s2 = Freesheet.createSheet('sheet2')
-      s1.update 'fn1', '10'
-      s2.update 'fn1FromS1', 'fromSheet("sheet1", "fn1")'
+    it 'creates sheets and connects them to environment', ->
+      freesheet = new Freesheet()
+      s1 = freesheet.createSheet('sheet1')
+      s2 = freesheet.createSheet('sheet2')
+      freesheet.sheets('sheet1').update 'fn1', '10'
+      freesheet.sheets('sheet2').update 'fn1FromS1', 'fromSheet("sheet1", "fn1")'
       s2.formulasAndValues()[0].value.should.eql 10
+      freesheet.destroy()
 
