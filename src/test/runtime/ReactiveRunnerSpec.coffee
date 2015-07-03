@@ -19,6 +19,7 @@ describe 'ReactiveRunner runs', ->
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
+  providedAggregateFunctions = (functionMap) -> runner.addProvidedAggregateFunctions functionMap
   providedSequenceFunctions = (functionMap) -> runner.addProvidedSequenceFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   providedStreamReturnFunctions = (functionMap) -> runner.addProvidedStreamReturnFunctions functionMap
@@ -371,7 +372,7 @@ describe 'ReactiveRunner runs', ->
 
     it 'finds the total of the values in a stream using Over version of function', ->
       providedStreams { theInput: inputSubj }
-      providedSequenceFunctions
+      providedAggregateFunctions
         total: (s) -> s.scan((acc, x) -> acc + x)
       parseUserFunctions 'tot = totalOver(theInput)'
 
@@ -383,7 +384,7 @@ describe 'ReactiveRunner runs', ->
 
     it 'finds the totals of the sequence values in a stream using plain version', ->
       providedStreams { theInput: inputSubj }
-      providedSequenceFunctions
+      providedAggregateFunctions
         total: (s) -> s.scan((acc, x) -> acc + x)
       parseUserFunctions 'tot = total(theInput)'
       parseUserFunctions 'totAll = totalOver(tot)'
@@ -396,6 +397,31 @@ describe 'ReactiveRunner runs', ->
       changesFor("tot").should.eql [null, 9, 11, 7]
       changesFor("totAll").should.eql [null, 9, 20, 27]
 
+    it 'finds the squares of the values in a stream using Over version of function', ->
+      providedStreams { theInput: inputSubj }
+      providedSequenceFunctions
+        square: (s) -> s.map((x) -> x * x)
+      parseUserFunctions 'sq = squareOver(theInput)'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+      inputSubj.onNext 40
+
+      changesFor("sq").should.eql [null, 400, 900, 1600]
+
+    it 'finds the squares of the sequence values in a stream using plain version', ->
+      providedStreams { theInput: inputSubj }
+      providedSequenceFunctions
+        square: (s) -> s.map((x) -> x * x)
+      parseUserFunctions 'sq = square(theInput)'
+
+      inputSubj.onNext [2, 3, 4]
+      inputSubj.onNext [5, 6]
+      inputSubj.onNext [7]
+#      inputSubj.onNext []
+
+      changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
+
     it 'uses a stream return function', ->
       providedStreamReturnFunctions
         widgetFactor: (a) -> inputSubj.map (x) -> x + a
@@ -407,7 +433,6 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("wf").should.eql [null, 23, 33, 43]
 
-    it.skip 'stream and sequence functions for array return type', ->
     it.skip 'stream and sequence transform functions', ->
 
 

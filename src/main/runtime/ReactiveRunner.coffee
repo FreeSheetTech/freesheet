@@ -10,15 +10,17 @@ module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
   @STREAM = 'stream'
   @STREAM_RETURN = 'streamReturn'
+  @AGGREGATE_RETURN = 'aggregateReturn'
 
   isRxObservable = (func) -> typeof func.subscribe == 'function'
-  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.STREAM_RETURN
+  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.returnKind == ReactiveRunner.STREAM_RETURN
+  returnsAggregate = (func) -> func.returnKind == ReactiveRunner.AGGREGATE_RETURN
 
   asImmediateFunction = (func) -> (s) ->
     results = []
     seq = Rx.Observable.from s
     func(seq).subscribe (x) -> results.push x
-    _.last results
+    if returnsAggregate(func) then _.last results else results
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -26,7 +28,7 @@ module.exports = class ReactiveRunner
     @userFunctionImpls = {}
     @inputStreams = {}
 
-  # TODO  addProvidedFunction and addProvidedStream do the same thing
+  # TODO  rationalise this zoo of add...Function
   addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedStream: (name, stream) -> @providedFunctions[name] = stream
@@ -35,14 +37,21 @@ module.exports = class ReactiveRunner
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
   addProvidedStreamFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM; @providedFunctions[name] = fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
-  addProvidedStreamReturnFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM_RETURN; @providedFunctions[name] = fn
+  addProvidedStreamReturnFunction: (name, fn) -> fn.returnKind = ReactiveRunner.STREAM_RETURN; @providedFunctions[name] = fn
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
   addProvidedSequenceFunction: (name, fn) ->
-    @addProvidedStreamFunction name + 'Over', fn
     @addProvidedFunction name, asImmediateFunction(fn)
+    @addProvidedStreamFunction name + 'Over', fn
 
   addProvidedSequenceFunctions: (functionMap) -> @addProvidedSequenceFunction n, f for n, f of functionMap
+
+  addProvidedAggregateFunction: (name, fn) ->
+    @addProvidedFunction name, asImmediateFunction(fn)
+    fn.returnKind = ReactiveRunner.AGGREGATE_RETURN
+    @addProvidedStreamFunction name + 'Over', fn
+
+  addProvidedAggregateFunctions: (functionMap) -> @addProvidedAggregateFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
     name = funcDef.name
@@ -129,7 +138,7 @@ module.exports = class ReactiveRunner
 
   _functionInfo: ->
     result = {}
-    result[name] = {kind: fn.kind} for name, fn of @providedFunctions when fn.kind
+    result[name] = {kind: fn.kind, returnKind: fn.returnKind} for name, fn of @providedFunctions when fn.kind or fn.returnKind
     result
 
   _functionArg: (name) ->

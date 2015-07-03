@@ -92,7 +92,7 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
 
   isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transform'
   isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
-  isStreamReturnFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'streamReturn'
+  isStreamReturnFunction = (functionCall) -> functionInfo[functionCall.functionName]?.returnKind == 'streamReturn'
 
   getCodeAndAccumulateFunctions = (expr, localNames) ->
     allLocalNames = incomingLocalNames[..].concat localNames

@@ -204,7 +204,7 @@ describe 'JsCodeGenerator', ->
   describe 'Generates code for calls to stream return functions', ->
 
     functionInfo =
-      widgetCount: {kind: 'streamReturn'}
+      widgetCount: {returnKind: 'streamReturn'}
 
     it 'with one literal argument', ->
       genBodyFor new FunctionCall('widgetCount("a string")', 'widgetCount', [aString]), functionInfo
