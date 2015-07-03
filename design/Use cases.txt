@@ -95,6 +95,8 @@ Use cases
 - Worksheets where only formulas can be changed
 - Runtime Environments: server/node, web page, standalone
 - Programming environments: IDE, browser, standalone
+- Sheets with one main answer for writing utilities and scripts
+- Command line runner can take script file, parse args to inputs, output one or more values eg one called 'main' or specify
 
 How people could make use of it
 -------------------------------

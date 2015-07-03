@@ -77,6 +77,45 @@ Transform functions 3
 - OR aggregation and transform functions act in two ways: on a sequence, and as filters on a stream
 - If aggregation function is always written as a fold, and transform/select as a function acting on one object, then framework applies either way
 
+Stream and sequence functions
+-----------------------------
+
+- Given:
+    goalsTotal = sum(fromEach (weeklyResults, the.goalsHome + the.goalsAway))
+
+
+- aggregate function applied to stream:
+
+    aveGoalsTotal = average(goalsTotal)
+
+- stream and item in one expression:
+
+    aveGoalsTotal = average( sum( fromEach (weeklyResults, the.goalsHome + the.goalsAway)))
+
+- So how do you know which is required?
+    - extra function meaning 'asStream - increase brackets, difficult to remember
+    - two versions of each collection function - one with suffix to mean 'over the stream'
+    - possible suffixes - Ext, XT, Ex, Over
+    - suffix should be: short, easy to say, easy to associate with an explanation like 'averageOver is the average over time, not just for one item'
+        eg totalGoalsForSeason =  sumOver( sum( fromEach( weeklyResults, the.goalsHome + the.goalsAway)))
+
+- Do we need a distinction between aggregate and transform functions?
+- Is the difference really between filter and fold?
+- Or could both filter and fold take an expression?
+- Is it just a difference between needing an expression as well as stream, or just a stream?
+- Stream functions may provide:
+  - selected or transformed values from stream eg filter
+  - one updating value derived from stream eg max
+  - an updating sequence of all values from stream so far eg sort, shuffle
+
+
+Dual-use function implementation
+--------------------------------------------
+
+- Provide a function that takes a stream
+- Use as is for the Over version
+- For the individual value version, use Observable.from, subscribe and collect output
+- Need to know whether function gives you a single value or a sequence so know whether to return an array or not
 
 In domain modelling
 -------------------

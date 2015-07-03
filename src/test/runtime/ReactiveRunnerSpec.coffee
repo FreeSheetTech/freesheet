@@ -19,6 +19,7 @@ describe 'ReactiveRunner runs', ->
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
+  providedSequenceFunctions = (functionMap) -> runner.addProvidedSequenceFunctions functionMap
   providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   providedStreamReturnFunctions = (functionMap) -> runner.addProvidedStreamReturnFunctions functionMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
@@ -366,20 +367,34 @@ describe 'ReactiveRunner runs', ->
                           {pointsFactor: 6}, {fudgeFactor: 4},
                           {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
 
-  describe 'stream functions', ->
+  describe 'sequence and stream functions', ->
 
-    it 'finds the total of the values in a stream', ->
+    it 'finds the total of the values in a stream using Over version of function', ->
       providedStreams { theInput: inputSubj }
-      providedStreamFunctions
-        total: (s) ->
-          s.scan( (acc, x) -> acc + x)
-      parseUserFunctions 'tot = total(theInput)'
+      providedSequenceFunctions
+        total: (s) -> s.scan((acc, x) -> acc + x)
+      parseUserFunctions 'tot = totalOver(theInput)'
 
       inputSubj.onNext 20
       inputSubj.onNext 30
       inputSubj.onNext 40
 
       changesFor("tot").should.eql [null, 20, 50, 90]
+
+    it 'finds the totals of the sequence values in a stream using plain version', ->
+      providedStreams { theInput: inputSubj }
+      providedSequenceFunctions
+        total: (s) -> s.scan((acc, x) -> acc + x)
+      parseUserFunctions 'tot = total(theInput)'
+      parseUserFunctions 'totAll = totalOver(tot)'
+
+      inputSubj.onNext [2, 3, 4]
+      inputSubj.onNext [5, 6]
+      inputSubj.onNext [7]
+#      inputSubj.onNext []
+
+      changesFor("tot").should.eql [null, 9, 11, 7]
+      changesFor("totAll").should.eql [null, 9, 20, 27]
 
     it 'uses a stream return function', ->
       providedStreamReturnFunctions
@@ -391,6 +406,9 @@ describe 'ReactiveRunner runs', ->
       inputSubj.onNext 40
 
       changesFor("wf").should.eql [null, 23, 33, 43]
+
+    it.skip 'stream and sequence functions for array return type', ->
+    it.skip 'stream and sequence transform functions', ->
 
 
   describe 'updates dependent expressions and notifies changes', ->

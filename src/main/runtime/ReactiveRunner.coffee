@@ -14,6 +14,12 @@ module.exports = class ReactiveRunner
   isRxObservable = (func) -> typeof func.subscribe == 'function'
   returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.STREAM_RETURN
 
+  asImmediateFunction = (func) -> (s) ->
+    results = []
+    seq = Rx.Observable.from s
+    func(seq).subscribe (x) -> results.push x
+    _.last results
+
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
@@ -31,6 +37,12 @@ module.exports = class ReactiveRunner
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
   addProvidedStreamReturnFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM_RETURN; @providedFunctions[name] = fn
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
+
+  addProvidedSequenceFunction: (name, fn) ->
+    @addProvidedStreamFunction name + 'Over', fn
+    @addProvidedFunction name, asImmediateFunction(fn)
+
+  addProvidedSequenceFunctions: (functionMap) -> @addProvidedSequenceFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
     name = funcDef.name

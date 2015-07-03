@@ -448,7 +448,7 @@ State as history
   - these intermediate functions sit in same place as the state
 - Even if can't implement that way, functional def acts as an invariant
   - could be used as for testing or integrity checking
-
+- Materializing the domain model as state - when do you need to?
 
 
 
@@ -459,7 +459,7 @@ Sum vs fold
   - state as data with functions with previous state and event as input  (fold)
 - Sum-type more flexible and easier to write
 - Fold-type closer to current ways of thinking about state, easier to persist
-- Everything is a fold in the end even smaller more fcused functions - even sum
+- Everything is a fold in the end even smaller more focused functions - even sum
 
 
 
