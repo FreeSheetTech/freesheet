@@ -9,11 +9,12 @@ _ = require 'lodash'
 module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
   @STREAM = 'stream'
+  @TRANSFORM_STREAM = 'transformStream'
   @STREAM_RETURN = 'streamReturn'
   @AGGREGATE_RETURN = 'aggregateReturn'
 
   isRxObservable = (func) -> typeof func.subscribe == 'function'
-  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.returnKind == ReactiveRunner.STREAM_RETURN
+  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.TRANSFORM_STREAM or func.returnKind == ReactiveRunner.STREAM_RETURN
   returnsAggregate = (func) -> func.returnKind == ReactiveRunner.AGGREGATE_RETURN
 
   asImmediateFunction = (func) -> (s) ->
@@ -22,19 +23,35 @@ module.exports = class ReactiveRunner
     func(seq).subscribe (x) -> results.push x
     if returnsAggregate(func) then _.last results else results
 
+  asImmediateTransformFunction = (func) ->
+    immFn = (s, f) ->
+      results = []
+      seq = Rx.Observable.from s
+      func(seq, f).subscribe (x) -> results.push x
+      results
+
+    immFn.kind = ReactiveRunner.TRANSFORM
+    immFn
+
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
     @userFunctionImpls = {}
     @inputStreams = {}
 
-  # TODO  rationalise this zoo of add...Function
+  # TODO  rationalise this zoo of add...Functions
   addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedStream: (name, stream) -> @providedFunctions[name] = stream
   addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
-  addProvidedTransformFunction: (name, fn) -> fn.kind = ReactiveRunner.TRANSFORM; @providedFunctions[name] = fn
+
+  addProvidedTransformFunction: (name, fn) ->
+    @addProvidedFunction name, asImmediateTransformFunction fn
+    fn.kind = ReactiveRunner.TRANSFORM_STREAM
+    @addProvidedFunction name + 'Over', fn
+
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
+
   addProvidedStreamFunction: (name, fn) -> fn.kind = ReactiveRunner.STREAM; @providedFunctions[name] = fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
   addProvidedStreamReturnFunction: (name, fn) -> fn.returnKind = ReactiveRunner.STREAM_RETURN; @providedFunctions[name] = fn

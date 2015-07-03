@@ -14,8 +14,10 @@ describe 'ReactiveRunner runs', ->
   inputSubj = null
 
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
-  fromEachFunction = (seq, func) -> (apply(func, x) for x in seq)
-  selectFunction = (seq, func) -> (x for x in seq when apply(func, x))
+  fromEachFunction = (s, func) ->
+    s.map (x) ->
+      apply(func, x)
+  selectFunction = (s, func) -> s.filter (x) -> apply(func, x)
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
@@ -422,6 +424,29 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
 
+    it 'applies a transform function to a stream using Over version of function', ->
+      providedStreams { theInput: inputSubj }
+      parseUserFunctions 'sq = fromEachOver(theInput, in * in)'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+      inputSubj.onNext 40
+
+      changesFor("sq").should.eql [null, 400, 900, 1600]
+
+    it 'applies a transform function to the sequence values in a stream using plain version', ->
+      providedStreams { theInput: inputSubj }
+      providedSequenceFunctions
+        square: (s) -> s.map((x) -> x * x)
+      parseUserFunctions 'sq = fromEach(theInput, in * in)'
+
+      inputSubj.onNext [2, 3, 4]
+      inputSubj.onNext [5, 6]
+      inputSubj.onNext [7]
+#      inputSubj.onNext []
+
+      changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
+
     it 'uses a stream return function', ->
       providedStreamReturnFunctions
         widgetFactor: (a) -> inputSubj.map (x) -> x + a
@@ -432,8 +457,6 @@ describe 'ReactiveRunner runs', ->
       inputSubj.onNext 40
 
       changesFor("wf").should.eql [null, 23, 33, 43]
-
-    it.skip 'stream and sequence transform functions', ->
 
 
   describe 'updates dependent expressions and notifies changes', ->
