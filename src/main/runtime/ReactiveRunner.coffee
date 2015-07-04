@@ -133,7 +133,7 @@ module.exports = class ReactiveRunner
     functionsPlusNew.concat _.uniq(newCalledFunctions)
 
 
-  destroy: ->  # TODO unsubscribe everything...
+  destroy: ->  @removeUserFunction n for n, f of @userFunctions
 
   #  private functions
 
@@ -153,21 +153,19 @@ module.exports = class ReactiveRunner
     args = [new Operations(func.name, @_inputStream), ctx]
     theFunction.apply null, args
 
-  _functionInfo: ->
-    result = {}
-    result[name] = {kind: fn.kind, returnKind: fn.returnKind} for name, fn of @providedFunctions when fn.kind or fn.returnKind
-    result
+  _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
 
   _functionArg: (name) ->
     switch
       when func = @userFunctions[name] then @_userFunctionSubject name
-      when (func = @providedFunctions[name])? and returnsStream(func) then func
       when func = @providedFunctions[name] then @_providedFunctionStream func
       else @_unknownUserFunctionSubject name
 
   _providedFunctionStream: (func) ->
-    if isRxObservable(func) then func
-    else
-      if func.length then new Rx.BehaviorSubject func else new Rx.BehaviorSubject func()
+    switch
+      when returnsStream(func) then func
+      when isRxObservable(func) then func
+      when func.length then new Rx.BehaviorSubject func
+      else new Rx.BehaviorSubject func()
 
   _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.BehaviorSubject(null))

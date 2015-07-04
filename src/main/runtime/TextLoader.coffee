@@ -10,7 +10,7 @@ module.exports = class TextLoader
     @runner.onValueChange (name, value) => @_values[name] = value
 
   clear: ->
-    @runner.removeUserFunction f.name for f in @_defs
+    @runner.destroy()
     @_defs = []
 
   loadDefinitions: (text) ->

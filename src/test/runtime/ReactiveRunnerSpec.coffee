@@ -645,6 +645,16 @@ describe 'ReactiveRunner runs', ->
         { "c": 12}
       ]
 
+    it 'destroy removes all user functions', ->
+      providedStreams { theInput: inputSubj }
+      parseUserFunctions 'aliens = theInput(); humans = theInput()'
+      inputSubj.onNext 'Aarhon'
+
+      runner.destroy()
+      inputSubj.onNext 'Zorgon'
+
+      changes.should.eql [{aliens:null}, {humans:null}, {aliens:'Aarhon'}, {humans:'Aarhon'}, {aliens:null}, {humans:null}]
+
 
     #      test of internals
     it 'cleans up user function subjects when no longer used', ->
