@@ -94,6 +94,7 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
   isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
   isTransformStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transformStream'
   isStreamReturnFunction = (functionCall) -> functionInfo[functionCall.functionName]?.returnKind == 'streamReturn'
+  returnsStream = (functionCall) -> isStreamFunction(functionCall) or isTransformStreamFunction(functionCall) or isStreamReturnFunction(functionCall)
 
   getCodeAndAccumulateFunctions = (expr, localNames) ->
     allLocalNames = incomingLocalNames[..].concat localNames
@@ -151,54 +152,33 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
 
     when expr instanceof FunctionCall and expr.functionName == 'in' then '_in'
 
-    when expr instanceof FunctionCall and isTransformFunction expr
-      functionName = expr.functionName
-      accumulateFunctionName functionName
-      accumulateCombineName new Name functionName
-      arg1 = getCodeAndAccumulateFunctions expr.children[0]
-      arg2 = applyTransformFunction expr.children[1]
-      fromContext(functionName) + argList [arg1, arg2]
-
-    when expr instanceof FunctionCall and isStreamFunction expr
-      functionName = expr.functionName
-      accumulateFunctionName functionName
-      args = (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
-      lsCode = fromContext functionName + argList args
-      lsName = localStreamName functionName
-      accumulateLocalStream lsName, lsCode
-      accumulateCombineName new Name lsName, true
-      fromContext lsName
-
-    when expr instanceof FunctionCall and isTransformStreamFunction expr
-      functionName = expr.functionName
-      accumulateFunctionName functionName
-      arg1 = getStreamCodeAndAccumulateFunctions expr.children[0]
-      arg2 = applyTransformFunction expr.children[1]
-      lsCode = fromContext functionName + argList [arg1, arg2]
-      lsName = localStreamName functionName
-      accumulateLocalStream lsName, lsCode
-      accumulateCombineName new Name lsName, true
-      fromContext lsName
-
-    when expr instanceof FunctionCall and isStreamReturnFunction expr
-      functionName = expr.functionName
-      accumulateFunctionName functionName
-      args = (getCodeAndAccumulateFunctions(e) for e in expr.children)
-      lsCode = fromContext functionName + argList args
-      lsName = localStreamName functionName
-      accumulateLocalStream lsName, lsCode
-      accumulateCombineName new Name lsName, true
-      fromContext lsName
+    when expr instanceof Input
+      "operations.input(\"#{expr.inputName}\")"
 
     when expr instanceof FunctionCall
       functionName = expr.functionName
       accumulateFunctionName functionName
-      accumulateCombineName new Name functionName
-      args = (getCodeAndAccumulateFunctions(e) for e in expr.children)
-      fromContext(functionName) + argList args
 
-    when expr instanceof Input
-      "operations.input(\"#{expr.inputName}\")"
+      if returnsStream expr
+        args =  switch
+          when isStreamFunction expr then (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
+          when isTransformStreamFunction expr then [getStreamCodeAndAccumulateFunctions(expr.children[0]), applyTransformFunction(expr.children[1])]
+          when isStreamReturnFunction expr then (getCodeAndAccumulateFunctions(e) for e in expr.children)
+
+        lsCode = fromContext functionName + argList args
+        lsName = localStreamName functionName
+        accumulateLocalStream lsName, lsCode
+        accumulateCombineName new Name lsName, true
+        fromContext lsName
+
+      else
+        accumulateCombineName new Name functionName
+        args =
+            if isTransformFunction expr
+                [getCodeAndAccumulateFunctions(expr.children[0]), applyTransformFunction(expr.children[1])]
+            else
+                (getCodeAndAccumulateFunctions(e) for e in expr.children)
+        fromContext(functionName) + argList args
 
     else
       throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)
