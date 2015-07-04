@@ -56,12 +56,12 @@ To do
     - merge aggregate with + operator
     - none for null 
     - worksheet display improvements
-- rename worksheets
-- styling in edit pages
-- styling in generated pages
-- text display
+    - styling in edit pages
+    - styling in generated pages
+- text display of worksheets
 - set of useful functions
 - storage
+- rename worksheets
 - documentation
 - working in elmon or other site
 

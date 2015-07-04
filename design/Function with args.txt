@@ -1,0 +1,5 @@
+User defined functions with arguments
+=====================================
+
+- Can already parse them
+- Can already have provided functions with arguments
