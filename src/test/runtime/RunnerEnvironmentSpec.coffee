@@ -10,12 +10,13 @@ describe 'RunnerEnvironment', ->
     map = new TextParser(text).functionDefinitionMap()
     (v for k, v of map)
   parseUserFunctions = (runner, text) -> runner.addUserFunctions parse(text)
+  changes = []
+  callback = (name, value) -> received = {}; received[name] = value; changes.push received
 
+  beforeEach ->
+    changes = []
 
   it 'allows references from one runner to another', ->
-    changes = []
-    callback = (name, value) -> received = {}; received[name] = value; changes.push received
-
     runnerA = new ReactiveRunner()
     runnerB = new ReactiveRunner()
     runnerB.onValueChange callback
@@ -32,9 +33,6 @@ describe 'RunnerEnvironment', ->
     changes.should.eql [{z:20}, {z: 30}]
 
   it 'gives an error when sheet does not exist', ->
-    changes = []
-    callback = (name, value) -> received = {}; received[name] = value; changes.push received
-
     runnerB = new ReactiveRunner()
     runnerB.onValueChange callback
 
@@ -47,9 +45,6 @@ describe 'RunnerEnvironment', ->
     changes.should.eql [{z:new CalculationError(null, 'Sheet runnerA could not be found')}]
 
   it 'gives an error when function does not exist', ->
-    changes = []
-    callback = (name, value) -> received = {}; received[name] = value; changes.push received
-
     runnerA = new ReactiveRunner()
     runnerB = new ReactiveRunner()
     runnerB.onValueChange callback
@@ -62,3 +57,23 @@ describe 'RunnerEnvironment', ->
     parseUserFunctions runnerB, 'z = fromSheet("runnerA", "y")'
 
     changes.should.eql [{z: new CalculationError(null, 'Name y could not be found in sheet runnerA')}]
+
+  describe 'renaming a sheet', ->
+
+#    it 'sends an error to existing references and lets it be found under the new name', ->
+#      runnerA = new ReactiveRunner()
+#      runnerB = new ReactiveRunner()
+#      runnerB.onValueChange callback
+#
+#      runnerEnv = new RunnerEnvironment()
+#      runnerEnv.add 'runnerA', runnerA
+#      runnerEnv.add 'runnerB', runnerB
+#
+#      parseUserFunctions runnerA, 'y = 10'
+#      parseUserFunctions runnerB, 'z = fromSheet("runnerA", "y")'
+#
+#      runnerEnv.rename 'runnerA', 'runnerQ'
+#      parseUserFunctions runnerB, 'z = fromSheet("runnerQ", "y")'
+#
+#
+#      changes.should.eql [{z:10}, {z:new CalculationError(null, 'Sheet runnerA could not be found')}, {z:10}]

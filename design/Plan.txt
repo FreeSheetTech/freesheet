@@ -44,7 +44,6 @@ MVP
 To do
 -----
     - Comparative operators in correct precedence
-- Dummy getData
     - Filter function
     - Object expressions
     - Scoping rules - including object expressions
@@ -52,16 +51,19 @@ To do
     - Error handling
     - Cyclic references
     - Date and time period arithmetic
-- Streams stopped when dependents removed - eg now() and map to elapsed
     - boolean expressions
     - simplified references in aggregates
     - merge aggregate with + operator
     - none for null 
     - worksheet display improvements
-- styling in pages
+- rename worksheets
+- styling in edit pages
+- styling in generated pages
+- text display
+- set of useful functions
+- storage
 - documentation
 - working in elmon or other site
-- auto-storage
 
 Future steps
 ------------
@@ -84,3 +86,7 @@ Stages of usefulness
 
 - ??? : develop script in worksheet and save
 - ??? : WYSIWYG page development
+
+To Do
+-----
+- Streams stopped when dependents removed - eg now() and map to elapsed
