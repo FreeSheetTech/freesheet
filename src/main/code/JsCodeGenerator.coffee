@@ -17,14 +17,16 @@ jsOperator = (op) ->
 argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
 createFunction = (argNames, functionBody) ->
-  functionCreateArgs = [null].concat 'operations','_ctx', functionBody
+  functionCreateArgs = [null].concat 'operations','_ctx', argNames, functionBody
   result = new (Function.bind.apply(Function, functionCreateArgs))
-#  console.log 'createFunction', result
+  console.log 'createFunction', result
   result
 
+# returns a function that when called with the context gives an Observable for use by the runner
 exprFunction = (funcDef, functionInfo) ->
   {code, functionNames} = exprFunctionBody funcDef, functionInfo
-  theFunction = createFunction functionNames, code
+  argNames = (ad.name for ad in funcDef.argDefs)
+  theFunction = createFunction argNames, code
   {theFunction, functionNames}
 
 combineCode = (argNames, exprCode) ->
@@ -35,9 +37,11 @@ combineCode = (argNames, exprCode) ->
 localStreamsVars = (localStreams) -> if localStreams.length then ("var #{s.name} = #{s.code};" for s in localStreams).join('\n') + '\n' else ''
 
 subjectCode = (exprCode) -> "operations.subject(#{exprCode})"
+functionSubjectCode = (exprCode, argNames) -> "operations.subject( function#{argList(argNames)} { return #{exprCode}; })"
 
 isStreamFunctionCall = (expr, functionInfo) -> expr instanceof FunctionCall and functionInfo[expr.functionName]?.kind == 'stream'
 isNoArgsFunctionCall = (expr) -> expr instanceof FunctionCall and expr.children.length == 0
+isFunctionCallWithArgs = (expr) -> expr instanceof FunctionCall and expr.children.length > 0
 isInput = (expr) -> expr instanceof Input
 
 fromContext = (name) ->
@@ -49,8 +53,10 @@ fromContext = (name) ->
 fromContextAll = (names) -> (fromContext n for n in names)
 withoutContext = (code) -> code.replace /_ctx./g, ''
 
-streamCode = (expr, functionInfo, code, combineNames) ->
-  if isStreamFunctionCall(expr, functionInfo)
+streamCode = (expr, functionInfo, code, combineNames, argNames) ->
+  if argNames.length
+    functionSubjectCode code, argNames
+  else if isStreamFunctionCall(expr, functionInfo)
     withoutContext(code)
   else if isNoArgsFunctionCall(expr)
     code
@@ -62,14 +68,15 @@ streamCode = (expr, functionInfo, code, combineNames) ->
     subjectCode(code)
 
 exprFunctionBody = (funcDef, functionInfo) ->
-  {code, functionNames, localStreams, combineNames} = exprCode funcDef.expr, functionInfo
+  argNames = (ad.name for ad in funcDef.argDefs)
+  {code, functionNames, localStreams, combineNames} = exprCode funcDef.expr, functionInfo, argNames
   varDecls = localStreamsVars(localStreams)
-  codeForStreams = streamCode(funcDef.expr, functionInfo, code, combineNames)
+  codeForStreams = streamCode funcDef.expr, functionInfo, code, combineNames, argNames
   bodyCode = "#{varDecls}return #{codeForStreams};"
 
   {code: bodyCode, functionNames}
 
-exprCode = (expr, functionInfo, incomingLocalNames = []) ->
+exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
   functionNames = []
   localStreams = []
   combineNames = []
@@ -98,7 +105,7 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
 
   getCodeAndAccumulateFunctions = (expr, localNames) ->
     allLocalNames = incomingLocalNames[..].concat localNames
-    exprResult = exprCode expr, functionInfo, allLocalNames
+    exprResult = exprCode expr, functionInfo, argNames, allLocalNames
     accumulateFunctionName(n) for n in _.difference exprResult.functionNames, allLocalNames
     accumulateCombineName(n) for n in _.filter exprResult.combineNames, (n) -> not _.contains allLocalNames, n.name
     accumulateLocalStreams exprResult.localStreams
@@ -151,6 +158,7 @@ exprCode = (expr, functionInfo, incomingLocalNames = []) ->
       "(#{aggCode}).#{expr.elementName}"
 
     when expr instanceof FunctionCall and expr.functionName == 'in' then '_in'
+    when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then expr.functionName
 
     when expr instanceof Input
       "operations.input(\"#{expr.inputName}\")"

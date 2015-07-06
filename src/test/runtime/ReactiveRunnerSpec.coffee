@@ -205,6 +205,12 @@ describe 'ReactiveRunner runs', ->
 
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
 
+  describe 'functions with arguments', ->
+    it.only 'can be defined and evaluated with one argument', ->
+      parseUserFunctions 'addFive(n) = n + 5; total = addFive(14)'
+      changesFor('total').should.eql [19]
+
+
   describe 'inputs', ->
 
     it 'create a named input when add user function with input expr', ->

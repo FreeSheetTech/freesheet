@@ -339,6 +339,8 @@ Teaching people to use it
 - How you think about the problem, what questions to ask
 - Cross-ref with HowTos and techniques and reference info
 - Analogies: fried(whisked(broken(egg))) - vs steps
+- Speak Freesheet
+- Freesheet phrase book
 
 
 Domain modelling
