@@ -22,8 +22,8 @@ createFunction = (argNames, functionBody) ->
 #  console.log 'createFunction', result
   result
 
-exprFunction = (expr, functionInfo) ->
-  {code, functionNames} = exprFunctionBody expr, functionInfo
+exprFunction = (funcDef, functionInfo) ->
+  {code, functionNames} = exprFunctionBody funcDef, functionInfo
   theFunction = createFunction functionNames, code
   {theFunction, functionNames}
 
@@ -61,10 +61,10 @@ streamCode = (expr, functionInfo, code, combineNames) ->
   else
     subjectCode(code)
 
-exprFunctionBody = (expr, functionInfo) ->
-  {code, functionNames, localStreams, combineNames} = exprCode expr, functionInfo
+exprFunctionBody = (funcDef, functionInfo) ->
+  {code, functionNames, localStreams, combineNames} = exprCode funcDef.expr, functionInfo
   varDecls = localStreamsVars(localStreams)
-  codeForStreams = streamCode(expr, functionInfo, code, combineNames)
+  codeForStreams = streamCode(funcDef.expr, functionInfo, code, combineNames)
   bodyCode = "#{varDecls}return #{codeForStreams};"
 
   {code: bodyCode, functionNames}

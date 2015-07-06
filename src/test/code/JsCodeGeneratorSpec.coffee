@@ -1,5 +1,6 @@
 should = require 'should'
 {Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector} = require '../ast/Expressions'
+{FunctionDefinition, UserFunction} = require '../ast/FunctionDefinition'
 TextParser = require '../parser/TextParser'
 {exprCode, exprFunctionBody, exprFunction} = require './JsCodeGenerator'
 
@@ -8,7 +9,12 @@ describe 'JsCodeGenerator', ->
   code = null
   functionNames = null
   genFor = (expr, functionInfo = {}) -> {code, functionNames} = exprCode expr, functionInfo; code
-  genBodyFor = (expr, functionInfo = {}) -> {code, functionNames} = exprFunctionBody expr, functionInfo
+  genBodyFor = (expr, functionInfo = {}) ->
+    funcDef = new UserFunction('testFunction', [], expr)
+    {code, functionNames} = exprFunctionBody funcDef, functionInfo
+  genFunctionFor = (expr, functionInfo = {}) ->
+    funcDef = new UserFunction('testFunction', [], expr)
+    {theFunction, functionNames} = exprFunction funcDef, functionInfo
   aString = new Literal('"a string"', 'a string')
   aNumber = new Literal('10.5', 10.5)
   namedValueCall = (name) -> new FunctionCall(name, name, [])
@@ -119,7 +125,7 @@ describe 'JsCodeGenerator', ->
 
       result = null
       operations = subject: (value) -> result = value
-      exprFunction(expr, {}).theFunction.apply(null, [operations])
+      genFunctionFor(expr, {}).theFunction.apply(null, [operations])
       result.should.eql(21)
 
     it 'combines two other streams', ->
@@ -131,9 +137,9 @@ describe 'JsCodeGenerator', ->
 
       result = null
       operations = combine: (x, y, fn) -> result = fn(x, y)
-      exprFunction(expr, functionInfo).theFunction.apply(null, [operations, {a:5, b:6}])
+      genFunctionFor(expr, functionInfo).theFunction.apply(null, [operations, {a:5, b:6}])
       result.should.eql(30)
-      exprFunction(expr, functionInfo).functionCalls = ['a', 'b']
+      genFunctionFor(expr, functionInfo).functionCalls = ['a', 'b']
 
     it 'combines a transform function and another stream', ->
       expr = new FunctionCall('fromEach( games, 10.5 )', 'fromEach', [namedValueCall('games'), aNumber])

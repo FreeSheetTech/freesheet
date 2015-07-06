@@ -22,7 +22,7 @@ Invoice with line items
 
 Standalone web page
 -------------------
-- Hosted on any website eg S3
+- Hosted on any website eg S3, Dropbox
 - Edited in IDE
 - Source in Github
 - Freesheet scripts are part of the source like HTML, JS, CSS
@@ -32,6 +32,8 @@ Standalone web page
 - Show worksheet in page for editing and updating
 - Worksheet hidden/not created in normal mode
 - Worksheet events on definition change so can do something to save the change
+- To share files, need to have standard js and files on a CDN
+- Makes testing with localhost during dev more difficult but prob a way round this
 
 Desktop document
 ----------------

@@ -338,6 +338,7 @@ Teaching people to use it
 - Like Lego/Meccano construction examples
 - How you think about the problem, what questions to ask
 - Cross-ref with HowTos and techniques and reference info
+- Analogies: fried(whisked(broken(egg))) - vs steps
 
 
 Domain modelling

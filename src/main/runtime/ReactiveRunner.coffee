@@ -73,7 +73,7 @@ module.exports = class ReactiveRunner
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    functionImpl = JsCodeGenerator.exprFunction funcDef.expr, @_functionInfo()
+    functionImpl = JsCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
     source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
 
