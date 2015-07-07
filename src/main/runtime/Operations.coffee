@@ -60,4 +60,5 @@ module.exports = class Operations
 
   combine: (streams..., combineFunction) -> Rx.Observable.combineLatest streams, @_errorCheck(combineFunction)
   subject: (value) -> new Rx.BehaviorSubject @_valueCheck value
+  eval: (fn) -> if fn?.call then fn else -> fn
   input: (name) -> @getInput name

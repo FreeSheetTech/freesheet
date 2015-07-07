@@ -16,17 +16,17 @@ jsOperator = (op) ->
 
 argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 
-createFunction = (argNames, functionBody) ->
-  functionCreateArgs = [null].concat 'operations','_ctx', argNames, functionBody
+createFunction = (functionBody) ->
+  functionCreateArgs = [null].concat 'operations','_ctx', functionBody
+#  console.log 'functionBody', functionBody
   result = new (Function.bind.apply(Function, functionCreateArgs))
-  console.log 'createFunction', result
+#  console.log 'createFunction', result
   result
 
 # returns a function that when called with the context gives an Observable for use by the runner
 exprFunction = (funcDef, functionInfo) ->
   {code, functionNames} = exprFunctionBody funcDef, functionInfo
-  argNames = (ad.name for ad in (funcDef?.argDefs or []))
-  theFunction = createFunction argNames, code
+  theFunction = createFunction code
   {theFunction, functionNames}
 
 combineCode = (argNames, exprCode) ->
@@ -56,7 +56,7 @@ withoutContext = (code) -> code.replace /_ctx./g, ''
 
 streamCode = (expr, functionInfo, code, combineNames, argNames) ->
   if isStreamFunctionCall(expr, functionInfo)
-    withoutContext(code)
+    withoutContext(functionOrExprCode(code, argNames))
   else if isNoArgsFunctionCall(expr) and combineNames.length == 0
       code
   else if isInput(expr)
@@ -185,7 +185,11 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
                 [getCodeAndAccumulateFunctions(expr.children[0]), applyTransformFunction(expr.children[1])]
             else
                 (getCodeAndAccumulateFunctions(e) for e in expr.children)
-        fromContext(functionName) + argList args
+
+        if args.length
+          "operations.eval(#{fromContext(functionName)})#{argList args}"
+        else
+          fromContext(functionName)
 
     else
       throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)

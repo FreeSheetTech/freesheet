@@ -2,7 +2,7 @@ Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
 JsCodeGenerator = require '../code/JsCodeGenerator'
 Period = require '../functions/Period'
-{CalculationError} = require '../error/Errors'
+{CalculationError, FunctionError} = require '../error/Errors'
 Operations = require './Operations'
 _ = require 'lodash'
 
@@ -151,7 +151,10 @@ module.exports = class ReactiveRunner
     ctx = {} # TODO use zipObject
     ctx[n] = @_functionArg(n) for n in functionNames
     args = [new Operations(func.name, @_inputStream), ctx]
-    theFunction.apply null, args
+    try
+      theFunction.apply null, args
+    catch e
+      new Rx.BehaviorSubject( new FunctionError func.name, 'Sorry - this formula cannot be used')
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
 

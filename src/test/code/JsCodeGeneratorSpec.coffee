@@ -75,7 +75,7 @@ describe 'JsCodeGenerator', ->
     it 'function call with arguments', ->
       expr = new FunctionCall('theFn (10.5, "a string" )', 'theFn', [aNumber, aString])
       genFor expr
-      code.should.eql '_ctx.theFn(10.5, "a string")'
+      code.should.eql 'operations.eval(_ctx.theFn)(10.5, "a string")'
       functionNames.should.eql ['theFn']
 
     it 'function call to transform function', ->
@@ -83,7 +83,7 @@ describe 'JsCodeGenerator', ->
       transformExpr = new InfixExpression('10.5 * "a string"', '*', [aNumber, aString])
       expr = new FunctionCall('transformFn (theSource, 10.5 * "a string" )', 'transformFn', [sourceExpr, transformExpr])
       genFor expr, {transformFn: {kind: 'transform'}}
-      code.should.eql '_ctx.transformFn(_ctx.theSource, function(_in) { return (10.5 * "a string") })'
+      code.should.eql 'operations.eval(_ctx.transformFn)(_ctx.theSource, function(_in) { return (10.5 * "a string") })'
       functionNames.should.eql ['transformFn', 'theSource']
 
     it 'function call to special name in changed to _in and not added to function calls', ->
@@ -145,7 +145,7 @@ describe 'JsCodeGenerator', ->
       expr = new FunctionCall('fromEach( games, 10.5 )', 'fromEach', [namedValueCall('games'), aNumber])
       functionInfo = fromEach: {kind: 'transform'}
       genBodyFor expr, functionInfo
-      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return 10.5 }); });'
+      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return operations.eval(fromEach)(games, function(_in) { return 10.5 }); });'
       functionNames.should.eql ['fromEach', 'games']
 
 
@@ -155,7 +155,7 @@ describe 'JsCodeGenerator', ->
       functionInfo = fromEach: {kind: 'transform'}
 
       genBodyFor expr, functionInfo
-      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return fromEach(games, function(_in) { return function() { var basicTime = (_in).time,\n    fullTime = operations.add(basicTime, 2),\n    maxTime = operations.add(fullTime, 3);\nreturn {basicTime: basicTime, fullTime: fullTime, maxTime: maxTime}; }() }); });'
+      code.should.eql 'return operations.combine(_ctx.fromEach, _ctx.games, function(fromEach, games) { return operations.eval(fromEach)(games, function(_in) { return function() { var basicTime = (_in).time,\n    fullTime = operations.add(basicTime, 2),\n    maxTime = operations.add(fullTime, 3);\nreturn {basicTime: basicTime, fullTime: fullTime, maxTime: maxTime}; }() }); });'
       functionNames.should.eql ['fromEach', 'games']
 
     it 'gets an input', ->
@@ -178,12 +178,12 @@ describe 'JsCodeGenerator', ->
 
     it 'with one argument which is a normal function call', ->
       genBodyFor new FunctionCall('total(addFive(b))', 'total', [new FunctionCall('addFive(b)', 'addFive', [namedValueCall('b')])]), functionInfo
-      code.should.eql 'var total_1 = _ctx.total(operations.combine(_ctx.addFive, _ctx.b, function(addFive, b) { return addFive(b); }));\nreturn total_1;'
+      code.should.eql 'var total_1 = _ctx.total(operations.combine(_ctx.addFive, _ctx.b, function(addFive, b) { return operations.eval(addFive)(b); }));\nreturn total_1;'
       functionNames.should.eql ['total', 'addFive', 'b']
 
     it 'inside a normal function', ->
       genBodyFor new FunctionCall('addFive(total(b))', 'addFive', [new FunctionCall('total(b)', 'total', [namedValueCall('b')])]), functionInfo
-      code.should.eql 'var total_1 = _ctx.total(_ctx.b);\nreturn operations.combine(_ctx.addFive, total_1, function(addFive, total_1) { return addFive(total_1); });'
+      code.should.eql 'var total_1 = _ctx.total(_ctx.b);\nreturn operations.combine(_ctx.addFive, total_1, function(addFive, total_1) { return operations.eval(addFive)(total_1); });'
       functionNames.should.eql ['addFive', 'total', 'b']
 
     it 'with an expression as an argument', ->
@@ -191,8 +191,8 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       genBodyFor expr, functionInfo
 
-      code.should.eql '''var total_1 = _ctx.total(operations.combine(_ctx.addTen, _ctx.c, _ctx.addFive, _ctx.d, function(addTen, c, addFive, d) { return (addTen(c) * addFive(d)); }));
-                         return operations.combine(_ctx.addFive, total_1, _ctx.addTen, _ctx.e, function(addFive, total_1, addTen, e) { return addFive((total_1 / addTen(e))); });'''
+      code.should.eql '''var total_1 = _ctx.total(operations.combine(_ctx.addTen, _ctx.c, _ctx.addFive, _ctx.d, function(addTen, c, addFive, d) { return (operations.eval(addTen)(c) * operations.eval(addFive)(d)); }));
+                         return operations.combine(_ctx.addFive, total_1, _ctx.addTen, _ctx.e, function(addFive, total_1, addTen, e) { return operations.eval(addFive)((total_1 / operations.eval(addTen)(e))); });'''
       functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'd', 'e']
 
     it 'complex expression with multiple streams at different levels and function used twice in one combine', ->
@@ -200,10 +200,10 @@ describe 'JsCodeGenerator', ->
       expr = new TextParser(originalCode).expression()
       genBodyFor expr, functionInfo
 
-      code.should.eql '''var total_1 = _ctx.total(operations.combine(_ctx.addTen, _ctx.d, function(addTen, d) { return addTen(d); }));
+      code.should.eql '''var total_1 = _ctx.total(operations.combine(_ctx.addTen, _ctx.d, function(addTen, d) { return operations.eval(addTen)(d); }));
                          var average_1 = _ctx.average(operations.combine(_ctx.c, total_1, function(c, total_1) { return (c * total_1); }));
-                         var total_2 = _ctx.total(operations.combine(_ctx.addTen, _ctx.c, _ctx.addFive, average_1, _ctx.e, function(addTen, c, addFive, average_1, e) { return (addTen(c) * addFive((average_1 / addTen(e)))); }));
-                         return operations.combine(_ctx.addFive, total_2, function(addFive, total_2) { return addFive(total_2); });'''
+                         var total_2 = _ctx.total(operations.combine(_ctx.addTen, _ctx.c, _ctx.addFive, average_1, _ctx.e, function(addTen, c, addFive, average_1, e) { return (operations.eval(addTen)(c) * operations.eval(addFive)((average_1 / operations.eval(addTen)(e)))); }));
+                         return operations.combine(_ctx.addFive, total_2, function(addFive, total_2) { return operations.eval(addFive)(total_2); });'''
       functionNames.should.eql ['addFive', 'total', 'addTen', 'c', 'average', 'd', 'e']
 
 

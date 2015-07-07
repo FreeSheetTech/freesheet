@@ -4,7 +4,7 @@ TextParser = require '../parser/TextParser'
 ReactiveRunner = require './ReactiveRunner'
 TimeFunctions = require '../functions/TimeFunctions'
 Period = require '../functions/Period'
-{CalculationError} = require '../error/Errors'
+{CalculationError, FunctionError} = require '../error/Errors'
 
 describe 'ReactiveRunner runs', ->
 
@@ -41,6 +41,7 @@ describe 'ReactiveRunner runs', ->
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
   unknown = (name) -> error(name, 'Unknown name')
   error = (name, msg) -> new CalculationError(name, msg)
+  fnError = (name, msg) -> new FunctionError(name, msg)
 
   beforeEach ->
     runner = new ReactiveRunner()
@@ -268,6 +269,31 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'a = 5'
 
       changesFor('result').should.eql [24, 25]
+
+    it 'can be defined with an expression using a stream return function', ->
+      providedStreamReturnFunctions
+        widgetFactor: (a) -> inputSubj.map (x) -> x + a
+      parseUserFunctions 'wf(p) = widgetFactor(5) + p'
+      parseUserFunctions 'result = wf(3)'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+      inputSubj.onNext 40
+
+      changesFor("result").should.eql [null, 28, 38, 48]
+
+    it 'can NOT be defined with only a stream return function', ->
+      providedStreamReturnFunctions
+        widgetFactor: (a) -> inputSubj.map (x) -> x + a
+      parseUserFunctions 'wf(p) = widgetFactor(p)'
+      parseUserFunctions 'result = wf(3)'
+
+      inputSubj.onNext 20
+      inputSubj.onNext 30
+      inputSubj.onNext 40
+
+      changesFor("result").should.eql [fnError("wf", "Sorry - this formula cannot be used")]
+
 
   describe 'inputs', ->
 

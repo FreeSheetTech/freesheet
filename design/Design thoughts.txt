@@ -452,6 +452,7 @@ State as history
 - Even if can't implement that way, functional def acts as an invariant
   - could be used as for testing or integrity checking
 - Materializing the domain model as state - when do you need to?
+- Log function also useful to see what changes have occurred in a value - in dirty sheets only?
 
 
 
