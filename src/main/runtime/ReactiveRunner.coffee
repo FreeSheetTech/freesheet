@@ -148,7 +148,7 @@ module.exports = class ReactiveRunner
   _userFunctionStream: (func, theFunction, functionNames) ->
     if _.includes(functionNames, func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
     if _.includes(@functionsUsedBy(func.name), func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself through another formula')
-    ctx = {}
+    ctx = {} # TODO use zipObject
     ctx[n] = @_functionArg(n) for n in functionNames
     args = [new Operations(func.name, @_inputStream), ctx]
     theFunction.apply null, args

@@ -206,9 +206,37 @@ describe 'ReactiveRunner runs', ->
       changes.should.eql [{a: 10}, {b: 20}, {c: 5}, {q: 122}]
 
   describe 'functions with arguments', ->
-    it.only 'can be defined and evaluated with one argument', ->
+
+    it 'can be defined and evaluated with one literal argument', ->
       parseUserFunctions 'addFive(n) = n + 5; total = addFive(14)'
       changesFor('total').should.eql [19]
+
+    it 'can be called with two other named values', ->
+      parseUserFunctions 'a = 4; b = 5'
+      parseUserFunctions 'addAndSquare(p, q) = (p + q) * (p + q); result = addAndSquare(a, b)'
+      changesFor('result').should.eql [81]
+
+    it 'can be called with another function with arguments', ->
+      parseUserFunctions 'addFive(n) = n + 5; addTen(n) = n + 10'
+      parseUserFunctions 'result = addFive(addTen(20))'
+      changesFor('result').should.eql [35]
+
+    it 'can use provided functions in the definition', ->
+      providedFunctions
+        square: (x) -> x * x
+      parseUserFunctions 'addFiveToSquare(p) = 5 + square(p); result = addFiveToSquare(9); result2 = square(9)'
+      changesFor('result').should.eql [86]
+
+    it 'can use user-defined functions in the definition', ->
+      parseUserFunctions 'addFive(n) = n + 5; addTen(n) = addFive(addFive(n))'
+      parseUserFunctions 'result = addTen(20)'
+      changesFor('result').should.eql [30]
+
+    it 'can be called with two nested function calls', ->
+      providedFunctions {square: (x) -> x * x }
+      parseUserFunctions 'addFive(n) = n + 5;'
+      parseUserFunctions 'addTenToSquare(p) = addFive(addFive(square(p))); result = addTenToSquare(9)'
+      changesFor('result').should.eql [91]
 
 
   describe 'inputs', ->
