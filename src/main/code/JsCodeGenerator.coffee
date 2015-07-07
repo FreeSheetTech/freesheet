@@ -37,7 +37,8 @@ combineCode = (argNames, exprCode) ->
 localStreamsVars = (localStreams) -> if localStreams.length then ("var #{s.name} = #{s.code};" for s in localStreams).join('\n') + '\n' else ''
 
 subjectCode = (exprCode) -> "operations.subject(#{exprCode})"
-functionOrExprCode = (exprCode, argNames) -> if argNames.length == 0 then exprCode else "function#{argList(argNames)} { return #{exprCode}; }"
+functionCode = (exprCode, argNames) ->  "function#{argList(argNames)} { return #{exprCode}; }"
+functionOrExprCode = (exprCode, argNames) -> if argNames.length == 0 then exprCode else functionCode exprCode, argNames
 
 isStreamFunctionCall = (expr, functionInfo) -> expr instanceof FunctionCall and functionInfo[expr.functionName]?.kind == 'stream'
 isNoArgsFunctionCall = (expr) -> expr instanceof FunctionCall and expr.children.length == 0
@@ -56,8 +57,8 @@ withoutContext = (code) -> code.replace /_ctx./g, ''
 streamCode = (expr, functionInfo, code, combineNames, argNames) ->
   if isStreamFunctionCall(expr, functionInfo)
     withoutContext(code)
-  else if isNoArgsFunctionCall(expr)
-    code
+  else if isNoArgsFunctionCall(expr) and combineNames.length == 0
+      code
   else if isInput(expr)
     code
   else if combineNames.length

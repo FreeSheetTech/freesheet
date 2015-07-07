@@ -221,10 +221,27 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'result = addFive(addTen(20))'
       changesFor('result').should.eql [35]
 
+    it 'can use a named value on its own in the definition', ->
+      parseUserFunctions 'a = 4'
+      parseUserFunctions 'sameAsA(p) = a; result = sameAsA(9)'
+      changesFor('result').should.eql [4]
+
+    it 'can use an input on its own in the definition', ->
+      parseUserFunctions 'a = input'
+      parseUserFunctions 'inputA(p) = a; result = inputA(9)'
+      sendInput 'a', "forty-two"
+      changesFor('result').should.eql [null, "forty-two"]
+
+    it 'can use an input in an expression in the definition', ->
+      parseUserFunctions 'a = input'
+      parseUserFunctions 'aPlus(p) = a + p; result = aPlus(9)'
+      sendInput 'a', 10
+      changesFor('result').should.eql [9, 19]
+
     it 'can use provided functions in the definition', ->
       providedFunctions
         square: (x) -> x * x
-      parseUserFunctions 'addFiveToSquare(p) = 5 + square(p); result = addFiveToSquare(9); result2 = square(9)'
+      parseUserFunctions 'addFiveToSquare(p) = 5 + square(p); result = addFiveToSquare(9)'
       changesFor('result').should.eql [86]
 
     it 'can use user-defined functions in the definition', ->
@@ -238,6 +255,19 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'addTenToSquare(p) = addFive(addFive(square(p))); result = addTenToSquare(9)'
       changesFor('result').should.eql [91]
 
+    it 'change when values they use change', ->
+      parseUserFunctions 'a = 4'
+      parseUserFunctions 'addA(p) = a + p; result = addA(10)'
+      parseUserFunctions 'a = 5'
+
+      changesFor('result').should.eql [14, 15]
+
+    it 'change when values in functions they use change', ->
+      parseUserFunctions 'a = 4'
+      parseUserFunctions 'addA(p) = a + p; addAPlus10(p) = addA(p) + 10; result = addAPlus10(10)'
+      parseUserFunctions 'a = 5'
+
+      changesFor('result').should.eql [24, 25]
 
   describe 'inputs', ->
 
