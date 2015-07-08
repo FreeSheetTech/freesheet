@@ -1,3 +1,37 @@
 Data Storage
 ============
 
+Worksheet document data source
+------------------------------
+- Docs with embedded worksheets act as data sources
+- Maybe select from all in a directory
+- Or could be a document on web
+- Or a set of documents on web if have directory index
+- Would allow invoice docs to be saved and contribute directly to accounts
+- Or scanned documents, fill in details below
+- Data source should cache and update when docs are added or timestamp updated
+- Function defines file location, worksheet name, named values to pick out from worksheet
+
+Adapter functions
+-----------------
+- Can get data from anywhere if you can write an adapter function for it
+- Same-origin rules may mean some things can only be done in a server-side sheet
+
+Storage types
+-------------
+- Server-side can have a shared store, where every user sees same data, or per-user store, where get own data with same worksheet
+
+Sharing data as worksheet docs
+------------------------------
+- Example: vocab lists
+- Can explain what the list is about in the text document part
+- Other users can can read the data but not update it
+- As master data updates, see new items, keep own data related to it in own storage
+- Useful if docs available with CORS
+- Could keep data in various formats, provide simple adapter worksheet in either source or consumer
+
+Data formats for sharing
+-----------------------
+- Maybe common interface data formats will emerge for various fields
+- Get worksheet data as JSON by default? Or as text definition?
+

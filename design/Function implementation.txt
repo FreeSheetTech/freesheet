@@ -180,6 +180,8 @@ Stream functions
 - For stream functions in runner, we need to:
   - provide the stream function to the expr function as a function, not wrapped in a stream
 
+- Stream functions of two kinds: they transform the stream input, or they create a stream depending on the current value of the input
+
 Streams and sequences
 ---------------------
 - itemsOf - could be just a marker to say 'generate different code'

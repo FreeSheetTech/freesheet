@@ -226,6 +226,21 @@ Programming environment
 - Good to keep worksheet similar to text: preserve blank lines and comments, but formulas may span several lines and parser ignores them
 - Static analysis: tree of all functions that feed into this one
 - Enter complex formulas in a nested table format
+- Copy and paste worksheet - text by default, comment indicates it is a worksheet
+- Bare worksheet documents for re-use or server-side - but always a need for documentation so could use for that
+
+Server-side worksheets
+----------------------
+- Great if can edit server-side docs in same place as client-side docs
+- Server-side docs usable just by referring to their URL
+- Client-side docs can be used in others - copied in, work locally
+- Server-side docs can be linked in to others, can see data on client but not edit, updated by pub/sub,
+- Doc uses server-side sheets alongside local worksheet
+- Having server-side sheets probably have to be only on a paid plan - or limited number/use
+- Fire up worksheet instance when request comes in for it
+- Shared and per-user storage
+- Whole doc is server-side - may have several linked worksheet modules
+
 
 
 
