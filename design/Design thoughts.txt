@@ -228,6 +228,7 @@ Programming environment
 - Enter complex formulas in a nested table format
 - Copy and paste worksheet - text by default, comment indicates it is a worksheet
 - Bare worksheet documents for re-use or server-side - but always a need for documentation so could use for that
+- Edit link when viewing own pages
 
 Server-side worksheets
 ----------------------
@@ -237,9 +238,30 @@ Server-side worksheets
 - Server-side docs can be linked in to others, can see data on client but not edit, updated by pub/sub,
 - Doc uses server-side sheets alongside local worksheet
 - Having server-side sheets probably have to be only on a paid plan - or limited number/use
-- Fire up worksheet instance when request comes in for it
+- Fire up worksheet instance when request comes in for it - when to kill it?
 - Shared and per-user storage
 - Whole doc is server-side - may have several linked worksheet modules
+- Many facilities would have to be per-user eg send email
+- Do you need a per-user instance of worksheet if it uses any per-user data?
+- Server different from doc editor
+- Server has a doc dir, can both run and serve up sheets for re-use or editing
+- Worksheets may be embedded in docs or standalone text files
+- Server needs to make worksheet avail to client even when running
+- Doc editing app is just a CMS - can run alongside on same docs
+- Doc editing is really just a standalone page able to push docs when saved, plus browsing
+- Doc dir can be linked with Github or whatever
+- Or maybe running and serving/editing are two separate apps
+- Need sign in to edit, need for some facilities when running
+- Should definitely be document oriented, not database
+- How manage listings, permissions etc
+- Pub/sub Changes best sent as JSON for interop with other apps
+- Wake up same as restarting after failure - need persistent
+- Could scale horizontally by having multiple instances of worksheet
+- Mongo store also good for inter-op
+- Scala/Java implementation of lang, with/without Rx, entirely possible
+- Server-side sheets allow real-time games
+- This could do everything a real-time app framework (M) could
+- Subscriptions: client only subscribes for updates from server for worksheet items it is actually using on page - worth it?
 
 
 

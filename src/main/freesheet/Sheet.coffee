@@ -24,11 +24,11 @@ module.exports = class Sheet
 
   load: (text) -> @loader.loadDefinitions text
   text: -> @loader.asText()
-  update: (name, definition, oldName, beforeName) ->
-    funcDef = @loader.setFunctionAsText name, definition, oldName, beforeName
+  update: (nameAndArgs, definition, replaceName, beforeName) ->
+    funcDef = @loader.setFunctionAsText nameAndArgs, definition, replaceName, beforeName
     notification = switch
-      when funcDef instanceof FunctionDefinition then ['addOrUpdate', name, funcDef.expr.text]
-      when funcDef instanceof FunctionError then ['error', name, funcDef.expr.text, errorText(funcDef.error)]
+      when funcDef instanceof FunctionDefinition then ['addOrUpdate', funcDef.name, funcDef.expr.text]
+      when funcDef instanceof FunctionError then ['error', funcDef.name, funcDef.expr.text, errorText(funcDef.error)]
       else throw new Error 'Unknown function definition type: ' + funcDef
     @functionChanges.onNext notification
 
