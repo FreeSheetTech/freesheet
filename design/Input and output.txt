@@ -44,6 +44,8 @@ Inputs
 - Runner has history besides current state
 - Rewind and step through would be good
 
+- Should inputs pull from another sheet, or other worksheets send inputs? First seems more with spirit of Rx
+
 Runner
 ------
 - Could provide named streams to it in same way as add user functions

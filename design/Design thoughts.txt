@@ -328,6 +328,8 @@ Reusing across the web
 - if have fragment on src, pick out the script with that id
 - imported sheets can only have safe functions
 - can store in git repo?
+- Heroku would need to use S3, prob better anyway - but don't force local server to use it
+-
 
 
 Managing subscriptions and user functions
@@ -562,6 +564,7 @@ Random stuff
 - Template helpers that auto-gen tables from data
 - Client app could be sequence of inputs and output updates
 - Separate client app sequences from view for testing
+- File input stream function - line at a time?
 
 FA Cup simulation
 -----------------

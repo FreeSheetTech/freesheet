@@ -125,6 +125,10 @@ In domain modelling
 - Need to avoid confusion about which you want
 
 
+Converting streams and lists
+----------------------------
+- Function to collect stream values into a list
+- Function to create stream from a list - useful for testing?
 
 Examples
 --------

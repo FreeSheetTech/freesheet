@@ -19,14 +19,14 @@ module.exports = class ReactiveRunner
 
   asImmediateFunction = (func) -> (s) ->
     results = []
-    seq = Rx.Observable.from s
+    seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
     func(seq).subscribe (x) -> results.push x
     if returnsAggregate(func) then _.last results else results
 
   asImmediateTransformFunction = (func) ->
     immFn = (s, f) ->
       results = []
-      seq = Rx.Observable.from s
+      seq = Rx.Observable.from s, Rx.Scheduler.immediate
       func(seq, f).subscribe (x) -> results.push x
       results
 
@@ -40,15 +40,20 @@ module.exports = class ReactiveRunner
     @inputStreams = {}
 
   # TODO  rationalise this zoo of add...Functions
-  addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
+  _addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
+  addProvidedFunction: (name, fn) ->
+    switch
+      when fn.returnKind is ReactiveRunner.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
+      else @_addProvidedFunction name, fn
+
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
   addProvidedStream: (name, stream) -> @providedFunctions[name] = stream
   addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
 
   addProvidedTransformFunction: (name, fn) ->
-    @addProvidedFunction name, asImmediateTransformFunction fn
+    @_addProvidedFunction name, asImmediateTransformFunction fn
     fn.kind = ReactiveRunner.TRANSFORM_STREAM
-    @addProvidedFunction name + 'Over', fn
+    @_addProvidedFunction name + 'Over', fn
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
@@ -58,13 +63,13 @@ module.exports = class ReactiveRunner
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
   addProvidedSequenceFunction: (name, fn) ->
-    @addProvidedFunction name, asImmediateFunction(fn)
+    @_addProvidedFunction name, asImmediateFunction(fn)
     @addProvidedStreamFunction name + 'Over', fn
 
   addProvidedSequenceFunctions: (functionMap) -> @addProvidedSequenceFunction n, f for n, f of functionMap
 
   addProvidedAggregateFunction: (name, fn) ->
-    @addProvidedFunction name, asImmediateFunction(fn)
+    @_addProvidedFunction name, asImmediateFunction(fn)
     fn.returnKind = ReactiveRunner.AGGREGATE_RETURN
     @addProvidedStreamFunction name + 'Over', fn
 
