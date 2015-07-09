@@ -87,6 +87,7 @@ Stages of usefulness
 - ??? : develop script in worksheet and save
 - ??? : WYSIWYG page development
 
-To Do
+Bugs
 -----
 - Streams stopped when dependents removed - eg now() and map to elapsed
+- When a function is added using an unknown name get an error, but if a valid name is removed later, just get null - should be consistent

@@ -321,6 +321,14 @@ Reusing functions
 - Are there sheets which just have functions for reuse, no input/output?
 - A function with params that also depends on internal values in a sheet can be re-used in other sheets: client gets a stream of changing functions
 
+Reusing across the web
+----------------------
+
+- script tag with src
+- if have fragment on src, pick out the script with that id
+- imported sheets can only have safe functions
+- can store in git repo?
+
 
 Managing subscriptions and user functions
 -----------------------------------------

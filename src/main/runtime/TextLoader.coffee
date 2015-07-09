@@ -4,6 +4,8 @@ TextParser = require '../parser/TextParser'
 
 module.exports = class TextLoader
 
+  argList = (funcDef) -> if funcDef.argDefs?.length then "(#{(a.name for a in funcDef.argDefs).join ', '})" else ""
+
   constructor: (@runner) ->
     @_defs = []
     @_values = {}
@@ -17,7 +19,7 @@ module.exports = class TextLoader
     @_setFunctionOrError f for f in @parseDefinitions text
 
   asText: ->
-    ("#{d.name} = #{d.expr.text.trim()};\n" for d in @_defs).join('')
+    ("#{d.name}#{argList d} = #{d.expr.text.trim()};\n" for d in @_defs).join('')
 
   functionDefinitions: -> @_defs[..]
   functionDefinitionsAndValues: -> _.map @_defs, (def) => {name: def.name, definition: def, value: @_valueFor(def)}

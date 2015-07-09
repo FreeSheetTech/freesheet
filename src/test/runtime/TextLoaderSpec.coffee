@@ -20,6 +20,7 @@ describe 'TextLoader', ->
   fn1 = new UserFunction('fn1', [], new InfixExpression('10.5 / 22', '/', [aNumber, aNumber22]))
   fn2 = new UserFunction('fn2', [], new InfixExpression('22+10.5', '+', [aNumber22, aNumber]))
   fn3 = new UserFunction('fn3', [], new InfixExpression('22 - 10.5', '-', [aNumber22, aNumber]))
+  fnArgs = new UserFunction('fnArgs', ['xx', 'a'], new InfixExpression('22 - 10.5', '-', [aNumber22, aNumber]))
 
   beforeEach ->
     runner =
@@ -160,3 +161,17 @@ describe 'TextLoader', ->
     runner.removeUserFunction.should.have.been.calledWith('fn1')
     runner.addUserFunction.should.not.have.been.calledWith(fn1)
     runner.addUserFunction.should.have.been.calledWith(fn2)
+
+  describe 'functions with arguments', ->
+    it 'returns definitions as text', ->
+      loader._defs = [fn1, fnArgs]
+      loader.asText().should.eql 'fn1 = 10.5 / 22;\nfnArgs(xx, a) = 22 - 10.5;\n'
+
+    it 'gets a definition by name', ->
+      loader._defs = [fn1, fnArgs]
+      loader.getFunction('fnArgs').should.eql fnArgs
+
+    it 'gets text of a definition by name', ->
+      loader._defs = [fn1, fnArgs]
+      loader.getFunctionAsText('fnArgs').should.eql '22 - 10.5'
+
