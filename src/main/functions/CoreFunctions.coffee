@@ -12,6 +12,7 @@ apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue
 module.exports = {
   fromEach: transformStream (s, func) -> s.map (x) -> apply(func, x)
   select: transformStream (s, func) -> s.filter (x) -> apply(func, x)
+  differentValues: sequence (s) -> s.distinct()
 
   shuffle: (seq) -> _.shuffle seq
 

@@ -90,6 +90,11 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'collected = collect( items )'
       changesFor('collected').should.eql [[33,11,44,22]]
 
+    it 'differentValues', ->
+      parseUserFunctions 'items = [ 11, 22, 44, 22, 11, 33, 11]'
+      parseUserFunctions 'distinct = differentValues( items )'
+      changesFor('distinct').should.eql [[11, 22, 44, 33]]
+
     it 'sort', ->
       parseUserFunctions 'items = [ 33,11,44,22]'
       parseUserFunctions 'sorted = sort( items )'
@@ -151,3 +156,7 @@ describe 'CoreFunctions includes', ->
       inputs {a: 33, b: "a"}, {a: 11, b:"b"}, {a:22, b:"c"}
       changesFor('sorted').should.eql [null, [{a: 33, b: "a"}], [{a: 11, b:"b"}, {a: 33, b: "a"}], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
 
+    it 'differentValues', ->
+      parseUserFunctions 'distinct = differentValuesOver(theInput)'
+      inputs 11, 22, 44, 22, 11, 33, 11
+      changesFor('distinct').should.eql [null, 11, 22, 44, 33]
