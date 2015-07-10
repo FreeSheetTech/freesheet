@@ -17,22 +17,13 @@ module.exports = class ReactiveRunner
   isRxObservable = (func) -> typeof func.subscribe == 'function'
   returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.TRANSFORM_STREAM or func.returnKind == ReactiveRunner.STREAM_RETURN or func.returnKind == ReactiveRunner.SEQUENCE_RETURN
   returnsAggregate = (func) -> func.returnKind == ReactiveRunner.AGGREGATE_RETURN
+  withKind = (func, kind) -> func.kind = kind; func
 
-  asImmediateFunction = (func) -> (s) ->
+  asImmediateFunction = (func) -> (s, f) ->
     results = []
     seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
-    func(seq).subscribe (x) -> results.push x
+    func(seq, f).subscribe (x) -> results.push x
     if returnsAggregate(func) then _.last results else results
-
-  asImmediateTransformFunction = (func) ->
-    immFn = (s, f) ->
-      results = []
-      seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
-      func(seq, f).subscribe (x) -> results.push x
-      if returnsAggregate(func) then _.last results else results
-
-    immFn.kind = ReactiveRunner.TRANSFORM
-    immFn
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -54,9 +45,8 @@ module.exports = class ReactiveRunner
   addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
 
   addProvidedTransformFunction: (name, fn) ->
-    @_addProvidedFunction name, asImmediateTransformFunction fn
-    fn.kind = ReactiveRunner.TRANSFORM_STREAM
-    @_addProvidedFunction name + 'Over', fn
+    @_addProvidedFunction name, withKind(asImmediateFunction(fn), ReactiveRunner.TRANSFORM)
+    @_addProvidedFunction name + 'Over', withKind(fn, ReactiveRunner.TRANSFORM_STREAM)
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
