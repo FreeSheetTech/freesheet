@@ -90,6 +90,11 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'sorted = sort( items )'
       changesFor('sorted').should.eql [[11, 22, 33, 44]]
 
+    it 'sortBy', ->
+      parseUserFunctions 'items = [ {a: 33, b: "a"}, {a: 11, b:"b"}, {a:22, b:"c"}]'
+      parseUserFunctions 'sorted = sortBy( items, in.a )'
+      changesFor('sorted').should.eql [[{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
+
     it 'ifElse - boolean chooses one of two other expressions', ->
       parseUserFunctions 'score = 10; passMark = 20'
       parseUserFunctions 'result = ifElse(score >= passMark, "Pass", "Fail")'
@@ -130,4 +135,9 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'sorted = sortOver( theInput )'
       inputs 33,11,44,22
       changesFor('sorted').should.eql [null, [33], [11, 33], [11, 33, 44], [11, 22, 33, 44]]
+
+    it 'sortBy', ->
+      parseUserFunctions 'sorted = sortByOver( theInput, in.a )'
+      inputs {a: 33, b: "a"}, {a: 11, b:"b"}, {a:22, b:"c"}
+      changesFor('sorted').should.eql [null, [{a: 33, b: "a"}], [{a: 11, b:"b"}, {a: 33, b: "a"}], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
 

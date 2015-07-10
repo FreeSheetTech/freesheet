@@ -96,3 +96,4 @@ Bugs
 Tech tasks
 ----------
 - Upgrade to Rx JS v3 - when past 3.0
+- Sort out function kinds and return kinds

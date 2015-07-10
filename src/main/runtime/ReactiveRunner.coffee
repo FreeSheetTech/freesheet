@@ -29,7 +29,7 @@ module.exports = class ReactiveRunner
       results = []
       seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
       func(seq, f).subscribe (x) -> results.push x
-      results
+      if returnsAggregate(func) then _.last results else results
 
     immFn.kind = ReactiveRunner.TRANSFORM
     immFn
@@ -44,6 +44,7 @@ module.exports = class ReactiveRunner
   _addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunction: (name, fn) ->
     switch
+      when fn.kind is ReactiveRunner.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
       when fn.returnKind is ReactiveRunner.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
       when fn.returnKind is ReactiveRunner.SEQUENCE_RETURN then @addProvidedSequenceFunction name, fn
       else @_addProvidedFunction name, fn

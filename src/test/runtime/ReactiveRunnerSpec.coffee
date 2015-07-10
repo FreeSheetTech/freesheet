@@ -14,6 +14,8 @@ describe 'ReactiveRunner runs', ->
   inputSubj = null
 
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
+#  fromEachFunction = (s, func) -> s.scan [], (acc, x) -> acc.concat apply(func, x)
+#  selectFunction = (s, func) -> s.scan [], (acc, x) -> if apply(func, x) then acc.concat x else acc
   fromEachFunction = (s, func) ->
     s.map (x) ->
       apply(func, x)
@@ -36,6 +38,7 @@ describe 'ReactiveRunner runs', ->
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
 
+  inputs = (items...) -> inputSubj.onNext i for i in items
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
@@ -49,6 +52,8 @@ describe 'ReactiveRunner runs', ->
     namedChanges = []
     runner.onValueChange callback
     inputSubj = new Rx.Subject()
+    runner.addProvidedStream 'theInput', inputSubj
+
     providedFunctions TimeFunctions
     providedTransformFunctions
       fromEach: fromEachFunction
@@ -516,17 +521,11 @@ describe 'ReactiveRunner runs', ->
       changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
 
     it 'applies a transform function to a stream using Over version of function', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'sq = fromEachOver(theInput, in * in)'
-
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-      inputSubj.onNext 40
-
+      inputs 20, 30, 40
       changesFor("sq").should.eql [null, 400, 900, 1600]
 
     it 'applies a transform function to the sequence values in a stream using plain version', ->
-      providedStreams { theInput: inputSubj }
       providedSequenceFunctions
         square: (s) -> s.map((x) -> x * x)
       parseUserFunctions 'sq = fromEach(theInput, in * in)'
