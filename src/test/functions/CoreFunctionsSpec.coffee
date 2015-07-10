@@ -80,6 +80,11 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'itemTotal = sum( items )'
       changesFor('itemTotal').should.eql [21]
 
+    it 'first - first of items', ->
+      parseUserFunctions 'items = [ 11,22,33]'
+      parseUserFunctions 'firstItem = first( items )'
+      changesFor('firstItem').should.eql [11]
+
     it 'ifElse - boolean chooses one of two other expressions', ->
       parseUserFunctions 'score = 10; passMark = 20'
       parseUserFunctions 'result = ifElse(score >= passMark, "Pass", "Fail")'
@@ -106,8 +111,13 @@ describe 'CoreFunctions includes', ->
       inputs 11, 22, 33
       changesFor('itemCount').should.eql [null, 1,2,3]
 
-    it 'sum - add all items in a list', ->
+    it 'sum - add all items', ->
       parseUserFunctions 'itemCount = sumOver( theInput )'
       inputs 11, 22, 44
       changesFor('itemCount').should.eql [null, 11,33,77]
+
+    it 'first - first of items', ->
+      parseUserFunctions 'itemCount = firstOver( theInput )'
+      inputs 11, 22, 44
+      changesFor('itemCount').should.eql [null, 11]
 

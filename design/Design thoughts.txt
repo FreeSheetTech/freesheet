@@ -447,6 +447,7 @@ Output events and output functions
 - If the function takes no parameters, equivalent to a view on one of the output event streams
 - Output views only exist if a client has created them, as v large number of parameterised views possible
 - Output views like additional reactive functions attached to main one
+- In a multi-user app the output view may just be for one user
 
 
 Worksheet instances
@@ -474,6 +475,8 @@ Instances and inputs
 - Access DBs saved data with definition
 - Maybe need a Save as Template option - just delete the inputs
 - May want to load from web and supply single value inputs as query params
+- Some sheets may need to update - get a snapshot from inputs and close
+- Some answers may be provided just by calling a function with supplied params
 
 
 State as history
@@ -547,6 +550,7 @@ Testing
 - Test is a scenario plus expected output states for some of the inputs - often just the last
 - Tests will want comments for single or groups of inputs
 - Tests may apply to one sheet or whole app
+- With modular connected sheets, have unit/integration question - do you simulate inputs to one sheet, or test whole thing?
 
 
 Design philosophy (or just how it turned out)
@@ -565,6 +569,8 @@ Random stuff
 - Client app could be sequence of inputs and output updates
 - Separate client app sequences from view for testing
 - File input stream function - line at a time?
+- Data difference function - useful for testing, detecting need for updates, other things?
+- Data patch function - to convert one to another
 
 FA Cup simulation
 -----------------

@@ -10,11 +10,12 @@ module.exports = class ReactiveRunner
   @TRANSFORM = 'transform'
   @STREAM = 'stream'
   @TRANSFORM_STREAM = 'transformStream'
+  @SEQUENCE_RETURN = 'sequenceReturn'
   @STREAM_RETURN = 'streamReturn'
   @AGGREGATE_RETURN = 'aggregateReturn'
 
   isRxObservable = (func) -> typeof func.subscribe == 'function'
-  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.TRANSFORM_STREAM or func.returnKind == ReactiveRunner.STREAM_RETURN
+  returnsStream = (func) -> func.kind == ReactiveRunner.STREAM or func.kind == ReactiveRunner.TRANSFORM_STREAM or func.returnKind == ReactiveRunner.STREAM_RETURN or func.returnKind == ReactiveRunner.SEQUENCE_RETURN
   returnsAggregate = (func) -> func.returnKind == ReactiveRunner.AGGREGATE_RETURN
 
   asImmediateFunction = (func) -> (s) ->
@@ -44,6 +45,7 @@ module.exports = class ReactiveRunner
   addProvidedFunction: (name, fn) ->
     switch
       when fn.returnKind is ReactiveRunner.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
+      when fn.returnKind is ReactiveRunner.SEQUENCE_RETURN then @addProvidedSequenceFunction name, fn
       else @_addProvidedFunction name, fn
 
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
