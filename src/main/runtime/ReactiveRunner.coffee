@@ -26,7 +26,7 @@ module.exports = class ReactiveRunner
   asImmediateTransformFunction = (func) ->
     immFn = (s, f) ->
       results = []
-      seq = Rx.Observable.from s, Rx.Scheduler.immediate
+      seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
       func(seq, f).subscribe (x) -> results.push x
       results
 

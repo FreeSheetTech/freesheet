@@ -30,14 +30,14 @@ describe 'TimeFunctions includes', ->
     runner.onValueChange callback
 
   it 'now - stream of current time as a Date updating every second', (done) ->
-    parseUserFunctions 'theTime = now()'
+    parseUserFunctions 'theTime = now(10)'
     checkResults = ->
       ticks = changesFor('theTime')
       ticks.length.should.eql(3)
       latestTickMillis = ticks[2].getTime()
-      (Date.now() - latestTickMillis).should.be.lessThan(1010)
+      (Date.now() - latestTickMillis).should.be.lessThan(40)
       done()
-    setTimeout checkResults, 3000
+    setTimeout checkResults, 30
 
   it 'dateValue - produces Date from ISO format', ->
     parseUserFunctions 'gameEnd = dateValue("2010-03-04 15:16:17")'

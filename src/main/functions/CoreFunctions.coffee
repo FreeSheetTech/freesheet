@@ -11,10 +11,7 @@ module.exports = {
   shuffle: (seq) -> _.shuffle seq
 
   count: aggregate (seq) ->
-    console.log 'count', seq
-    scanFunc = (acc, x) ->
-      console.log 'acc', acc, 'x', x
-      acc + 1
+    scanFunc = (acc, x) -> acc + 1
     seq.scan 0, scanFunc
 
   sum: (seq) -> _.reduce seq, (total, n) -> total + n
