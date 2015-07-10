@@ -9,6 +9,8 @@ describe 'CoreFunctions includes', ->
 
   runner = null
   changes = null
+  inputSubj = null
+
 
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
@@ -19,12 +21,16 @@ describe 'CoreFunctions includes', ->
 
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
+  inputs = (items...) -> inputSubj.onNext i for i in items
 
   beforeEach ->
     runner = new ReactiveRunner()
     runner.addProvidedFunctions CoreFunctions
     changes = []
     runner.onValueChange callback
+    inputSubj = new Rx.Subject()
+    runner.addProvidedStream 'theInput', inputSubj
+
 
   describe 'with lists', ->
     it 'fromEach - transform input to output simple value', ->
@@ -96,11 +102,12 @@ describe 'CoreFunctions includes', ->
   describe 'with streams', ->
 
     it 'count - number of items', ->
-      inputSubj = new Rx.Subject()
-      inputItems = [11, 22, 33]
-      runner.addProvidedStream 'items', inputSubj
-      parseUserFunctions 'itemCount = countOver( items )'
-
-      inputSubj.onNext i for i in inputItems
+      parseUserFunctions 'itemCount = countOver( theInput )'
+      inputs 11, 22, 33
       changesFor('itemCount').should.eql [null, 1,2,3]
+
+    it 'sum - add all items in a list', ->
+      parseUserFunctions 'itemCount = sumOver( theInput )'
+      inputs 11, 22, 44
+      changesFor('itemCount').should.eql [null, 11,33,77]
 

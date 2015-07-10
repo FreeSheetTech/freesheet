@@ -65,6 +65,7 @@ To do
 - documentation
 - working in elmon or other site
 
+
 Future steps
 ------------
 - Modularize into library
@@ -91,3 +92,7 @@ Bugs
 -----
 - Streams stopped when dependents removed - eg now() and map to elapsed
 - When a function is added using an unknown name get an error, but if a valid name is removed later, just get null - should be consistent
+
+Tech tasks
+----------
+- Upgrade to Rx JS v3 - when past 3.0
