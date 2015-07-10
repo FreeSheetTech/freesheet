@@ -85,6 +85,11 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'firstItem = first( items )'
       changesFor('firstItem').should.eql [11]
 
+    it 'collect - although pointless with a list', ->
+      parseUserFunctions 'items = [ 33,11,44,22]'
+      parseUserFunctions 'collected = collect( items )'
+      changesFor('collected').should.eql [[33,11,44,22]]
+
     it 'sort', ->
       parseUserFunctions 'items = [ 33,11,44,22]'
       parseUserFunctions 'sorted = sort( items )'
@@ -130,6 +135,11 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'itemCount = firstOver( theInput )'
       inputs 11, 22, 44
       changesFor('itemCount').should.eql [null, 11]
+
+    it 'collect', ->
+      parseUserFunctions 'collected = collectOver( theInput )'
+      inputs 11, 22, 44
+      changesFor('collected').should.eql [null, [11], [11, 22], [11, 22, 44]]
 
     it 'sort', ->
       parseUserFunctions 'sorted = sortOver( theInput )'

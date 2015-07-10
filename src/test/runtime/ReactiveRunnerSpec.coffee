@@ -14,11 +14,7 @@ describe 'ReactiveRunner runs', ->
   inputSubj = null
 
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
-#  fromEachFunction = (s, func) -> s.scan [], (acc, x) -> acc.concat apply(func, x)
-#  selectFunction = (s, func) -> s.scan [], (acc, x) -> if apply(func, x) then acc.concat x else acc
-  fromEachFunction = (s, func) ->
-    s.map (x) ->
-      apply(func, x)
+  fromEachFunction = (s, func) -> s.map (x) -> apply(func, x)
   selectFunction = (s, func) -> s.filter (x) -> apply(func, x)
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap

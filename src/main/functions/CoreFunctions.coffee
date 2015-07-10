@@ -18,6 +18,7 @@ module.exports = {
   count: aggregate (seq) -> seq.scan 0, (acc, x) -> acc + 1
   sum: aggregate (seq) -> seq.scan 0, (acc, x) -> acc + x
   first: aggregate (seq) -> seq.first()
+  collect: aggregate (seq) -> seq.scan [], (acc, x) -> acc.concat(x)
   sort: aggregate (seq) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x)
   sortBy: aggregate transformStream (seq, func) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x), func
 
