@@ -370,6 +370,7 @@ Error handling
     - error has full details of which function and what values
     - if error is an input to any other expression, the result of that expression is error too, linked to original
  - propagated errors link to the original error
+ - all provided functions should check the types of their arguments and throw useful error if not correct
 
 Teaching people to use it
 -------------------------

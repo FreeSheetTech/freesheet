@@ -16,6 +16,7 @@ module.exports = {
   differentValues: sequence (s) -> s.distinct()
 
   merge: stream (s1, s2) -> Rx.Observable.merge s1, s2
+  onChange: stream (s1, s2) -> s1.combineLatest(s2, (a, b) -> [a, b]).distinctUntilChanged((pair) -> pair[0]).map((pair) -> pair[1])
 
   shuffle: (seq) -> _.shuffle seq
 

@@ -174,4 +174,23 @@ describe 'CoreFunctions includes', ->
 
       changesFor('merged').should.eql [null, 11, 22, 33, 44, 55, 66]
 
+    it 'onChange - when changed value from first stream take value of second', ->
+      input2Subj = new Rx.Subject()
+      runner.addProvidedStream 'theInput2', input2Subj
+      inputs2 = (items...) -> input2Subj.onNext i for i in items
+
+      parseUserFunctions 'snapshot = onChange(theInput, theInput2)'
+      inputs2 33, 44
+      inputs 'a'
+      inputs2 55
+      inputs 'b'
+      inputs 'c'
+      inputs 'c'
+      inputs2 66, 77
+      inputs 'd'
+      inputs2 88
+
+      changesFor('snapshot').should.eql [null, 44, 55, 55, 77]
+
+
 
