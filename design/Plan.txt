@@ -90,6 +90,8 @@ Stages of usefulness
 
 Bugs
 -----
+- Worksheet value display expands as value display tables get bigger - or make draggable
+- Can't refer to a namedVAlue with same name as key in an aggregate expression
 - Streams stopped when dependents removed - eg now() and map to elapsed
 - When a function is added using an unknown name get an error, but if a valid name is removed later, just get null - should be consistent
 

@@ -41,6 +41,8 @@ module.exports = class Operations
         new Date(a.getTime() + b.millis)
       when _.isPlainObject(a) and _.isPlainObject(b)
         _.merge {}, a, b
+      when _.isArray(a) and _.isArray(b)
+        a.concat b
       else
         a + b
 

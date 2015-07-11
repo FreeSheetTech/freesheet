@@ -5,6 +5,11 @@ Operations = require './Operations'
 describe 'Operations', ->
   operations = new Operations('AFunction')
 
+  describe 'Arrays', ->
+
+    it 'concatenated with add', ->
+      operations.add([10, 22], [33, 44]).should.eql [10, 22, 33, 44]
+
   describe 'Date subtraction', ->
 
     it 'return null if one argument is null', ->

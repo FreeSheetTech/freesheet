@@ -192,5 +192,23 @@ describe 'CoreFunctions includes', ->
 
       changesFor('snapshot').should.eql [null, 44, 55, 55, 77]
 
+    it 'onChange - when changed value from first stream take value of second stream from formula', ->
+      input2Subj = new Rx.Subject()
+      input3Subj = new Rx.Subject()
+      runner.addProvidedStream 'theInput2', input2Subj
+      runner.addProvidedStream 'theInput3', input3Subj
+      inputs2 = (items...) -> input2Subj.onNext i for i in items
+      inputs3 = (items...) -> input3Subj.onNext i for i in items
+
+      parseUserFunctions 'combo = {a: theInput2, b: theInput3}'
+      parseUserFunctions 'snapshot = onChange(theInput, combo)'
+      inputs null, null
+      inputs2 33, 44
+      inputs3 77
+      inputs 'a'
+
+
+      changesFor('snapshot').should.eql [null, {a:44, b:77}]
+
 
 
