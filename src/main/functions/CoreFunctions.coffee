@@ -7,12 +7,15 @@ transformStream = (fn) -> fn.kind = ReactiveRunner.TRANSFORM_STREAM; fn
 aggregate = (fn) -> fn.returnKind = ReactiveRunner.AGGREGATE_RETURN; fn
 sequence = (fn) -> fn.returnKind = ReactiveRunner.SEQUENCE_RETURN; fn
 streamReturn = (fn) -> fn.returnKind = ReactiveRunner.STREAM_RETURN; fn
+stream = (fn) -> fn.kind = ReactiveRunner.STREAM; fn
 apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
 
 module.exports = {
   fromEach: transformStream (s, func) -> s.map (x) -> apply(func, x)
   select: transformStream (s, func) -> s.filter (x) -> apply(func, x)
   differentValues: sequence (s) -> s.distinct()
+
+  merge: stream (s1, s2) -> Rx.Observable.merge s1, s2
 
   shuffle: (seq) -> _.shuffle seq
 

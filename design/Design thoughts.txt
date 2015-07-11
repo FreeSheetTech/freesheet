@@ -388,6 +388,7 @@ Teaching people to use it
 - Analogies: fried(whisked(broken(egg))) - vs steps
 - Speak Freesheet
 - Freesheet phrase book
+- Events vs signals - both views useful
 
 
 Domain modelling

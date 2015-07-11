@@ -160,3 +160,18 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'distinct = differentValuesOver(theInput)'
       inputs 11, 22, 44, 22, 11, 33, 11
       changesFor('distinct').should.eql [null, 11, 22, 44, 33]
+
+    it 'merge', ->
+      input2Subj = new Rx.Subject()
+      runner.addProvidedStream 'theInput2', input2Subj
+      inputs2 = (items...) -> input2Subj.onNext i for i in items
+
+      parseUserFunctions 'merged = merge(theInput, theInput2)'
+      inputs 11, 22
+      inputs2 33, 44
+      inputs 55
+      inputs2 66
+
+      changesFor('merged').should.eql [null, 11, 22, 33, 44, 55, 66]
+
+
