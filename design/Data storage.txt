@@ -35,3 +35,11 @@ Data formats for sharing
 - Maybe common interface data formats will emerge for various fields
 - Get worksheet data as JSON by default? Or as text definition?
 
+Local storage implementation
+----------------------------
+
+- Usage: storedStream = localStore(rawStream, "myEvents")
+- Stores any events on rawStream under key "freesheet.myEvents"
+- Stores in an array, appends new events to end and updates each time a new event arrives
+- Starts stream with anything in the local storage on loading the sheet
+

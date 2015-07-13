@@ -100,6 +100,7 @@ Use cases
 - Sheets with one main answer for writing utilities and scripts
 - Command line runner can take script file, parse args to inputs, output one or more values eg one called 'main' or specify
 - Chat server
+- Server side sheet for test with hidden data
 
 How people could make use of it
 -------------------------------

@@ -64,6 +64,7 @@ To do
 - rename worksheets
 - documentation
 - working in elmon or other site
+- CDN/relative CSS/JS - inc freesheet dist files
 
 
 Future steps
@@ -90,6 +91,7 @@ Stages of usefulness
 
 Bugs
 -----
+- select from null aggregate just gives null
 - Worksheet value display expands as value display tables get bigger - or make draggable
 - Can't refer to a namedVAlue with same name as key in an aggregate expression
 - Streams stopped when dependents removed - eg now() and map to elapsed

@@ -10,6 +10,8 @@ describe 'CoreFunctions includes', ->
   runner = null
   changes = null
   inputSubj = null
+  input2Subj = null
+  input3Subj = null
 
 
   parse = (text) ->
@@ -22,6 +24,8 @@ describe 'CoreFunctions includes', ->
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
   inputs = (items...) -> inputSubj.onNext i for i in items
+  inputs2 = (items...) -> input2Subj.onNext i for i in items
+  inputs3 = (items...) -> input3Subj.onNext i for i in items
 
   beforeEach ->
     runner = new ReactiveRunner()
@@ -31,6 +35,11 @@ describe 'CoreFunctions includes', ->
     inputSubj = new Rx.Subject()
     runner.addProvidedStream 'theInput', inputSubj
 
+    input2Subj = new Rx.Subject()
+    runner.addProvidedStream 'theInput2', input2Subj
+
+    input3Subj = new Rx.Subject()
+    runner.addProvidedStream 'theInput3', input3Subj
 
   describe 'with lists', ->
     it 'fromEach - transform input to output simple value', ->
@@ -146,6 +155,12 @@ describe 'CoreFunctions includes', ->
       inputs 11, 22, 44
       changesFor('collected').should.eql [null, [11], [11, 22], [11, 22, 44]]
 
+    it 'collect is empty array with null initial value', ->
+      parseUserFunctions 'plus1 = theInput + 1'
+      parseUserFunctions 'collected = collectOver( plus1 )'
+      inputs 10, 21, 43
+      changesFor('collected').should.eql [[], [11], [11, 22], [11, 22, 44]]
+
     it 'sort', ->
       parseUserFunctions 'sorted = sortOver( theInput )'
       inputs 33,11,44,22
@@ -162,10 +177,6 @@ describe 'CoreFunctions includes', ->
       changesFor('distinct').should.eql [null, 11, 22, 44, 33]
 
     it 'merge', ->
-      input2Subj = new Rx.Subject()
-      runner.addProvidedStream 'theInput2', input2Subj
-      inputs2 = (items...) -> input2Subj.onNext i for i in items
-
       parseUserFunctions 'merged = merge(theInput, theInput2)'
       inputs 11, 22
       inputs2 33, 44
@@ -175,10 +186,6 @@ describe 'CoreFunctions includes', ->
       changesFor('merged').should.eql [null, 11, 22, 33, 44, 55, 66]
 
     it 'onChange - when changed value from first stream take value of second', ->
-      input2Subj = new Rx.Subject()
-      runner.addProvidedStream 'theInput2', input2Subj
-      inputs2 = (items...) -> input2Subj.onNext i for i in items
-
       parseUserFunctions 'snapshot = onChange(theInput, theInput2)'
       inputs2 33, 44
       inputs 'a'
@@ -193,20 +200,12 @@ describe 'CoreFunctions includes', ->
       changesFor('snapshot').should.eql [null, 44, 55, 55, 77]
 
     it 'onChange - when changed value from first stream take value of second stream from formula', ->
-      input2Subj = new Rx.Subject()
-      input3Subj = new Rx.Subject()
-      runner.addProvidedStream 'theInput2', input2Subj
-      runner.addProvidedStream 'theInput3', input3Subj
-      inputs2 = (items...) -> input2Subj.onNext i for i in items
-      inputs3 = (items...) -> input3Subj.onNext i for i in items
-
       parseUserFunctions 'combo = {a: theInput2, b: theInput3}'
       parseUserFunctions 'snapshot = onChange(theInput, combo)'
       inputs null, null
       inputs2 33, 44
       inputs3 77
       inputs 'a'
-
 
       changesFor('snapshot').should.eql [null, {a:44, b:77}]
 
