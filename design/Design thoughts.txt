@@ -229,6 +229,9 @@ Programming environment
 - Copy and paste worksheet - text by default, comment indicates it is a worksheet
 - Bare worksheet documents for re-use or server-side - but always a need for documentation so could use for that
 - Edit link when viewing own pages
+- Switch/case statement shown/edited in mini-table
+- Aggregate constructor as mini-table
+- Other expressions as mini-table?
 
 Server-side worksheets
 ----------------------
@@ -390,6 +393,7 @@ Teaching people to use it
 - Speak Freesheet
 - Freesheet phrase book
 - Events vs signals - both views useful
+- Cooking ingredients - ready made vs from scratch
 
 
 Domain modelling
