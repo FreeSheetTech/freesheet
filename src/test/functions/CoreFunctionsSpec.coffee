@@ -41,7 +41,47 @@ describe 'CoreFunctions includes', ->
     input3Subj = new Rx.Subject()
     runner.addProvidedStream 'theInput3', input3Subj
 
+  describe 'withValues', ->
+
+    it 'lines - split text into lines', ->
+      parseUserFunctions 'theLines = lines(theInput)'
+      inputs '''
+
+              First line
+              Second line
+
+              Line 3
+
+             '''
+      inputs null
+      changesFor('theLines').should.eql [null, ['', 'First line', 'Second line', '', 'Line 3', ''], []]
+
+    it 'nonEmptyLines - split text into lines, ignore empty lines, trim whitespace from others', ->
+      parseUserFunctions 'theLines = nonEmptyLines(theInput)'
+      inputs '''
+
+                 First line
+               Second line
+
+              Line 3
+
+             '''
+      changesFor('theLines').should.eql [null, ['First line', 'Second line', 'Line 3']]
+
+    it 'nonEmptyLines - empty list for null input', ->
+      parseUserFunctions 'theLines = nonEmptyLines(theInput)'
+      inputs null
+      changesFor('theLines').should.eql [null, []]
+
+    it 'fromCsvLine - comma or tab-separated text line to trimmed strings or numbers', ->
+      parseUserFunctions 'theWords = fromCsvLine("these,are the , 4, words")'
+      changesFor('theWords').should.eql [['these', 'are the', 4, 'words']]
+
   describe 'with lists', ->
+    it 'item - picks an item at a one-based index', ->
+      parseUserFunctions 'theItem = item(2, [30, 40, 50])'
+      changesFor('theItem').should.eql [40]
+
     it 'fromEach - transform input to output simple value', ->
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'pointsFactor = 15; fudgeFactor = 4'
@@ -114,6 +154,8 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'sorted = sortBy( items, in.a )'
       changesFor('sorted').should.eql [[{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
 
+
+  describe 'logical', ->
     it 'ifElse - boolean chooses one of two other expressions', ->
       parseUserFunctions 'score = 10; passMark = 20'
       parseUserFunctions 'result = ifElse(score >= passMark, "Pass", "Fail")'
@@ -209,5 +251,8 @@ describe 'CoreFunctions includes', ->
 
       changesFor('snapshot').should.eql [null, {a:44, b:77}]
 
+    it 'unpackLists - put each element separately into the output', ->
+      parseUserFunctions 'separateItems = unpackLists(theInput)'
+      inputs null, [33, 44, 66], 77, [], [88]
 
-
+      changesFor('separateItems').should.eql [null, null, 33, 44, 66, 77, 88]

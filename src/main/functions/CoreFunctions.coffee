@@ -10,7 +10,17 @@ streamReturn = (fn) -> fn.returnKind = ReactiveRunner.STREAM_RETURN; fn
 stream = (fn) -> fn.kind = ReactiveRunner.STREAM; fn
 apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
 
+
+isNumber = (text) -> text and text.match(/^\d*\.?\d+$|^\d+.?\d*$/)
+fromText = (text) -> if isNumber(text) then parseFloat(text) else text
+lines = (text) -> if text? then text.split '\n' else []
+
 module.exports = {
+  lines
+  nonEmptyLines: (text) -> (l.trim() for l in lines(text) when l.trim())
+  fromCsvLine: (text) -> (fromText(l.trim()) for l in text.split(','))
+
+  item: (index, list) -> list[index - 1]
   fromEach: transformStream (s, func) -> s.map (x) -> apply(func, x)
   select: transformStream (s, func) -> s.filter (x) -> apply(func, x)
   differentValues: sequence (s) -> s.distinct()
@@ -26,6 +36,8 @@ module.exports = {
   collect: aggregate (seq) -> seq.scan [], (acc, x) -> if x? then acc.concat(x) else acc
   sort: aggregate (seq) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x)
   sortBy: aggregate transformStream (seq, func) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x), func
+
+  unpackLists: stream (s) -> s.flatMap( (x) -> [].concat x)
 
   ifElse: (test, trueValue, falseValue) -> if test then trueValue else falseValue
   and: (a, b) -> a and b
