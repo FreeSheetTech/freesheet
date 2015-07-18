@@ -1,0 +1,31 @@
+Performance
+===========
+
+- With worksheets updating from all runner changes, very slow - in League example, 7 seconds to process 10 results
+- League example: 6500 separate updates when all season's results entered at once
+- Profiling shows nearly all time in Handsontable functions
+- Update table renders table on each update
+- Without that, runs fairly well but worksheet table view does not update
+- Change notifications done after all updates to runner from one event, on next tick of event loop, and debounced
+- Single changes better anyway to avoid inconsistent states
+- Prob need to use default scheduler to achieve this
+- Could make testing difficult - may need choice of both immediate and default notifications
+- Good to have observable giving all changes resulting from one input event as a map
+- Could then throttle this and combine the changes together - useful for updates over net
+
+Worksheet performance
+---------------------
+- Updates to table have re-render throttled
+- Render only affected part of table
+- Ensure table updated after page
+- Don't update table if hidden
+
+
+Single value changes per input event
+------------------------------------
+- Condense value changes resulting from one input event into one for each name
+- Send out only the last value for each name
+- Separate callbacks for each name
+- One combined callback
+- Have to define input event - easier if use sendInput!
+- Input functions can send their input on, then signal an input

@@ -557,6 +557,8 @@ Testing
 - Tests will want comments for single or groups of inputs
 - Tests may apply to one sheet or whole app
 - With modular connected sheets, have unit/integration question - do you simulate inputs to one sheet, or test whole thing?
+- Time: how do you handle time in testing?
+- Randomness: the same
 
 
 Design philosophy (or just how it turned out)
@@ -577,6 +579,7 @@ Random stuff
 - File input stream function - line at a time?
 - Data difference function - useful for testing, detecting need for updates, other things?
 - Data patch function - to convert one to another
+
 
 FA Cup simulation
 -----------------

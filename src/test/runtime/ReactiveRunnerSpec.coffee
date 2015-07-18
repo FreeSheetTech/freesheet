@@ -10,6 +10,7 @@ describe 'ReactiveRunner runs', ->
 
   runner = null
   changes = null
+  bufferedChanges = null
   namedChanges = null
   inputSubj = null
 
@@ -32,9 +33,11 @@ describe 'ReactiveRunner runs', ->
   sendInput = (name, value) -> runner.sendInput name, value
 
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
+  bufferedCallback = (name, value) -> received = {}; received[name] = value; bufferedChanges.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
 
   inputs = (items...) -> inputSubj.onNext i for i in items
+  sendInputs = (name, items...) -> runner.sendInput name, i for i in items
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
@@ -45,8 +48,10 @@ describe 'ReactiveRunner runs', ->
   beforeEach ->
     runner = new ReactiveRunner()
     changes = []
+    bufferedChanges = []
     namedChanges = []
     runner.onValueChange callback
+    runner.onBufferedValueChange bufferedCallback
     inputSubj = new Rx.Subject()
     runner.addProvidedStream 'theInput', inputSubj
 
@@ -642,6 +647,23 @@ describe 'ReactiveRunner runs', ->
 
       namedChanges.should.eql [{aaa: 10}, {xxx: null}, {bbb: null}, {bbb: null}, {bbb: 'value of bbb'}]
 
+  describe 'buffers value changes', ->
+
+    it 'for each input', ->
+      providedStreamFunctions
+        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
+
+      parseUserFunctions 'itemsIn = input'
+      parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'doubled = items * 2'
+      sendInputs 'itemsIn', [4, 5, 6], 7, [], [8, 9]
+
+      bufferedChanges.should.eql [{itemsIn: [4, 5, 6]}, {items: 6}, {doubled: 12},
+        {itemsIn: 7}, {items: 7}, {doubled: 14},
+        {itemsIn: []},
+        {itemsIn: [8, 9]}, {items: 9}, {doubled: 18}]
+
+
   describe 'removes named functions so that', ->
 
     it 'is no longer in the functions collection', ->
@@ -761,22 +783,3 @@ describe 'ReactiveRunner runs', ->
       runner.userFunctionImpls.should.not.have.property('greetings')
 
 
-#  it 'function with one arg which is a literal', ->
-#    scriptFunctions = parse '''addFive(n) = n + 5; total = addFive(14)'''
-#    runner = new ReactiveRunner({}, scriptFunctions)
-#
-#    subject = runner.output 'total'
-#    valueReceived = null
-#    subject.subscribe (value) -> valueReceived = value
-#
-#    valueReceived.should.eql 19
-#
-#  it 'function with one arg which is a constant expression', ->
-#    scriptFunctions = parse '''twelvePlusThree = 12 + 3; addFive(n) = n + 5; total = addFive(twelvePlusThree)'''
-#    runner = new ReactiveRunner({}, scriptFunctions)
-#
-#    subject = runner.output 'total'
-#    valueReceived = null
-#    subject.subscribe (value) -> valueReceived = value
-#
-#    valueReceived.should.eql 20

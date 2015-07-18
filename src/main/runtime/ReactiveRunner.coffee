@@ -25,11 +25,17 @@ module.exports = class ReactiveRunner
     func(seq, f).subscribe (x) -> results.push x
     if returnsAggregate(func) then _.last results else results
 
+  bufferedValueChangeStream = (valueChanges, trigger) ->
+    collectChanges = (changes) -> _.zipObject(changes)
+    valueChanges.buffer(-> trigger).map(collectChanges)
+
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
     @userFunctionImpls = {}
     @inputStreams = {}
+    @inputComplete = new Rx.Subject()
+    @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputComplete
 
   # TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
@@ -107,12 +113,16 @@ module.exports = class ReactiveRunner
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
+  onBufferedValueChange: (callback) ->
+    @bufferedValueChanges.subscribe (nameValueMap) -> callback n, v for n, v of nameValueMap
+
   getInputs: (name) -> (k for k, v of @inputStreams)
 
   sendInput: (name, value) ->
     stream = @inputStreams[name]
     throw   new Error 'Unknown input name' unless stream
     stream.onNext value
+    @_inputFinished()
 
   sendDebugInput: (name, value) ->
     stream = @_userFunctionSubject(name)
@@ -170,3 +180,5 @@ module.exports = class ReactiveRunner
       else new Rx.BehaviorSubject func()
 
   _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.BehaviorSubject(null))
+
+  _inputFinished: -> @inputComplete.onNext true

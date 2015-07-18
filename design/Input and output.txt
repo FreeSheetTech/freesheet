@@ -15,6 +15,7 @@ Inputs
 - Worksheet: 4th column with button.  Click button for pop-up dialog to enter new value
 - Probably useful to add type info to the input
 - If inputs are typed, can the types of everything else in the worksheet be inferred?
+- If inputs are typed, can input validation and UI form be generated automatically?
 - Documents what expected, allows auto validation, removes a big source of errors
 - Any reason why inputs cannot be used as outputs like any other function?
 - Inputs may be outputs of other sheets
@@ -98,9 +99,20 @@ Stores
 - Local store just sends on input events
 - Input events use timestamp of data they were based on?
 - Just one store?  What if need diff storage for different inputs? Eg user shortcuts and global data in accounting system
+- Prob best to have one store per sheet, use different sheets
 - Stored function - passes on after storing to a specified type of store
 - Pulls stored stuff back in
 - Stored could be used for calculated results as a cache too
+- Add storage provider from outside to keep sheet pure
+- Can be configured to store events on one or more named values, may be calculated
+- Has to inject the events back in on startup
+- May only need to keep latest
+- Needs to keep same order across all named values
+- Needs to listen directly, not to aggregated events
+
+Storage of constructed model entities
+-------------------------------------
+- Eg account, with balance - need to store
 
 Caching
 -------
@@ -116,6 +128,21 @@ Outputs
 - Results of the functions could be error or unit
  - Have (out-of-band?) info attached that shows whether a new or a stored value - useful for output functions
  - Have a treat-as-new function to strip this and replay everything
+
+Separation of concerns
+----------------------
+- Input source should not be in the sheet
+- Store location/implementation should not be in the sheet
+- Store *type* *could* be in the sheet - important for semantics
+    - could be ignored in test mode if necessary
+- Probably better to regard sheet as pure calculation, add storage info after
+- May want to store different things in different ways in different uses of the sheet
+- This allows much better unit-testing and reusability and safety
+- Runners may be responsible for storage providers
+- SO how do you attach these things?
+- How do you link sheets to page inputs?
+- How do you link sheets to each other?
+- How do you keep DRY by defaulting inputs with expected name?
 
 
 Linksheets
@@ -154,3 +181,27 @@ Linksheets
 
 - What about storing result of quiz long term?  Two worksheets - one for UI, one for learning results?
 - Or just different 'layers' of formulas within sheet that feed each other
+
+Links 2
+-------
+- Just declare inputs in sheet
+- Specify an input source when it is used in an environment like a page, but sheet doesn't know
+- Simplest thing is just 'page' or another sheet name
+- Add name mappings later if needed
+- Editor shows input source in dropdown - 'page' is default
+- Create input senders after loading sheets
+
+UI Inputs and actions
+---------------------
+- If inputs pushed from page, makes sheet more testable, reusable, independent
+- Could be independent of UI style eg command line, server-side UI
+- *** If doing validation, good to be able to reuse input sheet on server side
+- Validation, reflecting/clearing inputs all needed whether local or server-side UI
+- Need to show error messages
+- Already connecting page to output values independent of sheet, so why not input side?
+- Would remove input and click functions and just declare named inputs
+- Can send inputs any way you like, but a naming convention matching field names to inputs would be easy
+- UI components - how condense concept of paired input and error streams and split valid and invalid inputs into a reusable thing?  Fancy clever bricks
+- How generate default UI from specification of input required by main sheet as an aggregate with input types?
+- Parameterised worksheets as components?
+- Learn from web components?  Content? Nested components?

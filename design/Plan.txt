@@ -66,6 +66,12 @@ To do
 - working in elmon or other site
 - CDN/relative CSS/JS - inc freesheet dist files
 
+Provided functions
+------------------
+- More operators as sequence eg first, itemAt
+- unpackLists -> separateItems
+
+
 
 Future steps
 ------------
