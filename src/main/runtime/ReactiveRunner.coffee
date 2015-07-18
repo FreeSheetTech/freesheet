@@ -34,8 +34,8 @@ module.exports = class ReactiveRunner
     @userFunctionSubjects = {}
     @userFunctionImpls = {}
     @inputStreams = {}
-    @inputComplete = new Rx.Subject()
-    @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputComplete
+    @inputCompleteSubject = new Rx.Subject()
+    @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
 
   # TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
@@ -116,13 +116,21 @@ module.exports = class ReactiveRunner
   onBufferedValueChange: (callback) ->
     @bufferedValueChanges.subscribe (nameValueMap) -> callback n, v for n, v of nameValueMap
 
-  getInputs: (name) -> (k for k, v of @inputStreams)
+  onInputComplete: (callback) ->
+    @inputCompleteSubject.subscribe -> callback()
+
+  getInputs: -> (k for k, v of @inputStreams)
 
   sendInput: (name, value) ->
     stream = @inputStreams[name]
     throw   new Error 'Unknown input name' unless stream
     stream.onNext value
-    @_inputFinished()
+    @inputComplete()
+
+  sendPartialInput: (name, value) ->
+    stream = @inputStreams[name]
+    throw   new Error 'Unknown input name' unless stream
+    stream.onNext value
 
   sendDebugInput: (name, value) ->
     stream = @_userFunctionSubject(name)
@@ -181,4 +189,4 @@ module.exports = class ReactiveRunner
 
   _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.BehaviorSubject(null))
 
-  _inputFinished: -> @inputComplete.onNext true
+  inputComplete: -> @inputCompleteSubject.onNext true
