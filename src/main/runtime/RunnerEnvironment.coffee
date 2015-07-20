@@ -19,7 +19,6 @@ module.exports = class RunnerEnvironment
     if not runner.hasUserFunction(functionName) then return new Rx.BehaviorSubject(new CalculationError(null, "Name #{functionName} could not be found in sheet #{sheetName}"))
     stream = new Rx.BehaviorSubject()
     callback = (name, value) ->
-      console.log '_fromSheetFn', name, value
       stream.onNext value
       runner.inputComplete()  #TODO use inputs instead
     runner.onValueChange callback, functionName
