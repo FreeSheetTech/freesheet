@@ -29,3 +29,12 @@ Single value changes per input event
 - One combined callback
 - Have to define input event - easier if use sendInput!
 - Input functions can send their input on, then signal an input
+
+
+Profiling
+---------
+- Whole of generated functions only run once at startup
+- League example - not proportional to number of results:
+  - 380 results: 7s
+  - 190 results: 2s
+  - 85 results: 0.5s
