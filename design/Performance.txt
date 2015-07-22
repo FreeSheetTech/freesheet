@@ -38,3 +38,7 @@ Profiling
   - 380 results: 7s
   - 190 results: 2s
   - 85 results: 0.5s
+
+- Sending 10 results repeatedly:
+  went up from 200ms first time to 2000ms after 12
+  - so seems to depend on number of results already in the system - which it does!

@@ -645,7 +645,7 @@ describe 'ReactiveRunner runs', ->
       parseUserFunctions 'bbb = theInput()'
       inputSubj.onNext 'value of bbb'
 
-      namedChanges.should.eql [{aaa: 10}, {xxx: null}, {bbb: null}, {bbb: null}, {bbb: 'value of bbb'}]
+      namedChanges.should.eql [{aaa: 10}, {xxx: null}, {bbb: null}, {bbb: 'value of bbb'}]
 
   describe 'buffers value changes', ->
 

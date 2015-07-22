@@ -64,3 +64,4 @@ module.exports = class Operations
   subject: (value) -> new Rx.BehaviorSubject @_valueCheck value
   eval: (fn) -> if fn?.call then fn else -> fn
   input: (name) -> @getInput name
+  trace: (text, expr) -> console.log(text); expr

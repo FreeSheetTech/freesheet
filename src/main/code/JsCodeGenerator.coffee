@@ -5,6 +5,9 @@ class Name
   constructor: (@name, @local = false) ->
   toString: -> @name
 
+tracing = false
+trace = (onOff) -> tracing = onOff
+
 asLiteral = (value) -> JSON.stringify value
 
 jsOperator = (op) ->
@@ -166,7 +169,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
       functionName = expr.functionName
       accumulateFunctionName functionName
 
-      if returnsStream expr
+      callCode = if returnsStream expr
         args =  switch
           when isStreamFunction expr then (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
           when isTransformStreamFunction expr then [getStreamCodeAndAccumulateFunctions(expr.children[0]), applyTransformFunction(expr.children[1])]
@@ -191,10 +194,12 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
         else
           fromContext(functionName)
 
+      if tracing then "operations.trace('#{functionName}', #{callCode})" else callCode
+
     else
       throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)
 
-  {code, functionNames, localStreams, combineNames}
+  {code: code, functionNames, localStreams, combineNames}
 
 
-module.exports = {exprCode, exprFunctionBody, exprFunction}
+module.exports = {exprCode, exprFunctionBody, exprFunction, trace}

@@ -109,7 +109,7 @@ module.exports = class ReactiveRunner
       if subj = @userFunctionSubjects[name]
         callback name, subj.value
       else
-        @_newUserFunctionSubject name, null
+        @userFunctionSubjects[name] = @_newUserFunctionSubject name, null
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
@@ -155,6 +155,7 @@ module.exports = class ReactiveRunner
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
   _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))
+
   _newUserFunctionSubject: (name, initialValue) ->
     subj = new Rx.BehaviorSubject(initialValue)
     subj.valueChangesSub = subj.subscribe (value) =>
@@ -168,7 +169,7 @@ module.exports = class ReactiveRunner
     ctx[n] = @_functionArg(n) for n in functionNames
     args = [new Operations(func.name, @_inputStream), ctx]
     try
-      theFunction.apply null, args
+      theFunction.apply(null, args) #.observeOn(Rx.Scheduler.currentThread)
     catch e
       new Rx.BehaviorSubject( new FunctionError func.name, 'Sorry - this formula cannot be used')
 
