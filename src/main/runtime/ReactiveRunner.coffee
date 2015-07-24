@@ -88,6 +88,8 @@ module.exports = class ReactiveRunner
       subj.valueChangesSub = subj.subscribe (value) =>
         @valueChanges.onNext [name, value]
 
+#    if not subj.observeStream then subj.observeStream = subj.observeOn Rx.Scheduler.timeout
+
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
   removeUserFunction: (functionName) ->
@@ -177,7 +179,7 @@ module.exports = class ReactiveRunner
 
   _functionArg: (name) ->
     switch
-      when func = @userFunctions[name] then @_userFunctionSubject name
+      when func = @userFunctions[name] then @_userFunctionSubject(name) #.observeStream
       when func = @providedFunctions[name] then @_providedFunctionStream func
       else @_unknownUserFunctionSubject name
 

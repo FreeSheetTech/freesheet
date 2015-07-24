@@ -5,6 +5,7 @@ Sheet = require './Sheet'
 RunnerEnvironment = require '../runtime/RunnerEnvironment'
 CoreFunctions = require '../functions/CoreFunctions'
 TimeFunctions = require '../functions/TimeFunctions'
+JsCodeGenerator = require '../code/JsCodeGenerator'
 
 module.exports = class Freesheet
 
@@ -25,3 +26,5 @@ module.exports = class Freesheet
     sheet
 
   destroy: -> @_environment.destroy()
+
+  trace: (onOff) -> JsCodeGenerator.trace onOff
