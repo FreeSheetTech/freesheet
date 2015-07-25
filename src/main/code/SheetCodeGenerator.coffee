@@ -23,7 +23,7 @@ createFunction = (functionBody) ->
   functionCreateArgs = [null].concat 'operations','_ctx', functionBody
 #  console.log 'functionBody', functionBody
   result = new (Function.bind.apply(Function, functionCreateArgs))
-#  console.log 'createFunction', result
+  console.log 'createFunction', result
   result
 
 # returns a function that when called with the context gives an Observable for use by the runner
@@ -67,7 +67,7 @@ streamCode = (expr, functionInfo, code, combineNames, argNames) ->
   else if combineNames.length
      combineCode(combineNames, withoutContext(functionOrExprCode(code, argNames)))
   else
-    subjectCode(functionOrExprCode(code, argNames))
+    code
 
 exprFunctionBody = (funcDef, functionInfo) ->
   argNames = (ad.name for ad in funcDef.argDefs)
@@ -197,7 +197,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
       if tracing then "operations.trace('#{functionName}', #{callCode})" else callCode
 
     else
-      throw new Error("ReactiveCodeGenerator: Unknown expression: " + expr?.constructor.name)
+      throw new Error("SheetCodeGenerator: Unknown expression: " + expr?.constructor.name)
 
   {code: code, functionNames, localStreams, combineNames}
 

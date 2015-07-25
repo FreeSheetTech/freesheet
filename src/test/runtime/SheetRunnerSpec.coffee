@@ -62,6 +62,11 @@ describe 'SheetRunner runs', ->
 
 
   describe 'runs expressions', ->
+    it.only 'constant values', ->
+      parseUserFunctions 'a=100'
+
+      changes.should.eql [{a: 100}]
+
     it 'all arithmetic operations on numbers', ->
       parseUserFunctions 'a=100'
       parseUserFunctions '  p=a+2  '

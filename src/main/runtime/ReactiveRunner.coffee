@@ -79,10 +79,10 @@ module.exports = class ReactiveRunner
     @userFunctions[name] = funcDef
     functionImpl = ReactiveCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
-    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(null))
     subj.sourceSub?.dispose()
+    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
     subj.sourceSub = source.subscribe subj
     if not subj.valueChangesSub
       subj.valueChangesSub = subj.subscribe (value) =>
@@ -124,9 +124,7 @@ module.exports = class ReactiveRunner
   getInputs: -> (k for k, v of @inputStreams)
 
   sendInput: (name, value) ->
-    stream = @inputStreams[name]
-    throw   new Error 'Unknown input name' unless stream
-    stream.onNext value
+    @sendPartialInput name, value
     @inputComplete()
 
   sendPartialInput: (name, value) ->

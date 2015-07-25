@@ -37,6 +37,8 @@ module.exports = class SheetRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
 
+    @sheet = {provided: @providedFunctions}
+
   # TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
   addProvidedFunction: (name, fn) ->
@@ -79,15 +81,18 @@ module.exports = class SheetRunner
     @userFunctions[name] = funcDef
     functionImpl = SheetCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
-    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
+    @sheet[name] = functionImpl.theFunction
 
-    subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(null))
-    subj.sourceSub?.dispose()
-    subj.sourceSub = source.subscribe subj
+    initValue = @_sheetValue name
+    subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(initValue))
+    #    subj.sourceSub?.dispose()
+    #    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
+    #    subj.sourceSub = source.subscribe subj
     if not subj.valueChangesSub
-      subj.valueChangesSub = subj.subscribe (value) =>
+      subj.valueChangesSub = subj.distinctUntilChanged().subscribe (value) =>
         @valueChanges.onNext [name, value]
 
+    @_recalculate()
 #    if not subj.observeStream then subj.observeStream = subj.observeOn Rx.Scheduler.timeout
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
@@ -96,8 +101,8 @@ module.exports = class SheetRunner
     delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
       subj.onNext(null)
-      subj.sourceSub?.dispose()
-      subj.sourceSub = null
+#      subj.sourceSub?.dispose()
+#      subj.sourceSub = null
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
       for subjName, subj of @userFunctionSubjects
@@ -124,9 +129,7 @@ module.exports = class SheetRunner
   getInputs: -> (k for k, v of @inputStreams)
 
   sendInput: (name, value) ->
-    stream = @inputStreams[name]
-    throw   new Error 'Unknown input name' unless stream
-    stream.onNext value
+    @sendPartialInput name, value
     @inputComplete()
 
   sendPartialInput: (name, value) ->
@@ -134,7 +137,9 @@ module.exports = class SheetRunner
     throw   new Error 'Unknown input name' unless stream
     stream.onNext value
 
-  inputComplete: -> @inputCompleteSubject.onNext true
+  inputComplete: ->
+    @_recalculate()
+    @inputCompleteSubject.onNext true
 
   sendDebugInput: (name, value) ->
     stream = @_userFunctionSubject(name)
@@ -156,6 +161,14 @@ module.exports = class SheetRunner
   destroy: ->  @removeUserFunction n for n, f of @userFunctions
 
   #  private functions
+
+  _recalculate: ->
+    for name, subj of @userFunctionSubjects
+      subj.onNext @_sheetValue name
+
+  _sheetValue: (name) ->
+    operations = new Operations(name, @_inputStream)
+    @sheet[name].apply @sheet, [operations]
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
   _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))

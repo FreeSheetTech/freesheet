@@ -12,6 +12,7 @@ New Runner
 - When change a function, need to re-run all inputs
 - Need to know which function values have changed
 - Rx may still have a place
+- Should value changes be notified where still has same value - event stream view?
 
 
 Possible optimisations
