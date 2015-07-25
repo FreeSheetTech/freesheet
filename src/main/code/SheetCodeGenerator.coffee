@@ -48,13 +48,6 @@ isNoArgsFunctionCall = (expr) -> expr instanceof FunctionCall and expr.children.
 isFunctionCallWithArgs = (expr) -> expr instanceof FunctionCall and expr.children.length > 0
 isInput = (expr) -> expr instanceof Input
 
-fromContext = (name) ->
-  switch
-    when name instanceof Name and !name.local then "this.#{name.name}"
-    when name instanceof Name and name.local then name.name
-    else "this.#{name}"
-
-fromContextAll = (names) -> (fromContext n for n in names)
 withoutContext = (code) -> code.replace /_ctx./g, ''
 
 streamCode = (expr, functionInfo, code, combineNames, argNames) ->
@@ -84,6 +77,13 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
   localStreams = []
   combineNames = []
 
+  fromContext = (name, args) ->
+    switch
+      when _.includes(incomingLocalNames, name) then "#{name}"
+      else "this.#{name}#{callArgList(args)}"
+
+  fromContextAll = (names) -> (fromContext n for n in names)
+
   localStreamName = (name) ->
     startsWithName = (ls) -> ls.name.indexOf(name + '_') == 0
     existingStreamsCount = localStreams.filter(startsWithName).length
@@ -98,7 +98,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
       combineNames.push name
   accumulateCombineNames = (names) -> accumulateCombineName(n) for n in names
 
-  applyTransformFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }"
+  applyTransformFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }.bind(this)"
 
   isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transform'
   isStreamFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'stream'
@@ -190,7 +190,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
             else
                 (getCodeAndAccumulateFunctions(e) for e in expr.children)
 
-        fromContext(functionName) + callArgList(args)
+        fromContext(functionName, args)
 
       if tracing then "operations.trace('#{functionName}', #{callCode})" else callCode
 

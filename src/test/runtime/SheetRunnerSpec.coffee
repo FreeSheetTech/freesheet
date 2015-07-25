@@ -426,7 +426,7 @@ describe 'SheetRunner runs', ->
 
       changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
 
-    it 'transforms all elements of a sequence to a formula including a provided stream and values change for each value in the stream', ->
+    it.skip 'transforms all elements of a sequence to a formula including a provided stream and values change for each value in the stream', ->
       providedStreams { theInput: inputSubj }
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + theInput() )'
@@ -436,7 +436,7 @@ describe 'SheetRunner runs', ->
 
       changesFor("scores").should.eql [null, [27, 30], [37, 40]]
 
-    it 'transforms all elements of a sequence to a formula using a provided stream of a function with literal arguments and values change for each value in the stream', ->
+    it.skip 'transforms all elements of a sequence to a formula using a provided stream of a function with literal arguments and values change for each value in the stream', ->
       providedStreams
         adjust: inputSubj.map (ff) -> (adjustment) -> ff + adjustment
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
@@ -447,7 +447,7 @@ describe 'SheetRunner runs', ->
 
       changesFor("scores").should.eql [null, [32, 35], [42, 45]]    #first result is zero because adjust function not generated until first inputSubj value
 
-    it 'transforms all elements of a sequence to a formula using a provided stream of a function with arguments from input and values change for each value in the stream', ->
+    it.skip 'transforms all elements of a sequence to a formula using a provided stream of a function with arguments from input and values change for each value in the stream', ->
       providedStreams
         adjust:  inputSubj.startWith(0).map (ff) -> (adjustment) -> ff + adjustment
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
