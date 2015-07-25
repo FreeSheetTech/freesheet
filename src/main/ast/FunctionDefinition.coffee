@@ -1,5 +1,6 @@
 class FunctionDefinition
   constructor: (@name, @argDefs, @returnKind) ->
+  argNames: -> (a.name for a in @argDefs)
 
 class UserFunction extends FunctionDefinition
   constructor: (name, argNames, @expr) ->

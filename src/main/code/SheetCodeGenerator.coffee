@@ -20,16 +20,16 @@ jsOperator = (op) ->
 argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
-createFunction = (functionBody) ->
-#  console.log 'functionBody', functionBody
-  result = new (Function.bind.apply(Function, [null, functionBody]))
+createFunction = (functionBody, argNames) ->
+  functionCreateArgs = [null].concat argNames, functionBody
+  result = new (Function.bind.apply(Function, functionCreateArgs))
   console.log 'createFunction', result
   result
 
 # returns a function that when called with the context gives an Observable for use by the runner
 exprFunction = (funcDef, functionInfo) ->
   {code, functionNames} = exprFunctionBody funcDef, functionInfo
-  theFunction = createFunction code
+  theFunction = createFunction code, funcDef.argNames()
   {theFunction, functionNames}
 
 combineCode = (argNames, exprCode) ->
@@ -164,7 +164,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
     when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then expr.functionName
 
     when expr instanceof Input
-      "operations.input(\"#{expr.inputName}\")"
+      "this.operations.input(\"#{expr.inputName}\")"
 
     when expr instanceof FunctionCall
       functionName = expr.functionName
