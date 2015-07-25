@@ -86,14 +86,10 @@ module.exports = class SheetRunner
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = functionImpl.theFunction
 
-    initValue = @_sheetValue name
-    subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = new Rx.BehaviorSubject(initValue))
+    subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
     #    subj.sourceSub?.dispose()
     #    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
     #    subj.sourceSub = source.subscribe subj
-    if not subj.valueChangesSub
-      subj.valueChangesSub = subj.distinctUntilChanged().subscribe (value) =>
-        @valueChanges.onNext [name, value]
 
     @_recalculate()
 #    if not subj.observeStream then subj.observeStream = subj.observeOn Rx.Scheduler.timeout
@@ -165,6 +161,12 @@ module.exports = class SheetRunner
 
   #  private functions
 
+  _newUserFunctionSubject: (name, initialValue) ->
+    subj = new Rx.BehaviorSubject(initialValue)
+    subj.valueChangesSub = subj.distinctUntilChanged().subscribe (value) =>
+      @valueChanges.onNext [name, value]
+    subj
+
   _recalculate: ->
     for name, subj of @userFunctionSubjects
       subj.onNext @_sheetValue name
@@ -174,12 +176,6 @@ module.exports = class SheetRunner
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
   _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))
-
-  _newUserFunctionSubject: (name, initialValue) ->
-    subj = new Rx.BehaviorSubject(initialValue)
-    subj.valueChangesSub = subj.subscribe (value) =>
-      @valueChanges.onNext [name, value]
-    subj
 
   _userFunctionStream: (func, theFunction, functionNames) ->
     if _.includes(functionNames, func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
