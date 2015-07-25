@@ -21,9 +21,8 @@ argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
 createFunction = (functionBody) ->
-  functionCreateArgs = [null].concat 'operations','_ctx', functionBody
 #  console.log 'functionBody', functionBody
-  result = new (Function.bind.apply(Function, functionCreateArgs))
+  result = new (Function.bind.apply(Function, [null, functionBody]))
   console.log 'createFunction', result
   result
 
@@ -151,7 +150,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
         varDecls.push "#{name} = #{getCodeAndAccumulateFunctions expr.children[i], aggregationNames }"
         items.push "#{name}: #{name}"
 
-      "function() { var #{varDecls.join(',\n    ')};\nreturn {#{items.join(', ')}}; }()"
+      "function() { var #{varDecls.join(',\n    ')};\nreturn {#{items.join(', ')}}; }.bind(this)()"
 
     when expr instanceof Sequence
       items = (getCodeAndAccumulateFunctions(e) for e in expr.children)
