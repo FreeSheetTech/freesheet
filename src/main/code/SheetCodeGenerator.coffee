@@ -18,6 +18,7 @@ jsOperator = (op) ->
     else op
 
 argList = (items) -> if items.length then '(' + items.join(', ') + ')' else ''
+callArgList = (items) -> '(' + items.join(', ') + ')'
 
 createFunction = (functionBody) ->
   functionCreateArgs = [null].concat 'operations','_ctx', functionBody
@@ -50,24 +51,25 @@ isInput = (expr) -> expr instanceof Input
 
 fromContext = (name) ->
   switch
-    when name instanceof Name and !name.local then "_ctx.#{name.name}"
+    when name instanceof Name and !name.local then "this.#{name.name}"
     when name instanceof Name and name.local then name.name
-    else "_ctx.#{name}"
+    else "this.#{name}"
 
 fromContextAll = (names) -> (fromContext n for n in names)
 withoutContext = (code) -> code.replace /_ctx./g, ''
 
 streamCode = (expr, functionInfo, code, combineNames, argNames) ->
-  if isStreamFunctionCall(expr, functionInfo)
-    withoutContext(functionOrExprCode(code, argNames))
-  else if isNoArgsFunctionCall(expr) and combineNames.length == 0
-      code
-  else if isInput(expr)
-    code
-  else if combineNames.length
-     combineCode(combineNames, withoutContext(functionOrExprCode(code, argNames)))
-  else
-    code
+  code
+#  if isStreamFunctionCall(expr, functionInfo)
+#    withoutContext(functionOrExprCode(code, argNames))
+#  else if isNoArgsFunctionCall(expr) and combineNames.length == 0
+#      code
+#  else if isInput(expr)
+#    code
+#  else if combineNames.length
+#     functionOrExprCode(code, argNames)
+#  else
+#    code
 
 exprFunctionBody = (funcDef, functionInfo) ->
   argNames = (ad.name for ad in funcDef.argDefs)
@@ -189,10 +191,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
             else
                 (getCodeAndAccumulateFunctions(e) for e in expr.children)
 
-        if args.length
-          "operations.eval(#{fromContext(functionName)})#{argList args}"
-        else
-          fromContext(functionName)
+        fromContext(functionName) + callArgList(args)
 
       if tracing then "operations.trace('#{functionName}', #{callCode})" else callCode
 

@@ -62,7 +62,7 @@ describe 'SheetRunner runs', ->
 
 
   describe 'runs expressions', ->
-    it.only 'constant values', ->
+    it 'constant values', ->
       parseUserFunctions 'a=100'
 
       changes.should.eql [{a: 100}]
