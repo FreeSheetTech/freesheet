@@ -137,8 +137,8 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
       left = getCodeAndAccumulateFunctions expr.children[0]
       right = getCodeAndAccumulateFunctions expr.children[1]
       switch expr.operator
-        when '+' then "operations.add(#{left}, #{right})"
-        when '-' then "operations.subtract(#{left}, #{right})"
+        when '+' then "this.operations.add(#{left}, #{right})"
+        when '-' then "this.operations.subtract(#{left}, #{right})"
         else "(#{left} #{jsOperator(expr.operator)} #{right})"
 
     when expr instanceof Aggregation

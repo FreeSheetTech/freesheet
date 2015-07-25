@@ -81,10 +81,10 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'b = none'
       parseUserFunctions 'c = a <> none'
       parseUserFunctions 'c = a == none'
-      parseUserFunctions 'c = b <> none'
       parseUserFunctions 'c = b == none'
+      parseUserFunctions 'c = b <> none'
 
-      changes.should.eql [{a: 100}, {b: null}, {c: true}, {c: false}, {c: false}, {c: true}]
+      changes.should.eql [{a: 100}, {b: null}, {c: true}, {c: false}, {c: true}, {c: false}]
 
     it 'subtraction of two Dates', ->
       parseUserFunctions 'd1=dateValue("2014-02-03 12:00:20")'
@@ -135,11 +135,12 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'a = 100 > 100'
       parseUserFunctions 'b = 100 < 101'
       parseUserFunctions 'c = 101 >= 100'
-      parseUserFunctions 'x = a and b'
       parseUserFunctions 'x = a or b'
+      parseUserFunctions 'x = a and b'
       parseUserFunctions 'x = b and c'
+      parseUserFunctions 'x = false'
       parseUserFunctions 'x = a or b and c or false'
-      changesFor('x').should.eql [false, true, true, true]
+      changesFor('x').should.eql [true, false, true, false, true]
 
     it 'concatenates strings', ->
       parseUserFunctions 'a = "The A"'

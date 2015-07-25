@@ -37,10 +37,14 @@ module.exports = class SheetRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
 
-    @sheet = {provided: @providedFunctions}
+    @sheet = _.assign {}, @providedFunctions, {operations: new Operations("a function", @_inputStream)
+    }
 
   # TODO  rationalise this zoo of add...Functions
-  _addProvidedFunction: (name, fn) ->  @providedFunctions[name] = fn
+  _addProvidedFunction: (name, fn) ->
+    @providedFunctions[name] = fn
+    @sheet[name] = fn
+
   addProvidedFunction: (name, fn) ->
     switch
       when fn.kind is SheetRunner.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
@@ -58,9 +62,9 @@ module.exports = class SheetRunner
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
-  addProvidedStreamFunction: (name, fn) -> fn.kind = SheetRunner.STREAM; @providedFunctions[name] = fn
+  addProvidedStreamFunction: (name, fn) -> fn.kind = SheetRunner.STREAM; @_addProvidedFunction name, fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
-  addProvidedStreamReturnFunction: (name, fn) -> fn.returnKind = SheetRunner.STREAM_RETURN; @providedFunctions[name] = fn
+  addProvidedStreamReturnFunction: (name, fn) -> fn.returnKind = SheetRunner.STREAM_RETURN; @_addProvidedFunction name, fn
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
   addProvidedSequenceFunction: (name, fn) ->
@@ -167,8 +171,7 @@ module.exports = class SheetRunner
       subj.onNext @_sheetValue name
 
   _sheetValue: (name) ->
-    operations = new Operations(name, @_inputStream)
-    @sheet[name].apply @sheet, [operations]
+    @sheet[name].apply @sheet, []
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
   _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))
