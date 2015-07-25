@@ -1,6 +1,6 @@
 Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
-JsCodeGenerator = require '../code/JsCodeGenerator'
+ReactiveCodeGenerator = require '../code/ReactiveCodeGenerator'
 Period = require '../functions/Period'
 {CalculationError, FunctionError} = require '../error/Errors'
 Operations = require './Operations'
@@ -77,7 +77,7 @@ module.exports = class ReactiveRunner
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    functionImpl = JsCodeGenerator.exprFunction funcDef, @_functionInfo()
+    functionImpl = ReactiveCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
     source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
 

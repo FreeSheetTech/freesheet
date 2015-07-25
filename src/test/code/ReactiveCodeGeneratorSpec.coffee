@@ -2,9 +2,9 @@ should = require 'should'
 {Literal, Sequence, Aggregation, FunctionCall, InfixExpression, AggregationSelector} = require '../ast/Expressions'
 {FunctionDefinition, UserFunction} = require '../ast/FunctionDefinition'
 TextParser = require '../parser/TextParser'
-{exprCode, exprFunctionBody, exprFunction} = require './JsCodeGenerator'
+{exprCode, exprFunctionBody, exprFunction} = require './ReactiveCodeGenerator'
 
-describe 'JsCodeGenerator', ->
+describe 'ReactiveCodeGenerator', ->
 
   code = null
   functionNames = null

@@ -197,7 +197,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
       if tracing then "operations.trace('#{functionName}', #{callCode})" else callCode
 
     else
-      throw new Error("JsCodeGenerator: Unknown expression: " + expr?.constructor.name)
+      throw new Error("ReactiveCodeGenerator: Unknown expression: " + expr?.constructor.name)
 
   {code: code, functionNames, localStreams, combineNames}
 

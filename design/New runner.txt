@@ -1,0 +1,24 @@
+New Runner
+==========
+
+- Object with functions
+- Functions generated almost directly from FS expressions
+- Will still need Operations
+- Will still need some of code generator
+- Functions reference others via this
+- Inputs are stored as a list
+- Named values are also functions
+- Need to know when to take all values of an input or only latest
+- When change a function, need to re-run all inputs
+- Need to know which function values have changed
+- Rx may still have a place
+
+
+Possible optimisations
+----------------------
+- Cache function values
+- Work out what functions might be affected by an input
+- Memoise functions for certain arguments
+- Autogenerate objects with functions attached
+- Change full scans to fold operations using only the latest value
+
