@@ -29,6 +29,8 @@ module.exports = class SheetRunner
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
+  unknownNameFunction = (name) -> -> new CalculationError(name, "Unknown name")
+
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
@@ -85,12 +87,9 @@ module.exports = class SheetRunner
     functionImpl = SheetCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = functionImpl.theFunction
+    @sheet[name] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
-    #    subj.sourceSub?.dispose()
-    #    source = @_userFunctionStream funcDef, functionImpl.theFunction, functionImpl.functionNames
-    #    subj.sourceSub = source.subscribe subj
-
     @_recalculate()
 #    if not subj.observeStream then subj.observeStream = subj.observeOn Rx.Scheduler.timeout
 
@@ -172,7 +171,8 @@ module.exports = class SheetRunner
       subj.onNext @_sheetValue name
 
   _sheetValue: (name) ->
-    @sheet[name].apply @sheet, []
+    ops = new Operations name  #TODO decide where error checking belongs, whether to throw or return error directly
+    ops._valueCheck @sheet[name].apply @sheet, []
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
   _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))
