@@ -37,10 +37,9 @@ module.exports = class SheetRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
 
-    @sheet = _.assign {}, @providedFunctions, {operations: new Operations("a function", @_inputStream)
-    }
+    @sheet = _.assign {}, @providedFunctions, {operations: new Operations("a function", @_inputItem)}
 
-  # TODO  rationalise this zoo of add...Functions
+# TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->
     @providedFunctions[name] = fn
     @sheet[name] = fn
@@ -139,7 +138,7 @@ module.exports = class SheetRunner
   sendPartialInput: (name, value) ->
     stream = @inputStreams[name]
     throw   new Error 'Unknown input name' unless stream
-    stream.onNext value
+    stream.push value
 
   inputComplete: ->
     @_recalculate()
@@ -187,7 +186,7 @@ module.exports = class SheetRunner
     if _.includes(@functionsUsedBy(func.name), func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself through another formula')
     ctx = {} # TODO use zipObject
     ctx[n] = @_functionArg(n) for n in functionNames
-    args = [new Operations(func.name, @_inputStream), ctx]
+    args = [new Operations(func.name, @_inputItem), ctx]
     try
       theFunction.apply(null, args) #.observeOn(Rx.Scheduler.currentThread)
     catch e
@@ -208,5 +207,7 @@ module.exports = class SheetRunner
       when func.length then new Rx.BehaviorSubject func
       else new Rx.BehaviorSubject func()
 
-  _inputStream: (name) => @inputStreams[name] or (@inputStreams[name] = new Rx.BehaviorSubject(null))
+  _inputItem: (name) =>
+    stream = @inputStreams[name] or (@inputStreams[name] = [])
+    _.last(stream) or null
 
