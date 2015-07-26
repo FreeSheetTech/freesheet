@@ -14,6 +14,41 @@ New Runner
 - Rx may still have a place
 - Should value changes be notified where still has same value - event stream view?
 
+Working on stream instead of values
+-----------------------------------
+- Convention: all_xyz means the stream of xyz's instead of the latest value  ( allXyz too?)
+- Only collected if needed
+- If used in a function, create an all_xyz that returns this.stored.xyz
+- Need to update stored.xyz after each input - but only if it was affected?
+- Need to update stored.xyz before it is used
+- Need to ensure stored.xyz updated exactly once for each input
+- Need to update stored.xyz for each partial input
+- Poss: input counter
+- Poss: inputs received flag
+- all_xyz adds the latest input to stored.xyz before returning it if not up to date, then marks as up to date
+- Partial input flags all the stored.xyz as out of date
+- After each partial input, call each all_xyz to ensure it stores the latest value
+- Don't call other functions until input complete
+- Could hold all values for all named values to help debugging
+- Previous one would be useful for many things
+
+Stage 1 of all_xyz
+------------------
+- Collect all values of every named value in stored.xyz
+- Init stored.xyz to []
+- Flag upToDate on the array
+- Add an all_xyz function for every named value
+- partial input sets all upToDate to false
+- all_xyz calls xyz() and pushes on array if upToDate false, sets upTodate to true
+- Call every all_xyz after each partial input to ensure that input recorded
+
+
+To do
+-----
+- Do we need subjects for functions with args?
+- Do we need subjects at all?
+
+
 
 Possible optimisations
 ----------------------
@@ -22,4 +57,34 @@ Possible optimisations
 - Memoise functions for certain arguments
 - Autogenerate objects with functions attached
 - Change full scans to fold operations using only the latest value
+- In production mode, reduce the number of previous held
+- Wrap all functions generated in a manager function that can memoise and trace
+- Could profile time spent in each function and number of calls
+- Store dependencies of each function and invalidate only those
+- Only invalidate if function value changes (so need previous)
+- Don't depend on people writing functions a certain way
 
+Incremental updates
+-------------------
+- How to translate functions into previous plus latest input
+- If every aggregate function is a fold, not matter if have lots of sums inside a final aggregate
+- Memoise aggregate functions by arguments
+- Functions get access to previous value plus any other data they want to keep eg previous distinct values, no of values
+- A select just needs the previous values, plus new one, plus the select function
+
+Memoising
+---------
+- Each usage of a function gets a unique id passed to it somehow OR each usage of a function is wrapped in a memoiser
+- All function calls given their own name even if they are sub-exprs - would only work within a no-args function
+
+Change prediction
+-----------------
+- How limit updates to only the entities affected by an input eg account and new transaction
+
+Storing state
+-------------
+- How to cache and persist values so far for an entity
+- Memoise with id arg = entity
+- Don't memoise functions that don't call other functions
+- Memoise functions that call an all_xyz anywhere below them
+- Memoise no-args functions
