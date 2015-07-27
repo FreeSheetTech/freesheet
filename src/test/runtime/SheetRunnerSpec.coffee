@@ -476,25 +476,18 @@ describe 'SheetRunner runs', ->
 
   describe 'sequence and stream functions', ->
 
-    it 'finds the total of the values in a stream using Over version of function', ->
-      providedStreams { theInput: inputSubj }
+    it 'finds the total of the values in a stream using all_ function', ->
       providedAggregateFunctions
         total: (s) -> s.scan((acc, x) -> acc + x)
-      parseUserFunctions 'tot = totalOver(theInput)'
+      parseUserFunctions 'tot = total(all_theInput)'
 
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-      inputSubj.onNext 40
+      inputs 20, 30, 40
 
       changesFor("tot").should.eql [null, 20, 50, 90]
 
     it 'finds the totals of the sequence values in a stream using plain version and their running total', ->
       providedAggregateFunctions
-        total: (s) ->
-          console.log 'total', s
-          s.scan (acc, x) ->
-            console.log 'total scan', acc, x
-            acc + x
+        total: (s) -> s.scan (acc, x) -> acc + x
       parseUserFunctions 'tot = total(theInput)'
       parseUserFunctions 'totAll = total(all_tot)'
 
@@ -503,49 +496,35 @@ describe 'SheetRunner runs', ->
       changesFor("tot").should.eql [null, 9, 11, 7]
       changesFor("totAll").should.eql [null, 9, 20, 27]
 
-    it 'finds the squares of the values in a stream using Over version of function', ->
-      providedStreams { theInput: inputSubj }
+    it 'finds the squares of all  the values in a stream using all_ function', ->
       providedSequenceFunctions
         square: (s) -> s.map((x) -> x * x)
-      parseUserFunctions 'sq = squareOver(theInput)'
+      parseUserFunctions 'sq = square(all_theInput)'
 
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-      inputSubj.onNext 40
+      inputs 20, 30, 40
 
-      changesFor("sq").should.eql [null, 400, 900, 1600]
+      changesFor("sq").should.eql [[], [400], [400, 900], [400, 900, 1600]]
 
     it 'finds the squares of the sequence values in a stream using plain version', ->
-      providedStreams { theInput: inputSubj }
       providedSequenceFunctions
         square: (s) -> s.map((x) -> x * x)
       parseUserFunctions 'sq = square(theInput)'
 
-      inputSubj.onNext [2, 3, 4]
-      inputSubj.onNext [5, 6]
-      inputSubj.onNext [7]
-#      inputSubj.onNext []
+      inputs [2, 3, 4], [5, 6], [7]
 
-      changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
+      changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]
 
-    it 'applies a transform function to a stream using Over version of function', ->
-      parseUserFunctions 'sq = fromEachOver(theInput, in * in)'
+    it 'applies a transform function to an input stream using all_ version of function', ->
+      parseUserFunctions 'sq = fromEach(all_theInput, in * in)'
       inputs 20, 30, 40
-      changesFor("sq").should.eql [null, 400, 900, 1600]
+      changesFor("sq").should.eql [[], [400], [400, 900], [400, 900, 1600]]
 
     it 'applies a transform function to the sequence values in a stream using plain version', ->
-      providedSequenceFunctions
-        square: (s) -> s.map((x) -> x * x)
       parseUserFunctions 'sq = fromEach(theInput, in * in)'
+      inputs [2, 3, 4], [5, 6], [7]
+      changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]       # TODO should first be null or []?
 
-      inputSubj.onNext [2, 3, 4]
-      inputSubj.onNext [5, 6]
-      inputSubj.onNext [7]
-#      inputSubj.onNext []
-
-      changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
-
-    it 'uses a stream return function', ->
+    it.skip 'uses a stream return function', ->
       providedStreamReturnFunctions
         widgetFactor: (a) -> inputSubj.map (x) -> x + a
       parseUserFunctions 'wf = widgetFactor(3)'
