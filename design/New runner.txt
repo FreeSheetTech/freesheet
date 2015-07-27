@@ -34,12 +34,12 @@ Working on stream instead of values
 
 Stage 1 of all_xyz
 ------------------
-- Collect all values of every named value in stored.xyz
-- Init stored.xyz to []
-- Flag upToDate on the array
-- Add an all_xyz function for every named value
+    - Collect all values of every named value in stored.xyz
+    - Init stored.xyz to []
+    - Flag upToDate on the array
+    - Add an all_xyz function for every named value
 - partial input sets all upToDate to false
-- all_xyz calls xyz() and pushes on array if upToDate false, sets upTodate to true
+    - all_xyz calls xyz() and pushes on array if upToDate false, sets upTodate to true
 - Call every all_xyz after each partial input to ensure that input recorded
 
 

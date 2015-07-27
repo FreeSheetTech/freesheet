@@ -36,7 +36,7 @@ describe 'SheetRunner runs', ->
   bufferedCallback = (name, value) -> received = {}; received[name] = value; bufferedChanges.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
 
-  inputs = (items...) -> inputSubj.onNext i for i in items
+  inputs = (items...) -> sendInputs 'theInput', items...
   sendInputs = (name, items...) -> runner.sendInput name, i for i in items
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
@@ -47,13 +47,14 @@ describe 'SheetRunner runs', ->
 
   beforeEach ->
     runner = new SheetRunner()
+    parseUserFunctions 'theInput = input'
+
     changes = []
     bufferedChanges = []
     namedChanges = []
     runner.onValueChange callback
     runner.onBufferedValueChange bufferedCallback
     inputSubj = new Rx.Subject()
-    runner.addProvidedStream 'theInput', inputSubj
 
     providedFunctions TimeFunctions
     providedTransformFunctions
@@ -313,7 +314,7 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'in1 = input'
       parseUserFunctions 'in2 = input'
 
-      runner.getInputs().should.eql ['in1', 'in2']
+      runner.getInputs().should.eql ['theInput', 'in1', 'in2']
       changes.should.eql [{in1: null}, {in2: null}]
 
     it 'update other values when a new input sent', ->
@@ -329,7 +330,7 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'in1 = 20'
       parseUserFunctions 'in1 = input'
 
-      runner.getInputs().should.eql ['in1']
+      runner.getInputs().should.eql ['theInput', 'in1']
       changes.should.eql [{in1: 20}, {in1: null}]
 
 #    it 'update other values when a debug input sent to any named value', ->
@@ -487,17 +488,17 @@ describe 'SheetRunner runs', ->
 
       changesFor("tot").should.eql [null, 20, 50, 90]
 
-    it 'finds the totals of the sequence values in a stream using plain version', ->
-      providedStreams { theInput: inputSubj }
+    it 'finds the totals of the sequence values in a stream using plain version and their running total', ->
       providedAggregateFunctions
-        total: (s) -> s.scan((acc, x) -> acc + x)
+        total: (s) ->
+          console.log 'total', s
+          s.scan (acc, x) ->
+            console.log 'total scan', acc, x
+            acc + x
       parseUserFunctions 'tot = total(theInput)'
-      parseUserFunctions 'totAll = totalOver(tot)'
+      parseUserFunctions 'totAll = total(all_tot)'
 
-      inputSubj.onNext [2, 3, 4]
-      inputSubj.onNext [5, 6]
-      inputSubj.onNext [7]
-#      inputSubj.onNext []
+      inputs [2, 3, 4], [5, 6], [7]
 
       changesFor("tot").should.eql [null, 9, 11, 7]
       changesFor("totAll").should.eql [null, 9, 20, 27]

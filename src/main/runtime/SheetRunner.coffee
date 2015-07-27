@@ -21,15 +21,24 @@ module.exports = class SheetRunner
 
   asImmediateFunction = (func) -> (s, f) ->
     results = []
-    seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
-    func(seq, f).subscribe (x) -> results.push x
-    if returnsAggregate(func) then _.last results else results
+    if _.isArray s
+      seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
+      func(seq, f).subscribe (x) -> results.push x
+    if returnsAggregate(func) then _.last(results) ? null else results
 
   bufferedValueChangeStream = (valueChanges, trigger) ->
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
   unknownNameFunction = (name) -> -> new CalculationError(name, "Unknown name")
+
+  allFunction = (name) -> ->
+    storedValues = this.stored[name]
+    if not this.storedUpToDate[name]
+      storedValues.push this[name]()
+      this.storedUpToDate[name] = true
+
+    storedValues
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -39,7 +48,12 @@ module.exports = class SheetRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
 
-    @sheet = _.assign {}, @providedFunctions, {operations: new Operations("a function", @_inputItem)}
+    @sheet = _.assign {}, @providedFunctions, {
+      operations: new Operations("a function", @_inputItem)
+      stored: {}
+      storedUpToDate: {}
+    }
+
 
 # TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->
@@ -88,6 +102,11 @@ module.exports = class SheetRunner
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = functionImpl.theFunction
     @sheet[name] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
+    if funcDef.argDefs.length == 0
+      @sheet.stored[name] = []
+      @sheet.storedUpToDate[name] = true
+      @sheet['all_' + name] = allFunction name
+
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
     @_recalculate()
@@ -134,6 +153,8 @@ module.exports = class SheetRunner
     stream = @inputStreams[name]
     throw   new Error 'Unknown input name' unless stream
     stream.push value
+    @sheet.storedUpToDate[k] = false for k,a of @sheet.stored
+    f.apply(@sheet) for n, f of @sheet when n.match /^all_/
 
   inputComplete: ->
     @_recalculate()
