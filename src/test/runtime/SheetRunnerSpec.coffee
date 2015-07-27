@@ -41,7 +41,7 @@ describe 'SheetRunner runs', ->
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
-  unknown = (name) -> error(name, 'Unknown name')
+  unknown = (name) -> error(name, 'Unknown name: ' + name)
   error = (name, msg) -> new CalculationError(name, msg)
   fnError = (name, msg) -> new FunctionError(name, msg)
 
@@ -659,23 +659,21 @@ describe 'SheetRunner runs', ->
       runner.userFunctions.should.not.have.property 'a'
 
     it 'all changes sends a null and no longer invokes callback', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
-      inputSubj.onNext 'Aarhon'
+      inputs 'Aarhon'
 
       removeUserFunction 'aliens'
-      inputSubj.onNext 'Zorgon'
+      inputs 'Zorgon'
 
-      changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:null}]
+      changes.should.eql [{aliens:null}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {aliens:null}, {"theInput": "Zorgon"}]
 
     it 'named change sends a null and no longer invokes callback', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       observeNamedChanges 'aliens'
-      inputSubj.onNext 'Aarhon'
+      inputs 'Aarhon'
 
       removeUserFunction 'aliens'
-      inputSubj.onNext 'Zorgon'
+      inputs 'Zorgon'
 
       namedChanges.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:null}]
 
@@ -693,17 +691,16 @@ describe 'SheetRunner runs', ->
       removeUserFunction 'aliens'
 
     it 'sends null to other functions that use it', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       parseUserFunctions 'greetings = "Hi " + aliens '
       observeNamedChanges 'greetings'
-      inputSubj.onNext 'Aarhon'
+      inputs 'Aarhon'
 
       removeUserFunction 'aliens'
-      inputSubj.onNext 'Zorgon'
+      inputs 'Zorgon'
 
-      namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings:'Hi null'}]
-      changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens:null}, {greetings:'Hi null'}]
+      namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings: unknown 'aliens'}]
+      changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens:null}, {greetings: unknown 'aliens'}, {"theInput": "Zorgon"}]
 
     it 'can add a function with the same name as one removed', ->
       parseUserFunctions 'a = 10; b = 20; c = a * b'
@@ -719,7 +716,7 @@ describe 'SheetRunner runs', ->
       removeUserFunction 'c'
       parseUserFunctions 'a = 10; b = 20; c = a + b'
 
-      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {a: null}, {c: 0}, {b: null}, {c: 0}, {c: null}, {a: 10}, {b: 20}, {c: 30}]
+      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {a: null}, {c: unknown 'a'}, {b: null}, {c: null}, {a: 10}, {b: 20}, {c: 30}]
 
     it 'can add a function with the same name and forward reference after removing all functions', ->
       parseUserFunctions 'c = a * 2; a = 10'
@@ -728,27 +725,24 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'c = a + 2; a = 10'
 
       changes.should.eql [
-        { "a": error('a', 'Unknown name')}
-        { "c": error('a', 'Unknown name')}
-        { "a": 10}
-        { "c": 20}
-        { "c": null}
-        { "a": null}
-        { "a": error('a', 'Unknown name')}
-        { "c": error('a', 'Unknown name')}
-        { "a": 10}
-        { "c": 12}
+        { c: unknown 'a'}
+        { a: 10}
+        { c: 20}
+        { c: null}
+        { a: null}
+        { c: unknown 'a'}
+        { a: 10}
+        { c: 12}
       ]
 
     it 'destroy removes all user functions', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput(); humans = theInput()'
-      inputSubj.onNext 'Aarhon'
+      inputs 'Aarhon'
 
       runner.destroy()
-      inputSubj.onNext 'Zorgon'
+      inputs 'Zorgon'
 
-      changes.should.eql [{aliens:null}, {humans:null}, {aliens:'Aarhon'}, {humans:'Aarhon'}, {aliens:null}, {humans:null}]
+      changes.should.eql [{aliens:null}, {humans:null}, {theInput:'Aarhon'}, {aliens:'Aarhon'}, {humans:'Aarhon'}, {theInput: null}, {aliens: unknown 'theInput'}, {humans: unknown 'theInput'}, {aliens:null}, {humans:null}]
 
 
     #      test of internals

@@ -30,15 +30,7 @@ module.exports = class SheetRunner
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
-  unknownNameFunction = (name) -> -> new CalculationError(name, "Unknown name")
-
-  allFunction = (name) -> ->
-    storedValues = this.stored[name]
-    if not this.storedUpToDate[name]
-      storedValues.push this[name]()
-      this.storedUpToDate[name] = true
-
-    storedValues
+  unknownNameFunction = (name) -> -> throw new CalculationError(name, "Unknown name: " + name)
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -101,11 +93,11 @@ module.exports = class SheetRunner
     functionImpl = SheetCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = functionImpl.theFunction
-    @sheet[name] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
+    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
     if funcDef.argDefs.length == 0
       @sheet.stored[name] = []
       @sheet.storedUpToDate[name] = true
-      @sheet['all_' + name] = allFunction name
+      @sheet['all_' + name] = @_allFunction name
 
 
     subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
@@ -126,6 +118,8 @@ module.exports = class SheetRunner
         if not subj.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
+      @sheet[functionName] = unknownNameFunction(functionName)
+      @_recalculate()
 
   onValueChange: (callback, name) ->
     if name
@@ -193,10 +187,24 @@ module.exports = class SheetRunner
 
   _sheetValue: (name) ->
     ops = new Operations name  #TODO decide where error checking belongs, whether to throw or return error directly
-    ops._valueCheck @sheet[name].apply @sheet, []
+    try
+      ops._valueCheck @sheet[name].apply @sheet, []
+    catch e
+      ops._error e
+
+  _allFunction: (name) ->
+    runner = this
+    ->
+      storedValues = this.stored[name]
+      if not this.storedUpToDate[name]
+        storedValues.push runner._sheetValue(name)
+        this.storedUpToDate[name] = true
+
+      storedValues
+
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
-  _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name")))
+  _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name: " + name)))
 
   _userFunctionStream: (func, theFunction, functionNames) ->
     if _.includes(functionNames, func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
