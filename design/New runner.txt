@@ -13,6 +13,7 @@ New Runner
 - Need to know which function values have changed
 - Rx may still have a place
 - Should value changes be notified where still has same value - event stream view?
+- Aim: to produce 'normal' JavaScript that would run as a standalone program
 
 Working on stream instead of values
 -----------------------------------
@@ -38,9 +39,58 @@ Stage 1 of all_xyz
     - Init stored.xyz to []
     - Flag upToDate on the array
     - Add an all_xyz function for every named value
-- partial input sets all upToDate to false
+    - partial input sets all upToDate to false
     - all_xyz calls xyz() and pushes on array if upToDate false, sets upTodate to true
-- Call every all_xyz after each partial input to ensure that input recorded
+    - Call every all_xyz after each partial input to ensure that input recorded
+
+Functions producing multiple outputs for one input
+--------------------------------------------------
+- eg flatten/unpackLists
+- When function called, need to know it is multiple outputs, not just one sequence
+- Only reason need to see all of them and not just last one is if accumulating a downstream value in all_
+- Poss: put each value in turn in the slot for that name, then recalculate every down stream all_
+- Design problem: opposition of event push and recalculation pull viewpoints
+- If can send partial input to a primary input, maybe can do it to an intermediate named value too
+- Slots can take place of the subjects, hold Invalid value to show need recalculating, use value as cache
+- If each slot calls its function to get new value, sets in its slot, then invalidates its descendants, then recalculates every all_
+- If multiple output values, set each in slot and recalculate in turn
+- Need to get multiple sheet value change events
+- If subscribed to value changes on all_xyz, that would force separate events
+
+
+Multiple outputs example
+------------------------
+  transactionList = input
+  transactions = unpack(transactionList)
+  creditTotal = sum(fromEach(select(all_transactions, type = 'C'), amount)
+  debitTransactions = select(all_transactions, type = 'D')
+  debitTotal = sum(fromEach(debitTransactions, amount))
+
+Events on sheet
+---------------
+- Input event goes to an input from outside
+- Sheet functions can raise events on sheet to any slot
+- A sheet function may queue up multiple (or zero) events to its own slot - or others?
+- Could have debugging or state restoration events to any slot from outside
+- When ask for slot value (single):
+  - this will always be a pull from a dependent slot
+  - if invalid, run function to get next slot value and put in slot
+  - return slot value
+- Event queue and event loop:
+  - Input events always go in a queue with name and value
+  - From outside, queue the event and start event loop
+  - Event loop takes first event and sends to sheet until queue empty
+  - When queue empty, do input complete (recalculate and send value changes to listeners)
+- Send to sheet
+  - Puts that value in the slot
+  - If the value has changed, invalidate all dependent slots
+  - Whether changed or not, recalculate every dependent all_ slot
+- When ask for slot value (multiple):
+  - this will always be a pull from a dependent slot or value change observer
+  - if invalid, run function to get next slot values and put first one in slot
+  - queue up remaining values as events for this slot
+  - return slot value
+- Functions just do what they say on tin - return multiple values if there are multiple values - sheet uses that
 
 
 To do
@@ -63,6 +113,9 @@ Possible optimisations
 - Store dependencies of each function and invalidate only those
 - Only invalidate if function value changes (so need previous)
 - Don't depend on people writing functions a certain way
+- Only produce sheet value change events if anyone listening
+- Only produce unbuffered value change events if anyone listening
+- Only invalidate dependents after an event if your value has changed
 
 Incremental updates
 -------------------

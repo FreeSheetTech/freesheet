@@ -531,6 +531,8 @@ Web service
 - Control channel to upload or change or view the worksheet while running
 - Important to be able to see the sheet in real time while running
 - Could send out changes via DDP or other pub/sub mechanism
+- May also want to get and set a bunch of inputs together eg for configuring settings on an app
+
 
 Modules
 -------
@@ -579,6 +581,11 @@ Random stuff
 - File input stream function - line at a time?
 - Data difference function - useful for testing, detecting need for updates, other things?
 - Data patch function - to convert one to another
+- Multiple sheets under one web app
+- Sheets in same app can communicate
+- Sell app by one-off sub to registered users
+- Use for configuring a conventional app - write connector funcs
+- Poker or other card game
 
 
 FA Cup simulation

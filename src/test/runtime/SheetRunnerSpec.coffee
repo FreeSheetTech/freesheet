@@ -283,31 +283,6 @@ describe 'SheetRunner runs', ->
 
       changesFor('result').should.eql [24, 25]
 
-    it.skip 'can be defined with an expression using a stream return function', ->
-      providedStreamReturnFunctions
-        widgetFactor: (a) -> inputSubj.map (x) -> x + a
-      parseUserFunctions 'wf(p) = widgetFactor(5) + p'
-      parseUserFunctions 'result = wf(3)'
-
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-      inputSubj.onNext 40
-
-      changesFor("result").should.eql [null, 28, 38, 48]
-
-    it.skip 'can NOT be defined with only a stream return function', ->
-      providedStreamReturnFunctions
-        widgetFactor: (a) -> inputSubj.map (x) -> x + a
-      parseUserFunctions 'wf(p) = widgetFactor(p)'
-      parseUserFunctions 'result = wf(3)'
-
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-      inputSubj.onNext 40
-
-      changesFor("result").should.eql [fnError("wf", "Sorry - this formula cannot be used")]
-
-
   describe 'inputs', ->
 
     it 'create a named input when add user function with input expr', ->
@@ -376,16 +351,16 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'num = 10 - "xxx"'
       changes.should.eql [{num: error 'num', 'Invalid values in calculation'}]
 
-    it.skip 'direct circular expression', ->
+    it 'direct circular expression', ->
       parseUserFunctions 'x = 10'
       parseUserFunctions 'x = x.y'
-      changes.should.eql [{x:10}, {x: error 'x', 'Formula uses itself' }]
+      changes.should.eql [{x:10}, {x: error 'x', 'Formula uses itself: x' }]
 
-    it.skip 'indirect circular expression', ->
+    it 'indirect circular expression', ->
       parseUserFunctions 'y = 10'
       parseUserFunctions 'x = y'
       parseUserFunctions 'y = x'
-      changes.should.eql [{y:10}, {x:10}, {y: error 'y', 'Formula uses itself through another formula' }, {x: error 'y', 'Formula uses itself through another formula' }]
+      changes.should.eql [{y:10}, {x:10}, {y: error 'y', 'Formula uses itself through another formula: y' }, {x: error 'y', 'Formula uses itself through another formula: y' }]
 
   describe 'expressions as function arguments with sequences', ->
 
@@ -427,37 +402,13 @@ describe 'SheetRunner runs', ->
 
       changes.should.eql [{games: [ { time: 21, score: 7 }, { time: 25, score: 10} ]}, {pointsFactor: 15}, {fudgeFactor: 4}, {scores: [109, 154]}]
 
-    it.skip 'transforms all elements of a sequence to a formula including a provided stream and values change for each value in the stream', ->
-      providedStreams { theInput: inputSubj }
+    it 'transforms all elements of a sequence to a formula including an input and values change for each input value', ->
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, in.score + theInput() )'
 
-      inputSubj.onNext 20
-      inputSubj.onNext 30
+      inputs 20, 30
 
-      changesFor("scores").should.eql [null, [27, 30], [37, 40]]
-
-    it.skip 'transforms all elements of a sequence to a formula using a provided stream of a function with literal arguments and values change for each value in the stream', ->
-      providedStreams
-        adjust: inputSubj.map (ff) -> (adjustment) -> ff + adjustment
-      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
-      parseUserFunctions 'scores = fromEach( games, in.score + adjust(5) )'
-
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-
-      changesFor("scores").should.eql [null, [32, 35], [42, 45]]    #first result is zero because adjust function not generated until first inputSubj value
-
-    it.skip 'transforms all elements of a sequence to a formula using a provided stream of a function with arguments from input and values change for each value in the stream', ->
-      providedStreams
-        adjust:  inputSubj.startWith(0).map (ff) -> (adjustment) -> ff + adjustment
-      parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
-      parseUserFunctions 'scores = fromEach( games, adjust(in.score) )'
-
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-
-      changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]  #first result is unadjusted values because adjust function starts with 0
+      changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]
 
     it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
@@ -524,18 +475,6 @@ describe 'SheetRunner runs', ->
       inputs [2, 3, 4], [5, 6], [7]
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]       # TODO should first be null or []?
 
-    it.skip 'uses a stream return function', ->
-      providedStreamReturnFunctions
-        widgetFactor: (a) -> inputSubj.map (x) -> x + a
-      parseUserFunctions 'wf = widgetFactor(3)'
-
-      inputSubj.onNext 20
-      inputSubj.onNext 30
-      inputSubj.onNext 40
-
-      changesFor("wf").should.eql [null, 23, 33, 43]
-
-
   describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->
       parseUserFunctions 'price = 22.5; tax_rate = 0.2'
@@ -546,7 +485,7 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'price = 20; tax_rate = 0.2; total = price + (price * tax_rate)'
       runner.removeUserFunction 'price'
       parseUserFunctions 'price = 30'
-      changes.should.eql [{price:20}, {'tax_rate':0.2}, {total: 24}, {price: null}, {total: 0}, {total: 36}, {price: 30}]
+      changes.should.eql [{price:20}, {'tax_rate':0.2}, {total: 24}, {price: null}, {total: unknown 'price'}, {price: 30}, {total: 36}]
 
     it 'to a function set after it is observed', ->
       observeNamedChanges 'price'
@@ -555,36 +494,21 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'tax_rate = 0.2'
       parseUserFunctions 'price = 33.5'
 
-      changes.should.eql [{price:null}, {price:22.5}, {tax_rate:0.2}, {price: 33.5}]
-      namedChanges.should.eql [{price:null}, {price:22.5}, {price: 33.5}]
+      changes.should.eql [{price: unknown 'price'}, {price:22.5}, {tax_rate:0.2}, {price: 33.5}]
+      namedChanges.should.eql [{price: unknown 'price'}, {price:22.5}, {price: 33.5}]
 
-    it.skip 'to a function that uses an event stream via a provided function', ->
-      providedStreams { theInput: inputSubj }
+    it 'to a function that uses an event stream via a provided function', ->
       parseUserFunctions 'aliens = theInput()'
-      inputSubj.onNext 'Aarhon'
-      inputSubj.onNext 'Zorgon'
+      inputs 'Aarhon', 'Zorgon'
 
-      changes.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:'Zorgon'}]
+      changes.should.eql [{aliens:null}, {theInput:'Aarhon'}, {aliens:'Aarhon'}, {theInput:'Zorgon'}, {aliens:'Zorgon'}]
 
-    it.skip 'of a function that calls a function that uses an event stream via a provided function', ->
-      providedStreams { theInput: inputSubj }
+    it 'of a function that calls a function that uses an event stream via a provided function', ->
       parseUserFunctions 'number = theInput(); plusOne = number + 1'
-      inputSubj.onNext 10
-      inputSubj.onNext 20
+      inputs 10, 20
 
-      changes.should.eql [{number:null}, {plusOne:1}, {number:10}, {plusOne:11}, {number:20}, {plusOne:21}]
+      changes.should.eql [{number:null}, {plusOne:1}, {theInput:10}, {number:10}, {plusOne:11}, {theInput:20}, {number:20}, {plusOne:21}]
 
-
-    it.skip 'to a function that uses an event stream via a provided function with arguments', ->
-      providedStreams inputValueWithSuffix: inputSubj.map (iv) -> (p, s) -> p + iv + s
-
-      parseUserFunctions 'aliens = inputValueWithSuffix("some ", " stuff")'
-      inputSubj.onNext 'Aarhon'
-      observeNamedChanges 'aliens'
-
-      inputSubj.onNext 'Zorgon'
-
-      namedChanges.should.eql [{aliens: 'some Aarhon stuff'}, {aliens: 'some Zorgon stuff'}]
 
     it 'when referenced functions defined before', ->
       parseUserFunctions 'materials = 35; labour = 25'
@@ -596,33 +520,29 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'materials = 35; labour = 25'
 
-      changes.should.eql [{ materials: unknown('materials') }, {labour: unknown('labour')  }, {total: unknown('materials') }, {materials: 35 }, {total: unknown('labour') }, {labour: 25 }, {total: 60 }]
+      changes.should.eql [{total: unknown('materials') }, {materials: 35 }, {total: unknown('labour') }, {labour: 25 }, {total: 60 }]
 
     it 'adds two changing values in formula set afterwards', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'labour = theInput()'
       parseUserFunctions 'total = materials + labour'
 
-      inputSubj.onNext 25
+      inputs 25
       parseUserFunctions 'materials = 50'
 
-      changes.should.eql [{materials: 35}, {labour:null}, {total: 35}, {labour:25}, {total: 60}, {materials: 50}, {total: 75}]
+      changes.should.eql [{materials: 35}, {labour:null}, {total: 35}, {theInput: 25}, {labour:25}, {total: 60}, {materials: 50}, {total: 75}]
 
 
     it 'adds two changing values in function set in between', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'labour = theInput()'
 
-      inputSubj.onNext 25
+      inputs 25
 
-      changes.should.eql [{materials: 35}, {labour: unknown('labour')}, {total: unknown('labour')}, {labour:25}, {total: 60}]
+      changes.should.eql [{materials: 35}, {total: unknown 'labour'}, {labour: null}, {total: 35}, {theInput: 25}, {total: 60}, {labour: 25}]
 
     it 'on individual named value including initial value', ->
-
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aaa = 10'
 
       observeNamedChanges 'aaa'
@@ -630,18 +550,18 @@ describe 'SheetRunner runs', ->
       observeNamedChanges 'bbb'
 
       parseUserFunctions 'bbb = theInput()'
-      inputSubj.onNext 'value of bbb'
+      inputs 'value of bbb'
 
-      namedChanges.should.eql [{aaa: 10}, {xxx: null}, {bbb: null}, {bbb: 'value of bbb'}]
+      namedChanges.should.eql [{aaa: 10}, {xxx: unknown 'xxx'}, {bbb: unknown 'bbb'}, {bbb: null}, {bbb: 'value of bbb'}]
 
   describe 'buffers value changes', ->
 
-    it 'for each input', ->
+    it.skip 'for each input', ->
       providedStreamFunctions
         unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
 
       parseUserFunctions 'itemsIn = input'
-      parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'items = unpackLists(all_itemsIn)'
       parseUserFunctions 'doubled = items * 2'
       sendInputs 'itemsIn', [4, 5, 6], 7, [], [8, 9]
 
@@ -747,14 +667,13 @@ describe 'SheetRunner runs', ->
 
     #      test of internals
     it 'cleans up user function subjects when no longer used', ->
-      providedStreams { theInput: inputSubj }
       parseUserFunctions 'aliens = theInput()'
       parseUserFunctions 'greetings = "Hi " + aliens '
       runner.userFunctionSubjects.should.have.property('aliens')
       runner.userFunctionSubjects.should.have.property('greetings')
 
       removeUserFunction 'aliens'
-      runner.userFunctionSubjects.should.have.property('aliens')
+      runner.userFunctionSubjects.should.not.have.property('aliens')
       runner.userFunctionSubjects.should.have.property('greetings')
 
       removeUserFunction 'greetings'

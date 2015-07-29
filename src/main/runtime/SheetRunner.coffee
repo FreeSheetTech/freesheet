@@ -30,7 +30,8 @@ module.exports = class SheetRunner
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
-  unknownNameFunction = (name) -> -> throw new CalculationError(name, "Unknown name: " + name)
+  errorFunction = (name, message) -> -> throw new CalculationError(name, "#{message}: " + name)
+  unknownNameFunction = (name) -> errorFunction name, 'Unknown name'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -92,7 +93,11 @@ module.exports = class SheetRunner
     @userFunctions[name] = funcDef
     functionImpl = SheetCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
-    @sheet[name] = functionImpl.theFunction
+    @sheet[name] = switch
+      when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'
+      when _.includes(@functionsUsedBy(name), name) then errorFunction name, 'Formula uses itself through another formula'
+      else functionImpl.theFunction
+
     @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
     if funcDef.argDefs.length == 0
       @sheet.stored[name] = []
@@ -127,7 +132,8 @@ module.exports = class SheetRunner
       if subj = @userFunctionSubjects[name]
         callback name, subj.value
       else
-        @userFunctionSubjects[name] = @_newUserFunctionSubject name, null
+        @sheet[name] = unknownNameFunction(name)
+        @userFunctionSubjects[name] = @_newUserFunctionSubject name, @_sheetValue name
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
