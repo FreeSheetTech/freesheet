@@ -14,6 +14,8 @@ module.exports = class SheetRunner
   @STREAM_RETURN = 'streamReturn'
   @AGGREGATE_RETURN = 'aggregateReturn'
 
+  Invalid = '__INVALID__'
+
   isRxObservable = (func) -> typeof func.subscribe == 'function'
   returnsStream = (func) -> func.kind == SheetRunner.STREAM or func.kind == SheetRunner.TRANSFORM_STREAM or func.returnKind == SheetRunner.STREAM_RETURN or func.returnKind == SheetRunner.SEQUENCE_RETURN
   returnsAggregate = (func) -> func.returnKind == SheetRunner.AGGREGATE_RETURN
@@ -40,12 +42,15 @@ module.exports = class SheetRunner
     @inputStreams = {}
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
+    @slots = {}
+    @inputEvents = []
 
     @sheet = _.assign {}, @providedFunctions, {
       operations: new Operations("a function", @_inputItem)
       stored: {}
       storedUpToDate: {}
     }
+
 
 
 # TODO  rationalise this zoo of add...Functions
@@ -90,16 +95,21 @@ module.exports = class SheetRunner
 
   addUserFunction: (funcDef) ->
     name = funcDef.name
+    replacing = @userFunctions[name]?
+    if replacing then @_invalidateDependents name
     @userFunctions[name] = funcDef
     functionImpl = SheetCodeGenerator.exprFunction funcDef, @_functionInfo()
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'
       when _.includes(@functionsUsedBy(name), name) then errorFunction name, 'Formula uses itself through another formula'
+      when funcDef.argDefs.length is 0 then @_cachedValueFunction name, functionImpl.theFunction
       else functionImpl.theFunction
 
+
     @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
-    if funcDef.argDefs.length == 0
+    if funcDef.argDefs.length is 0
+      @slots[name] = Invalid
       @sheet.stored[name] = []
       @sheet.storedUpToDate[name] = true
       @sheet['all_' + name] = @_allFunction name
@@ -123,6 +133,7 @@ module.exports = class SheetRunner
         if not subj.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
+      delete @slots[functionName]
       @sheet[functionName] = unknownNameFunction(functionName)
       @_recalculate()
 
@@ -187,16 +198,15 @@ module.exports = class SheetRunner
       @valueChanges.onNext [name, value]
     subj
 
+  _invalidateDependents: (name) -> @slots[n] = Invalid for n in @_functionsUsing name
+
+  _functionsUsing: (name) -> (n for n, f of @userFunctions when _.includes @functionsUsedBy(n), name)
+
   _recalculate: ->
     for name, subj of @userFunctionSubjects
       subj.onNext @_sheetValue name
 
-  _sheetValue: (name) ->
-    ops = new Operations name  #TODO decide where error checking belongs, whether to throw or return error directly
-    try
-      ops._valueCheck @sheet[name].apply @sheet, []
-    catch e
-      ops._error e
+  _sheetValue: (name) -> @sheet[name].apply @sheet, []
 
   _allFunction: (name) ->
     runner = this
@@ -208,6 +218,17 @@ module.exports = class SheetRunner
 
       storedValues
 
+  _cachedValueFunction: (name, calcFunction) ->
+    runner = this
+    ops = new Operations name
+    ->
+      if runner.slots[name] is Invalid
+        runner.slots[name] = try
+            ops._valueCheck calcFunction.apply runner.sheet, []
+          catch e
+            ops._error e
+
+      runner.slots[name]
 
   _userFunctionSubject: (name) -> @userFunctionSubjects[name]
   _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name: " + name)))
