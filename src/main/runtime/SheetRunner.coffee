@@ -43,7 +43,7 @@ module.exports = class SheetRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
     @slots = {}
-    @inputEvents = []
+    @events = []
 
     @sheet = _.assign {}, @providedFunctions, {
       operations: new Operations("a function", @_inputItem)
@@ -163,9 +163,13 @@ module.exports = class SheetRunner
   sendPartialInput: (name, value) ->
     stream = @inputStreams[name]
     throw   new Error 'Unknown input name' unless stream
-    stream.push value
-    @sheet.storedUpToDate[k] = false for k,a of @sheet.stored
-    f.apply(@sheet) for n, f of @sheet when n.match /^all_/
+    @events.push [name, value]
+    @_processEvents()
+
+  sendDebugInput: (name, value) ->
+    throw new Error 'Unknown value name' unless @userFunctions[name]?.argDefs.length is 0
+    @events.push [name, value]
+    @_processEvents()
 
   inputComplete: ->
     @_recalculate()
@@ -198,7 +202,21 @@ module.exports = class SheetRunner
       @valueChanges.onNext [name, value]
     subj
 
+  _processEvents: -> @_processEvent @events.shift() while @events.length
+
+  _processEvent: (event) ->
+    [name, value] = event
+    @slots[name] = value
+    @_invalidateDependents name  #TODO only if value has changed?
+    @_updateDependentAllValues name
+
   _invalidateDependents: (name) -> @slots[n] = Invalid for n in @_functionsUsing name
+
+  _updateDependentAllValues: (name) ->
+    # TODO     does every all_ value currently
+    @sheet.storedUpToDate[k] = false for k,a of @sheet.stored
+    f.apply(@sheet) for n, f of @sheet when n.match /^all_/
+
 
   _functionsUsing: (name) -> (n for n, f of @userFunctions when _.includes @functionsUsedBy(n), name)
 
