@@ -28,6 +28,7 @@ describe 'SheetRunner runs', ->
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
     (v for k, v of map)
+  functionsUsedBy = (name) -> runner.functionsUsedBy(name)
   parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
   removeUserFunction = (name) -> runner.removeUserFunction name
   sendInput = (name, value) -> runner.sendInput name, value
@@ -438,7 +439,11 @@ describe 'SheetRunner runs', ->
 
     it 'finds the totals of the sequence values in a stream using plain version and their running total', ->
       providedAggregateFunctions
-        total: (s) -> s.scan (acc, x) -> acc + x
+        total: (s) ->
+          console.log 'total', s
+          s.scan (acc, x) ->
+            console.log 'scan', acc, x
+            acc + x
       parseUserFunctions 'tot = total(theInput)'
       parseUserFunctions 'totAll = total(all_tot)'
 
@@ -610,7 +615,7 @@ describe 'SheetRunner runs', ->
       removeUserFunction 'aliens'
       removeUserFunction 'aliens'
 
-    it 'sends null to other functions that use it', ->
+    it 'sends unknown name to other functions that use it', ->
       parseUserFunctions 'aliens = theInput()'
       parseUserFunctions 'greetings = "Hi " + aliens '
       observeNamedChanges 'greetings'
@@ -683,3 +688,27 @@ describe 'SheetRunner runs', ->
       runner.userFunctionImpls.should.not.have.property('greetings')
 
 
+  describe 'finds functions', ->
+
+    describe 'used by a function', ->
+
+      it 'directly', ->
+        parseUserFunctions 'a = 10; b = 20; c = a * b'
+
+        functionsUsedBy('a').should.eql []
+        functionsUsedBy('b').should.eql []
+        functionsUsedBy('c').should.eql ['a', 'b']
+
+      it 'indirectly', ->
+        parseUserFunctions 'a = 10; b = a + 20; c = b + 30'
+
+        functionsUsedBy('a').should.eql []
+        functionsUsedBy('b').should.eql ['a']
+        functionsUsedBy('c').should.eql ['b', 'a']
+
+      it 'without duplicates', ->
+        parseUserFunctions 'a = 10; b = a + 20 + a; c = b + 30 * a'
+
+        functionsUsedBy('a').should.eql []
+        functionsUsedBy('b').should.eql ['a']
+        functionsUsedBy('c').should.eql ['b', 'a']

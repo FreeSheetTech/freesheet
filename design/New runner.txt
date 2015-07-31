@@ -92,6 +92,12 @@ Events on sheet
   - return slot value
 - Functions just do what they say on tin - return multiple values if there are multiple values - sheet uses that
 
+Errors in cached values
+-----------------------
+- If a function results in an error, want that to propagate through to dependents
+- Want the result of all dependent calculations to be that error, not treating it as an object to give something like  'Hi' + error.toString()
+- Getting sheet value at outside has to catch error and return as object
+- Exception should be thrown out through all called functions and not cached
 
 To do
 -----

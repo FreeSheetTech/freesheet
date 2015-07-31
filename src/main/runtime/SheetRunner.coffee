@@ -122,6 +122,7 @@ module.exports = class SheetRunner
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
   removeUserFunction: (functionName) ->
+    @_invalidateDependents functionName
     delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
       subj.onNext(null)
@@ -189,7 +190,9 @@ module.exports = class SheetRunner
     newFunctions = (n for n in funcImpl.functionNames when not _.includes functionsCollectedSoFar, n)
     functionsPlusNew = functionsCollectedSoFar.concat newFunctions
     newCalledFunctions = _.flatten(@functionsUsedBy(n, functionsPlusNew) for n in newFunctions)
-    functionsPlusNew.concat _.uniq(newCalledFunctions)
+    result = _.uniq functionsPlusNew.concat(newCalledFunctions)
+#    console.log 'functionsUsedBy', name, result
+    result
 
 
   destroy: ->  @removeUserFunction n for n, f of @userFunctions
@@ -215,24 +218,36 @@ module.exports = class SheetRunner
   _updateDependentAllValues: (name) ->
     # TODO     does every all_ value currently
     @sheet.storedUpToDate[k] = false for k,a of @sheet.stored
-    f.apply(@sheet) for n, f of @sheet when n.match /^all_/
+    for n, f of @sheet when n.match /^all_/
+      console.log '_updateDependentAllValues', name, n
+      f.apply(@sheet)
 
 
-  _functionsUsing: (name) -> (n for n, f of @userFunctions when _.includes @functionsUsedBy(n), name)
+  _functionsUsing: (name) ->
+    result = (n for n, f of @userFunctions when _.includes(@functionsUsedBy(n), name) or _.includes(@functionsUsedBy(n), 'all_' + name))
+    console.log '_functionsUsing', name, result
+    result
 
   _recalculate: ->
     for name, subj of @userFunctionSubjects
       subj.onNext @_sheetValue name
 
-  _sheetValue: (name) -> @sheet[name].apply @sheet, []
+  _sheetValue: (name) ->
+    ops = new Operations name
+    try
+      @sheet[name].apply @sheet, []
+    catch e
+      ops._error e
 
   _allFunction: (name) ->
     runner = this
     ->
       storedValues = this.stored[name]
+      console.log '_allFunction', name, storedValues
       if not this.storedUpToDate[name]
         storedValues.push runner._sheetValue(name)
         this.storedUpToDate[name] = true
+        console.log '_allFunction updating', name, storedValues
 
       storedValues
 
@@ -241,10 +256,7 @@ module.exports = class SheetRunner
     ops = new Operations name
     ->
       if runner.slots[name] is Invalid
-        runner.slots[name] = try
-            ops._valueCheck calcFunction.apply runner.sheet, []
-          catch e
-            ops._error e
+        runner.slots[name] =  ops._valueCheck calcFunction.apply runner.sheet, []
 
       runner.slots[name]
 
