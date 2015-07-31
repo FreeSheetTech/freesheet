@@ -709,6 +709,30 @@ describe 'SheetRunner runs', ->
       it 'without duplicates', ->
         parseUserFunctions 'a = 10; b = a + 20 + a; c = b + 30 * a'
 
-        functionsUsedBy('a').should.eql []
         functionsUsedBy('b').should.eql ['a']
         functionsUsedBy('c').should.eql ['b', 'a']
+
+      it 'including undefined functions', ->
+        parseUserFunctions 'a = 10; b = a + 10 + d;'
+
+        functionsUsedBy('b').should.eql ['a', 'd']
+
+      it 'exception if first function is not defined as a user function', ->
+        parseUserFunctions 'a = 10;'
+
+        (-> functionsUsedBy 'b').should.throw /Unknown function name: b/
+
+      it 'including all_ functions and their underlying functions', ->
+        parseUserFunctions 'a = 10; b = sum(all_a);'
+
+        functionsUsedBy('b').should.eql ['sum', 'all_a', 'a']
+
+      it 'including functions used via all_ functions', ->
+        parseUserFunctions 'a = 10; b = a + 2; c = sum(all_b);'
+
+        functionsUsedBy('c').should.eql ['sum', 'all_b', 'b', 'a']
+
+      it 'using an undefined all_ function', ->
+        parseUserFunctions 'a = 10; c = sum(all_d) + a;'
+
+        functionsUsedBy('c').should.eql ['sum', 'all_d', 'a', 'd']

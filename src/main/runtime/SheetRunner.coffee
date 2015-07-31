@@ -183,16 +183,19 @@ module.exports = class SheetRunner
 
   hasUserFunction: (name) -> @_userFunctionSubject(name)?
 
-  functionsUsedBy: (name, functionsCollectedSoFar = []) ->
-    return functionsCollectedSoFar if not @userFunctions[name]
-    funcImpl = @userFunctionImpls[name]
-    throw new Error "Unknown function name: #{name}" unless funcImpl
-    newFunctions = (n for n in funcImpl.functionNames when not _.includes functionsCollectedSoFar, n)
-    functionsPlusNew = functionsCollectedSoFar.concat newFunctions
-    newCalledFunctions = _.flatten(@functionsUsedBy(n, functionsPlusNew) for n in newFunctions)
-    result = _.uniq functionsPlusNew.concat(newCalledFunctions)
-#    console.log 'functionsUsedBy', name, result
-    result
+  functionsUsedBy: (name) ->
+    throw new Error "Unknown function name: #{name}" unless  @userFunctions[name]
+
+    collectFunctions = (name, functionsCollectedSoFar) =>
+      isAllFunction = !!name.match /^all_/
+      plainName = name.replace /^all_/, ''
+      return functionsCollectedSoFar if not @userFunctions[plainName] and !isAllFunction
+      newFunctions = if isAllFunction then [plainName] else (n for n in @userFunctionImpls[name].functionNames when not _.includes functionsCollectedSoFar, n)
+      functionsPlusNew = functionsCollectedSoFar.concat newFunctions
+      newCalledFunctions = _.flatten(collectFunctions(n, functionsPlusNew) for n in newFunctions)
+      _.uniq functionsPlusNew.concat(newCalledFunctions)
+
+    collectFunctions name, []
 
 
   destroy: ->  @removeUserFunction n for n, f of @userFunctions
