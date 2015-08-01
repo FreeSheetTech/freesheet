@@ -33,12 +33,6 @@ module.exports = class Operations
     catch e
       @_error e
 
-  _valueCheck: (value) ->
-    try
-      checkResult value
-    catch e
-      @_error e
-
   add: (a, b) ->
     switch
       when a instanceof Period and b instanceof Period

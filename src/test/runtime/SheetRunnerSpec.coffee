@@ -19,10 +19,8 @@ describe 'SheetRunner runs', ->
   selectFunction = (s, func) -> s.filter (x) -> apply(func, x)
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
-  providedStreams = (streamMap) -> runner.addProvidedStreams streamMap
   providedAggregateFunctions = (functionMap) -> runner.addProvidedAggregateFunctions functionMap
   providedSequenceFunctions = (functionMap) -> runner.addProvidedSequenceFunctions functionMap
-  providedStreamFunctions = (functionMap) -> runner.addProvidedStreamFunctions functionMap
   providedStreamReturnFunctions = (functionMap) -> runner.addProvidedStreamReturnFunctions functionMap
   providedTransformFunctions = (functionMap) -> runner.addProvidedTransformFunctions functionMap
   parse = (text) ->
@@ -44,7 +42,6 @@ describe 'SheetRunner runs', ->
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
   unknown = (name) -> error(name, 'Unknown name: ' + name)
   error = (name, msg) -> new CalculationError(name, msg)
-  fnError = (name, msg) -> new FunctionError(name, msg)
 
   beforeEach ->
     runner = new SheetRunner()

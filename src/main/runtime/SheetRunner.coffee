@@ -1,14 +1,12 @@
 Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
 SheetCodeGenerator = require '../code/SheetCodeGenerator'
-Period = require '../functions/Period'
 {CalculationError, FunctionError} = require '../error/Errors'
 Operations = require './Operations'
 _ = require 'lodash'
 
 module.exports = class SheetRunner
   @TRANSFORM = 'transform'
-  @STREAM = 'stream'
   @TRANSFORM_STREAM = 'transformStream'
   @SEQUENCE_RETURN = 'sequenceReturn'
   @STREAM_RETURN = 'streamReturn'
@@ -16,9 +14,6 @@ module.exports = class SheetRunner
 
   Invalid = '__INVALID__'
 
-  isRxObservable = (func) -> typeof func.subscribe == 'function'
-  returnsStream = (func) -> func.kind == SheetRunner.STREAM or func.kind == SheetRunner.TRANSFORM_STREAM or func.returnKind == SheetRunner.STREAM_RETURN or func.returnKind == SheetRunner.SEQUENCE_RETURN
-  returnsAggregate = (func) -> func.returnKind == SheetRunner.AGGREGATE_RETURN
   withKind = (func, kind) -> func.kind = kind; func
 
   asImmediateFunction = (func) -> (s, f) ->
@@ -28,7 +23,7 @@ module.exports = class SheetRunner
       func(seq, f).subscribe (x) -> results.push x
 
     switch
-      when returnsAggregate(func) then _.last(results) ? null
+      when func.returnKind == SheetRunner.AGGREGATE_RETURN then _.last(results) ? null
       when func.returnKind == SheetRunner.STREAM_RETURN then {_multipleValues: results }
       else results
 
@@ -50,11 +45,10 @@ module.exports = class SheetRunner
     @events = []
 
     @sheet = _.assign {}, @providedFunctions, {
-      operations: new Operations("a function")
+      operations: new Operations(null)
       stored: {}
       storedUpToDate: {}
     }
-
 
 
 # TODO  rationalise this zoo of add...Functions
@@ -70,8 +64,6 @@ module.exports = class SheetRunner
       else @_addProvidedFunction name, fn
 
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
-  addProvidedStream: (name, stream) -> @providedFunctions[name] = stream
-  addProvidedStreams: (functionMap) -> @addProvidedStream n, s for n, s of functionMap
 
   addProvidedTransformFunction: (name, fn) ->
     @_addProvidedFunction name, withKind(asImmediateFunction(fn), SheetRunner.TRANSFORM)
@@ -79,24 +71,18 @@ module.exports = class SheetRunner
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
-  addProvidedStreamFunction: (name, fn) -> fn.kind = SheetRunner.STREAM; @_addProvidedFunction name, fn
-  addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
   addProvidedStreamReturnFunction: (name, fn) ->
     @_addProvidedFunction name, asImmediateFunction(fn)
     fn.returnKind = SheetRunner.STREAM_RETURN
 
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
-  addProvidedSequenceFunction: (name, fn) ->
-    @_addProvidedFunction name, asImmediateFunction(fn)
-    @addProvidedStreamFunction name + 'Over', fn
-
+  addProvidedSequenceFunction: (name, fn) -> @_addProvidedFunction name, asImmediateFunction(fn)
   addProvidedSequenceFunctions: (functionMap) -> @addProvidedSequenceFunction n, f for n, f of functionMap
 
   addProvidedAggregateFunction: (name, fn) ->
     @_addProvidedFunction name, asImmediateFunction(fn)
     fn.returnKind = SheetRunner.AGGREGATE_RETURN
-    @addProvidedStreamFunction name + 'Over', fn
 
   addProvidedAggregateFunctions: (functionMap) -> @addProvidedAggregateFunction n, f for n, f of functionMap
 
@@ -123,9 +109,8 @@ module.exports = class SheetRunner
       @sheet['all_' + name] = @_allFunction name
 
 
-    subj = @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
+    @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
     @_recalculate()
-#    if not subj.observeStream then subj.observeStream = subj.observeOn Rx.Scheduler.timeout
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
@@ -184,7 +169,7 @@ module.exports = class SheetRunner
     @_recalculate()
     @inputCompleteSubject.onNext true
 
-  hasUserFunction: (name) -> @_userFunctionSubject(name)?
+  hasUserFunction: (name) -> @userFunctions[name]?
 
   functionsUsedBy: (name) ->
     throw new Error "Unknown function name: #{name}" unless  @userFunctions[name]
@@ -268,20 +253,6 @@ module.exports = class SheetRunner
           runner.slots[name] = calculated
 
       runner.slots[name]
-
-  _userFunctionSubject: (name) -> @userFunctionSubjects[name]
-  _unknownUserFunctionSubject: (name) -> (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, new CalculationError(name, "Unknown name: " + name)))
-
-  _userFunctionStream: (func, theFunction, functionNames) ->
-    if _.includes(functionNames, func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself')
-    if _.includes(@functionsUsedBy(func.name), func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself through another formula')
-    ctx = {} # TODO use zipObject
-    ctx[n] = @_functionArg(n) for n in functionNames
-    args = [new Operations(func.name), ctx]
-    try
-      theFunction.apply(null, args) #.observeOn(Rx.Scheduler.currentThread)
-    catch e
-      new Rx.BehaviorSubject( new FunctionError func.name, 'Sorry - this formula cannot be used')
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
 

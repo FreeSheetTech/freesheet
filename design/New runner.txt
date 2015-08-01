@@ -101,7 +101,8 @@ Errors in cached values
 
 To do
 -----
-- No need to generate code for inputs or have input pulling functions
+    - No need to generate code for inputs or have input pulling functions
+- Unit test functions using
 - Do we need subjects for functions with args?
 - Do we need subjects at all?
 

@@ -23,7 +23,7 @@ callArgList = (items) -> '(' + items.join(', ') + ')'
 createFunction = (functionBody, argNames) ->
   functionCreateArgs = [null].concat argNames, functionBody
   result = new (Function.bind.apply(Function, functionCreateArgs))
-  console.log 'createFunction', result
+#  console.log 'createFunction', result
   result
 
 # returns a function that when called with the context gives an Observable for use by the runner
