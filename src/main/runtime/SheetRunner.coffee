@@ -20,7 +20,6 @@ module.exports = class SheetRunner
   returnsStream = (func) -> func.kind == SheetRunner.STREAM or func.kind == SheetRunner.TRANSFORM_STREAM or func.returnKind == SheetRunner.STREAM_RETURN or func.returnKind == SheetRunner.SEQUENCE_RETURN
   returnsAggregate = (func) -> func.returnKind == SheetRunner.AGGREGATE_RETURN
   withKind = (func, kind) -> func.kind = kind; func
-  withReturnKind = (func, kind) -> func.returnKind = kind; func
 
   asImmediateFunction = (func) -> (s, f) ->
     results = []
@@ -76,7 +75,7 @@ module.exports = class SheetRunner
 
   addProvidedTransformFunction: (name, fn) ->
     @_addProvidedFunction name, withKind(asImmediateFunction(fn), SheetRunner.TRANSFORM)
-    @_addProvidedFunction name + 'Over', withKind(fn, SheetRunner.TRANSFORM_STREAM)
+    fn.returnKind = SheetRunner.TRANSFORM_STREAM
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
@@ -206,10 +205,7 @@ module.exports = class SheetRunner
 
   #  private functions
 
-  _queueEvents: (name, values) ->
-    console.log 'entering _queueEvents', name, values
-    @events.push [name, v] for v in values
-    console.log 'after _queueEvents', @events
+  _queueEvents: (name, values) -> @events.push [name, v] for v in values
 
   _newUserFunctionSubject: (name, initialValue) ->
     subj = new Rx.BehaviorSubject(initialValue)
@@ -221,7 +217,6 @@ module.exports = class SheetRunner
 
   _processEvent: (event) ->
     [name, value] = event
-    console.log 'entering _processEvent', name, value
     @slots[name] = value
     @_invalidateDependents name  #TODO only if value has changed?
     @_updateDependentAllValues name
@@ -266,7 +261,6 @@ module.exports = class SheetRunner
     ->
       if runner.slots[name] is Invalid
         calculated = ops._valueCheck calcFunction.apply runner.sheet, []
-        console.log 'calculated', calculated
         if calculated?._multipleValues?
           runner.slots[name] = calculated._multipleValues[0] or null
           if calculated._multipleValues.length > 1 then runner._queueEvents name, calculated._multipleValues[1..]
@@ -290,19 +284,6 @@ module.exports = class SheetRunner
       new Rx.BehaviorSubject( new FunctionError func.name, 'Sorry - this formula cannot be used')
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
-
-  _functionArg: (name) ->
-    switch
-      when func = @userFunctions[name] then @_userFunctionSubject(name) #.observeStream
-      when func = @providedFunctions[name] then @_providedFunctionStream func
-      else @_unknownUserFunctionSubject name
-
-  _providedFunctionStream: (func) ->
-    switch
-      when returnsStream(func) then func
-      when isRxObservable(func) then func
-      when func.length then new Rx.BehaviorSubject func
-      else new Rx.BehaviorSubject func()
 
   _inputItem: (name) =>
     stream = @inputStreams[name] or (@inputStreams[name] = [])
