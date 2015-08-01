@@ -57,13 +57,14 @@ module.exports = class SheetRunner
       when fn.kind is FunctionTypes.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
       when fn.returnKind is FunctionTypes.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
       when fn.returnKind is FunctionTypes.SEQUENCE_RETURN then @addProvidedSequenceFunction name, fn
+      when fn.returnKind is FunctionTypes.STREAM_RETURN then @addProvidedStreamReturnFunction name, fn
       else @_addProvidedFunction name, fn
 
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
 
   addProvidedTransformFunction: (name, fn) ->
     @_addProvidedFunction name, withKind(asImmediateFunction(fn), FunctionTypes.TRANSFORM)
-    fn.returnKind = FunctionTypes.TRANSFORM_STREAM
+    fn.kind = FunctionTypes.TRANSFORM_STREAM
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 

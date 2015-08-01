@@ -1,7 +1,7 @@
 should = require 'should'
 Rx = require 'rx'
 TextParser = require '../parser/TextParser'
-ReactiveRunner = require '../runtime/ReactiveRunner'
+SheetRunner = require '../runtime/SheetRunner'
 CoreFunctions = require './CoreFunctions'
 
 
@@ -23,23 +23,16 @@ describe 'CoreFunctions includes', ->
 
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
 
-  inputs = (items...) -> inputSubj.onNext i for i in items
-  inputs2 = (items...) -> input2Subj.onNext i for i in items
-  inputs3 = (items...) -> input3Subj.onNext i for i in items
+  inputs = (items...) -> runner.sendInput 'theInput', i for i in items
+  inputs2 = (items...) -> runner.sendInput 'theInput2',  i for i in items
+  inputs3 = (items...) -> runner.sendInput 'theInput3',  i for i in items
 
   beforeEach ->
-    runner = new ReactiveRunner()
+    runner = new SheetRunner()
     runner.addProvidedFunctions CoreFunctions
     changes = []
     runner.onValueChange callback
-    inputSubj = new Rx.Subject()
-    runner.addProvidedStream 'theInput', inputSubj
-
-    input2Subj = new Rx.Subject()
-    runner.addProvidedStream 'theInput2', input2Subj
-
-    input3Subj = new Rx.Subject()
-    runner.addProvidedStream 'theInput3', input3Subj
+    parseUserFunctions 'theInput = input; theInput2 = input; theInput3 = input;'
 
   describe 'withValues', ->
 
@@ -54,7 +47,7 @@ describe 'CoreFunctions includes', ->
 
              '''
       inputs null
-      changesFor('theLines').should.eql [null, ['', 'First line', 'Second line', '', 'Line 3', ''], []]
+      changesFor('theLines').should.eql [[], ['', 'First line', 'Second line', '', 'Line 3', ''], []]
 
     it 'nonEmptyLines - split text into lines, ignore empty lines, trim whitespace from others', ->
       parseUserFunctions 'theLines = nonEmptyLines(theInput)'
@@ -66,12 +59,12 @@ describe 'CoreFunctions includes', ->
               Line 3
 
              '''
-      changesFor('theLines').should.eql [null, ['First line', 'Second line', 'Line 3']]
+      changesFor('theLines').should.eql [[], ['First line', 'Second line', 'Line 3']]
 
     it 'nonEmptyLines - empty list for null input', ->
       parseUserFunctions 'theLines = nonEmptyLines(theInput)'
       inputs null
-      changesFor('theLines').should.eql [null, []]
+      changesFor('theLines').should.eql [[]]
 
     it 'fromCsvLine - comma or tab-separated text line to trimmed strings or numbers', ->
       parseUserFunctions 'theWords = fromCsvLine("these,are the , 4, words")'
@@ -178,45 +171,45 @@ describe 'CoreFunctions includes', ->
   describe 'with streams', ->
 
     it 'count - number of items', ->
-      parseUserFunctions 'itemCount = countOver( theInput )'
+      parseUserFunctions 'itemCount = count( all_theInput )'
       inputs 11, 22, 33
-      changesFor('itemCount').should.eql [null, 1,2,3]
+      changesFor('itemCount').should.eql [0, 1,2,3]
 
     it 'sum - add all items', ->
-      parseUserFunctions 'itemCount = sumOver( theInput )'
+      parseUserFunctions 'itemCount = sum( all_theInput )'
       inputs 11, 22, 44
-      changesFor('itemCount').should.eql [null, 11,33,77]
+      changesFor('itemCount').should.eql [0, 11,33,77]
 
     it 'first - first of items', ->
-      parseUserFunctions 'itemCount = firstOver( theInput )'
+      parseUserFunctions 'firstOne = first( all_theInput )'
       inputs 11, 22, 44
-      changesFor('itemCount').should.eql [null, 11]
+      changesFor('firstOne').should.eql [null, 11]
 
     it 'collect', ->
-      parseUserFunctions 'collected = collectOver( theInput )'
+      parseUserFunctions 'collected = collect( all_theInput )'
       inputs 11, 22, 44
-      changesFor('collected').should.eql [null, [11], [11, 22], [11, 22, 44]]
+      changesFor('collected').should.eql [[], [11], [11, 22], [11, 22, 44]]
 
     it 'collect is empty array with null initial value', ->
       parseUserFunctions 'plus1 = theInput + 1'
-      parseUserFunctions 'collected = collectOver( plus1 )'
+      parseUserFunctions 'collected = collect( all_plus1 )'
       inputs 10, 21, 43
       changesFor('collected').should.eql [[], [11], [11, 22], [11, 22, 44]]
 
     it 'sort', ->
-      parseUserFunctions 'sorted = sortOver( theInput )'
+      parseUserFunctions 'sorted = sort( all_theInput )'
       inputs 33,11,44,22
-      changesFor('sorted').should.eql [null, [33], [11, 33], [11, 33, 44], [11, 22, 33, 44]]
+      changesFor('sorted').should.eql [[], [33], [11, 33], [11, 33, 44], [11, 22, 33, 44]]
 
     it 'sortBy', ->
-      parseUserFunctions 'sorted = sortByOver( theInput, in.a )'
+      parseUserFunctions 'sorted = sortBy( all_theInput, in.a )'
       inputs {a: 33, b: "a"}, {a: 11, b:"b"}, {a:22, b:"c"}
-      changesFor('sorted').should.eql [null, [{a: 33, b: "a"}], [{a: 11, b:"b"}, {a: 33, b: "a"}], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
+      changesFor('sorted').should.eql [[], [{a: 33, b: "a"}], [{a: 11, b:"b"}, {a: 33, b: "a"}], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
 
     it 'differentValues', ->
-      parseUserFunctions 'distinct = differentValuesOver(theInput)'
+      parseUserFunctions 'distinct = differentValues(all_theInput)'
       inputs 11, 22, 44, 22, 11, 33, 11
-      changesFor('distinct').should.eql [null, 11, 22, 44, 33]
+      changesFor('distinct').should.eql [ [], [ 11 ], [ 11, 22 ], [ 11, 22, 44 ], [ 11, 22, 44, 33 ] ]
 
     it 'merge', ->
       parseUserFunctions 'merged = merge(theInput, theInput2)'
@@ -252,7 +245,10 @@ describe 'CoreFunctions includes', ->
       changesFor('snapshot').should.eql [null, {a:44, b:77}]
 
     it 'unpackLists - put each element separately into the output', ->
-      parseUserFunctions 'separateItems = unpackLists(theInput)'
-      inputs null, [33, 44, 66], 77, [], [88]
+      parseUserFunctions 'itemsIn = theInput'
+      parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'plusOne = items + 1'
+      inputs [33, 44, 66], [77], [], [88]
 
-      changesFor('separateItems').should.eql [null, null, 33, 44, 66, 77, 88]
+      changesFor('plusOne').should.eql [34, 45, 67, 78, 89]
+      changesFor('items').should.eql [33, 44, 66, 77, 88]

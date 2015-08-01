@@ -1,10 +1,10 @@
 Rx = require 'rx'
 Period = require './Period'
-ReactiveRunner = require '../runtime/ReactiveRunner'
+FunctionTypes = require '../runtime/FunctionTypes'
 
 pageLoadTime = new Date()
 
-streamReturn = (fn) -> fn.returnKind = ReactiveRunner.STREAM_RETURN; fn
+streamReturn = (fn) -> fn.returnKind = FunctionTypes.STREAM_RETURN; fn
 
 module.exports = {
   now: streamReturn (interval = 1000) -> Rx.Observable.interval(interval).startWith(new Date()).map(-> new Date())

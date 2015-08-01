@@ -1,13 +1,13 @@
 Rx = require 'rx'
 _ = require 'lodash'
-ReactiveRunner = require '../runtime/ReactiveRunner'
+FunctionTypes = require '../runtime/FunctionTypes'
 
-#transform = (fn) -> fn.kind = 'transform'; fn
-transformStream = (fn) -> fn.kind = ReactiveRunner.TRANSFORM_STREAM; fn
-aggregate = (fn) -> fn.returnKind = ReactiveRunner.AGGREGATE_RETURN; fn
-sequence = (fn) -> fn.returnKind = ReactiveRunner.SEQUENCE_RETURN; fn
-streamReturn = (fn) -> fn.returnKind = ReactiveRunner.STREAM_RETURN; fn
-stream = (fn) -> fn.kind = ReactiveRunner.STREAM; fn
+transform = (fn) -> fn.kind = 'transform'; fn
+transformStream = (fn) -> fn.kind = FunctionTypes.TRANSFORM_STREAM; fn
+aggregate = (fn) -> fn.returnKind = FunctionTypes.AGGREGATE_RETURN; fn
+sequence = (fn) -> fn.returnKind = FunctionTypes.SEQUENCE_RETURN; fn
+streamReturn = (fn) -> fn.returnKind = FunctionTypes.STREAM_RETURN; fn
+stream = (fn) -> fn.kind = FunctionTypes.STREAM; fn
 apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
 
 
@@ -32,12 +32,12 @@ module.exports = {
 
   count: aggregate (seq) -> seq.scan 0, (acc, x) -> acc + 1
   sum: aggregate (seq) -> seq.scan 0, (acc, x) -> acc + x
-  first: aggregate (seq) -> seq.first()
+  first: aggregate (seq) -> seq.scan null, (acc, x) -> acc ? x
   collect: aggregate (seq) -> seq.scan [], (acc, x) -> if x? then acc.concat(x) else acc
   sort: aggregate (seq) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x)
   sortBy: aggregate transformStream (seq, func) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x), func
 
-  unpackLists: stream (s) -> s.flatMap( (x) -> [].concat x)
+  unpackLists: streamReturn (s) -> s.flatMap( (x) -> [].concat x)
 
   ifElse: (test, trueValue, falseValue) -> if test then trueValue else falseValue
   and: (a, b) -> a and b
