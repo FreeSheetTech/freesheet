@@ -1,4 +1,5 @@
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
+FunctionTypes = require '../runtime/FunctionTypes'
 _ = require 'lodash'
 
 tracing = false
@@ -44,7 +45,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
 
   applyTransformFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }.bind(this)"
 
-  isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == 'transform'
+  isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == FunctionTypes.TRANSFORM
 
   getCodeAndAccumulateFunctions = (expr, localNames) ->
     allLocalNames = incomingLocalNames[..].concat localNames

@@ -3,14 +3,10 @@ Rx = require 'rx'
 SheetCodeGenerator = require '../code/SheetCodeGenerator'
 {CalculationError, FunctionError} = require '../error/Errors'
 Operations = require './Operations'
+FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
 
 module.exports = class SheetRunner
-  @TRANSFORM = 'transform'
-  @TRANSFORM_STREAM = 'transformStream'
-  @SEQUENCE_RETURN = 'sequenceReturn'
-  @STREAM_RETURN = 'streamReturn'
-  @AGGREGATE_RETURN = 'aggregateReturn'
 
   Invalid = '__INVALID__'
 
@@ -23,8 +19,8 @@ module.exports = class SheetRunner
       func(seq, f).subscribe (x) -> results.push x
 
     switch
-      when func.returnKind == SheetRunner.AGGREGATE_RETURN then _.last(results) ? null
-      when func.returnKind == SheetRunner.STREAM_RETURN then {_multipleValues: results }
+      when func.returnKind == FunctionTypes.AGGREGATE_RETURN then _.last(results) ? null
+      when func.returnKind == FunctionTypes.STREAM_RETURN then {_multipleValues: results }
       else results
 
   bufferedValueChangeStream = (valueChanges, trigger) ->
@@ -58,22 +54,22 @@ module.exports = class SheetRunner
 
   addProvidedFunction: (name, fn) ->
     switch
-      when fn.kind is SheetRunner.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
-      when fn.returnKind is SheetRunner.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
-      when fn.returnKind is SheetRunner.SEQUENCE_RETURN then @addProvidedSequenceFunction name, fn
+      when fn.kind is FunctionTypes.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
+      when fn.returnKind is FunctionTypes.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
+      when fn.returnKind is FunctionTypes.SEQUENCE_RETURN then @addProvidedSequenceFunction name, fn
       else @_addProvidedFunction name, fn
 
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
 
   addProvidedTransformFunction: (name, fn) ->
-    @_addProvidedFunction name, withKind(asImmediateFunction(fn), SheetRunner.TRANSFORM)
-    fn.returnKind = SheetRunner.TRANSFORM_STREAM
+    @_addProvidedFunction name, withKind(asImmediateFunction(fn), FunctionTypes.TRANSFORM)
+    fn.returnKind = FunctionTypes.TRANSFORM_STREAM
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
   addProvidedStreamReturnFunction: (name, fn) ->
     @_addProvidedFunction name, asImmediateFunction(fn)
-    fn.returnKind = SheetRunner.STREAM_RETURN
+    fn.returnKind = FunctionTypes.STREAM_RETURN
 
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
@@ -82,7 +78,7 @@ module.exports = class SheetRunner
 
   addProvidedAggregateFunction: (name, fn) ->
     @_addProvidedFunction name, asImmediateFunction(fn)
-    fn.returnKind = SheetRunner.AGGREGATE_RETURN
+    fn.returnKind = FunctionTypes.AGGREGATE_RETURN
 
   addProvidedAggregateFunctions: (functionMap) -> @addProvidedAggregateFunction n, f for n, f of functionMap
 
