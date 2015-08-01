@@ -20,13 +20,18 @@ module.exports = class SheetRunner
   returnsStream = (func) -> func.kind == SheetRunner.STREAM or func.kind == SheetRunner.TRANSFORM_STREAM or func.returnKind == SheetRunner.STREAM_RETURN or func.returnKind == SheetRunner.SEQUENCE_RETURN
   returnsAggregate = (func) -> func.returnKind == SheetRunner.AGGREGATE_RETURN
   withKind = (func, kind) -> func.kind = kind; func
+  withReturnKind = (func, kind) -> func.returnKind = kind; func
 
   asImmediateFunction = (func) -> (s, f) ->
     results = []
     if _.isArray s
       seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
       func(seq, f).subscribe (x) -> results.push x
-    if returnsAggregate(func) then _.last(results) ? null else results
+
+    switch
+      when returnsAggregate(func) then _.last(results) ? null
+      when func.returnKind == SheetRunner.STREAM_RETURN then {_multipleValues: results }
+      else results
 
   bufferedValueChangeStream = (valueChanges, trigger) ->
     collectChanges = (changes) -> _.zipObject(changes)
@@ -77,7 +82,10 @@ module.exports = class SheetRunner
 
   addProvidedStreamFunction: (name, fn) -> fn.kind = SheetRunner.STREAM; @_addProvidedFunction name, fn
   addProvidedStreamFunctions: (functionMap) -> @addProvidedStreamFunction n, f for n, f of functionMap
-  addProvidedStreamReturnFunction: (name, fn) -> fn.returnKind = SheetRunner.STREAM_RETURN; @_addProvidedFunction name, fn
+  addProvidedStreamReturnFunction: (name, fn) ->
+    @_addProvidedFunction name, asImmediateFunction(fn)
+    fn.returnKind = SheetRunner.STREAM_RETURN
+
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
   addProvidedSequenceFunction: (name, fn) ->
@@ -202,6 +210,11 @@ module.exports = class SheetRunner
 
   #  private functions
 
+  _queueEvents: (name, values) ->
+    console.log 'entering _queueEvents', name, values
+    @events.push [name, v] for v in values
+    console.log 'after _queueEvents', @events
+
   _newUserFunctionSubject: (name, initialValue) ->
     subj = new Rx.BehaviorSubject(initialValue)
     subj.valueChangesSub = subj.distinctUntilChanged().subscribe (value) =>
@@ -212,6 +225,7 @@ module.exports = class SheetRunner
 
   _processEvent: (event) ->
     [name, value] = event
+    console.log 'entering _processEvent', name, value
     @slots[name] = value
     @_invalidateDependents name  #TODO only if value has changed?
     @_updateDependentAllValues name
@@ -222,13 +236,11 @@ module.exports = class SheetRunner
     # TODO     does every all_ value currently
     @sheet.storedUpToDate[k] = false for k,a of @sheet.stored
     for n, f of @sheet when n.match /^all_/
-      console.log '_updateDependentAllValues', name, n
       f.apply(@sheet)
 
 
   _functionsUsing: (name) ->
     result = (n for n, f of @userFunctions when _.includes(@functionsUsedBy(n), name) or _.includes(@functionsUsedBy(n), 'all_' + name))
-    console.log '_functionsUsing', name, result
     result
 
   _recalculate: ->
@@ -246,11 +258,9 @@ module.exports = class SheetRunner
     runner = this
     ->
       storedValues = this.stored[name]
-      console.log '_allFunction', name, storedValues
       if not this.storedUpToDate[name]
         storedValues.push runner._sheetValue(name)
         this.storedUpToDate[name] = true
-        console.log '_allFunction updating', name, storedValues
 
       storedValues
 
@@ -259,7 +269,13 @@ module.exports = class SheetRunner
     ops = new Operations name
     ->
       if runner.slots[name] is Invalid
-        runner.slots[name] =  ops._valueCheck calcFunction.apply runner.sheet, []
+        calculated = ops._valueCheck calcFunction.apply runner.sheet, []
+        console.log 'calculated', calculated
+        if calculated?._multipleValues?
+          runner.slots[name] = calculated._multipleValues[0] or null
+          if calculated._multipleValues.length > 1 then runner._queueEvents name, calculated._multipleValues[1..]
+        else
+          runner.slots[name] = calculated
 
       runner.slots[name]
 

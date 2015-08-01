@@ -439,11 +439,7 @@ describe 'SheetRunner runs', ->
 
     it 'finds the totals of the sequence values in a stream using plain version and their running total', ->
       providedAggregateFunctions
-        total: (s) ->
-          console.log 'total', s
-          s.scan (acc, x) ->
-            console.log 'scan', acc, x
-            acc + x
+        total: (s) -> s.scan (acc, x) -> acc + x
       parseUserFunctions 'tot = total(theInput)'
       parseUserFunctions 'totAll = total(all_tot)'
 
@@ -479,6 +475,19 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'sq = fromEach(theInput, in * in)'
       inputs [2, 3, 4], [5, 6], [7]
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]       # TODO should first be null or []?
+
+    it 'usess items from unpacked lists', ->
+
+      providedStreamReturnFunctions
+        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
+
+      parseUserFunctions 'itemsIn = input'
+      parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'doubled = items * 2'
+      sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
+
+      changesFor("doubled").should.eql([0, 10, 14, 0, 18])
+
 
   describe 'updates dependent expressions and notifies changes', ->
     it 'to a constant value formula when it is set and changed', ->
@@ -562,7 +571,7 @@ describe 'SheetRunner runs', ->
   describe 'buffers value changes', ->
 
     it.skip 'for each input', ->
-      providedStreamFunctions
+      providedStreamReturnFunctions
         unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
 
       parseUserFunctions 'itemsIn = input'

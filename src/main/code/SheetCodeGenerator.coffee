@@ -170,7 +170,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
       functionName = expr.functionName
       accumulateFunctionName functionName
 
-      callCode = if returnsStream expr
+      callCode = if false #returnsStream expr
         args =  switch
           when isStreamFunction expr then (getStreamCodeAndAccumulateFunctions(e) for e in expr.children)
           when isTransformStreamFunction expr then [getStreamCodeAndAccumulateFunctions(expr.children[0]), applyTransformFunction(expr.children[1])]
