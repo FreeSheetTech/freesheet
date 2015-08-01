@@ -164,7 +164,7 @@ exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
     when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then expr.functionName
 
     when expr instanceof Input
-      "this.operations.input(\"#{expr.inputName}\")"
+      "null"
 
     when expr instanceof FunctionCall
       functionName = expr.functionName

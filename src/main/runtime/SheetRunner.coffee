@@ -1,5 +1,5 @@
 Rx = require 'rx'
-{Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector} = require '../ast/Expressions'
+{Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
 SheetCodeGenerator = require '../code/SheetCodeGenerator'
 Period = require '../functions/Period'
 {CalculationError, FunctionError} = require '../error/Errors'
@@ -43,14 +43,14 @@ module.exports = class SheetRunner
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
     @userFunctionImpls = {}
-    @inputStreams = {}
+    @inputs = {}
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
     @slots = {}
     @events = []
 
     @sheet = _.assign {}, @providedFunctions, {
-      operations: new Operations("a function", @_inputItem)
+      operations: new Operations("a function")
       stored: {}
       storedUpToDate: {}
     }
@@ -113,6 +113,7 @@ module.exports = class SheetRunner
       when funcDef.argDefs.length is 0 then @_cachedValueFunction name, functionImpl.theFunction
       else functionImpl.theFunction
 
+    if funcDef.expr instanceof Input then @inputs[name] = true
 
     @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
     if funcDef.argDefs.length is 0
@@ -162,15 +163,14 @@ module.exports = class SheetRunner
   onInputComplete: (callback) ->
     @inputCompleteSubject.subscribe -> callback()
 
-  getInputs: -> (k for k, v of @inputStreams)
+  getInputs: -> (k for k, v of @inputs)
 
   sendInput: (name, value) ->
     @sendPartialInput name, value
     @inputComplete()
 
   sendPartialInput: (name, value) ->
-    stream = @inputStreams[name]
-    throw  new Error 'Unknown input name' unless stream
+    throw  new Error 'Unknown input name' unless @inputs[name]?
     @events.push [name, value]
     @_processEvents()
 
@@ -277,15 +277,11 @@ module.exports = class SheetRunner
     if _.includes(@functionsUsedBy(func.name), func.name) then return new Rx.BehaviorSubject( new CalculationError func.name, 'Formula uses itself through another formula')
     ctx = {} # TODO use zipObject
     ctx[n] = @_functionArg(n) for n in functionNames
-    args = [new Operations(func.name, @_inputItem), ctx]
+    args = [new Operations(func.name), ctx]
     try
       theFunction.apply(null, args) #.observeOn(Rx.Scheduler.currentThread)
     catch e
       new Rx.BehaviorSubject( new FunctionError func.name, 'Sorry - this formula cannot be used')
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
-
-  _inputItem: (name) =>
-    stream = @inputStreams[name] or (@inputStreams[name] = [])
-    _.last(stream) or null
 
