@@ -171,7 +171,7 @@ module.exports = class SheetRunner
 
   sendPartialInput: (name, value) ->
     stream = @inputStreams[name]
-    throw   new Error 'Unknown input name' unless stream
+    throw  new Error 'Unknown input name' unless stream
     @events.push [name, value]
     @_processEvents()
 
@@ -179,15 +179,11 @@ module.exports = class SheetRunner
     throw new Error 'Unknown value name' unless @userFunctions[name]?.argDefs.length is 0
     @events.push [name, value]
     @_processEvents()
+    @inputComplete()
 
   inputComplete: ->
     @_recalculate()
     @inputCompleteSubject.onNext true
-
-  sendDebugInput: (name, value) ->
-    stream = @_userFunctionSubject(name)
-    throw new Error 'Unknown name' unless stream
-    stream.onNext value
 
   hasUserFunction: (name) -> @_userFunctionSubject(name)?
 

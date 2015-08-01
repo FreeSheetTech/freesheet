@@ -309,7 +309,7 @@ describe 'SheetRunner runs', ->
       runner.getInputs().should.eql ['theInput', 'in1']
       changes.should.eql [{in1: 20}, {in1: null}]
 
-    it.skip 'update other values when a debug input sent to any named value', ->
+    it 'update other values when a debug input sent to any named value', ->
       parseUserFunctions 'materials = none; taxRate = 0.2'
       parseUserFunctions 'total = materials * (1 + taxRate)'
 
@@ -322,7 +322,7 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'materials = input; taxRate = 0.2'
 
       (-> sendInput 'taxRate', 10).should.throw /Unknown input name/
-      (-> runner.sendDebugInput 'unknown', 10).should.throw /Unknown name/
+      (-> runner.sendDebugInput 'unknown', 10).should.throw /Unknown value name/
 
   describe 'errors in expression evaluation', ->
 
