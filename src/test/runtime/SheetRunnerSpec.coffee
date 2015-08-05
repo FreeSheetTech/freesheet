@@ -473,6 +473,19 @@ describe 'SheetRunner runs', ->
       inputs [2, 3, 4], [5, 6], [7]
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]       # TODO should first be null or []?
 
+    it 'does not collect items for all_ if a stream function returns no values', ->
+
+      providedStreamReturnFunctions
+        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
+
+      parseUserFunctions 'itemsIn = input'
+      parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'everyItem = all_items'
+
+      sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
+
+      changesFor("everyItem").should.eql([[4, 5, 7, 8, 9]])
+
     it 'uses items from unpacked lists', ->
 
       providedStreamReturnFunctions
@@ -483,7 +496,7 @@ describe 'SheetRunner runs', ->
       parseUserFunctions 'doubled = items * 2'
       sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
 
-      changesFor("doubled").should.eql([0, 10, 14, 0, 18])
+      changesFor("doubled").should.eql([0, 10, 14, 18])
 
     it 'collects all items from unpacked lists', ->
 
@@ -592,7 +605,7 @@ describe 'SheetRunner runs', ->
 
       bufferedChanges.should.eql [{itemsIn: [4, 5, 6]}, {items: 6}, {doubled: 12},
         {itemsIn: [7]}, {items: 7}, {doubled: 14},
-        {itemsIn: []}, {items: null}, {doubled: 0},
+        {itemsIn: []},
         {itemsIn: [8, 9]}, {items: 9}, {doubled: 18}]
 
 

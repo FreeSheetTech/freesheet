@@ -8,8 +8,6 @@ _ = require 'lodash'
 
 module.exports = class SheetRunner
 
-  Invalid = '__INVALID__'
-
   withKind = (func, kind) -> func.kind = kind; func
 
   asImmediateFunction = (func) -> (s, f) ->
@@ -38,6 +36,7 @@ module.exports = class SheetRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
     @slots = {}
+    @valid = {}
     @events = []
 
     @sheet = _.assign {}, @providedFunctions, {
@@ -100,7 +99,8 @@ module.exports = class SheetRunner
 
     @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
     if funcDef.argDefs.length is 0
-      @slots[name] = Invalid
+      @slots[name] = null
+      @valid[name] = false
       @sheet.stored[name] = []
       @sheet.storedUpToDate[name] = true
       @sheet['all_' + name] = @_allFunction name
@@ -125,6 +125,7 @@ module.exports = class SheetRunner
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
       delete @slots[functionName]
+      delete @valid[functionName]
       @sheet[functionName] = unknownNameFunction(functionName)
       @_recalculate()
 
@@ -203,7 +204,7 @@ module.exports = class SheetRunner
     @_invalidateDependents name  #TODO only if value has changed?
     @_updateDependentAllValues name
 
-  _invalidateDependents: (name) -> @slots[n] = Invalid for n in @_functionsUsing name
+  _invalidateDependents: (name) -> @valid[n] = false for n in @_functionsUsing name
 
   _updateDependentAllValues: (name) ->
     # TODO     does every all_ value currently
@@ -241,13 +242,16 @@ module.exports = class SheetRunner
     runner = this
     ops = new Operations name
     ->
-      if runner.slots[name] is Invalid
+      if !runner.valid[name]
         calculated = ops._valueCheck calcFunction.apply runner.sheet, []
         if calculated?._multipleValues?
-          runner.slots[name] = calculated._multipleValues[0] or null
+          if calculated._multipleValues.length > 0 then runner.slots[name] = calculated._multipleValues[0]
           if calculated._multipleValues.length > 1 then runner._queueEvents name, calculated._multipleValues[1..]
         else
           runner.slots[name] = calculated
+
+        runner.valid[name] = true
+
 
       runner.slots[name]
 
