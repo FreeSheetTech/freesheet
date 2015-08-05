@@ -43,9 +43,9 @@ Stage 1 of all_xyz
     - all_xyz calls xyz() and pushes on array if upToDate false, sets upTodate to true
     - Call every all_xyz after each partial input to ensure that input recorded
 
-Functions producing multiple outputs for one input
---------------------------------------------------
-- eg flatten/unpackLists
+Stream Functions - producing zero or more outputs for one input
+---------------------------------------------------------------
+- eg merge, onchange, flatten/unpackLists
 - When function called, need to know it is multiple outputs, not just one sequence
 - Only reason need to see all of them and not just last one is if accumulating a downstream value in all_
 - Poss: put each value in turn in the slot for that name, then recalculate every down stream all_
@@ -56,6 +56,10 @@ Functions producing multiple outputs for one input
 - If multiple output values, set each in slot and recalculate in turn
 - Need to get multiple sheet value change events
 - If subscribed to value changes on all_xyz, that would force separate events
+- Could use Rx
+- Could detect new values in inputs
+- If no new value, named value is not updated
+- If know current event name, can see which args to a function depend on it
 
 
 Multiple outputs example
@@ -91,6 +95,58 @@ Events on sheet
   - queue up remaining values as events for this slot
   - return slot value
 - Functions just do what they say on tin - return multiple values if there are multiple values - sheet uses that
+
+New value question
+------------------
+- Key to making the sheet work is being able to answer the questions: has this function got a new value?
+- Second, separate question is: has this function got a changed value?
+- A new value means a new event through the chain from an input
+- At a stream function, there may or may not be a new value
+- A normal function needs to know whether any of its input expressions have a changed value
+- A stream function needs to know which of its input expressions have a new value to decide whether it has a new value
+- Essential for stream function, possible optimisation for normal function
+
+Pull or push?
+-------------
+- Input event can find all values that are dependent on it and invalidate/recalculate them
+- Values can recalculate themselves and all the values they depend on in turn
+- Stream functions change the question because they may or may not produce new values for their dependents
+- Must capture new values for all_ functions after every input but don't want to recalculate others until input complete
+- Poss: new value pass and changed value pass
+- Poss: push - for each input with new value, recalculate immediate descendants.
+- Linked with other differing views: analogue/digital, event/signal
+- Events and time dimenstion bring two things: outputs based on event arriving, and memory of previous inputs
+
+
+New value implementations
+-------------------------
+- Stream function needs to be able to have a call like newValue(expr) that returns the value or 'no new value'
+- An all_ function needs the same
+- Maybe getValue, returns a wrapper with value and new flag
+- Maybe hasNewValue(expr)
+- Poss: listeners for which functions called, look for ones hitting the new input
+- What happens when go through multiple stream functions?
+- Maybe all_ and cached value call getNewValue(expr) - expr needs to be a function
+- In cached value, expr is a function anyway.  In stream functions, need to generate code that way
+- Poss: event cycle and input cycle (to complete) - store value state just for this cycle
+- When get to new value, which may not be an input, don't need to go any further
+- Things to know about each value: the value, is valid, is changed, is new
+- Poss: each cached value function logs the call.  One use for this is tracing, another is to flag if new value hit
+- New value would also need to be true for all cached values that depend on it, until hit a stream function
+- New value cannot be determined just by dependency tree - actually need to do the calculation - so favour pull approach
+- When pull reaches a stream function, that function determines whether value is new or not
+- What happens with stream functions used in expressions within a function?  What if no new value? No new value for this function either?
+- When no there is no new value, need to cache that so don't ask again
+
+Input cycle
+-----------
+- Sheet has steady state, and input cycle with nested event cycle
+- Do not allow partial inputs - can't have clients leaving sheet in an inconsistent state
+- Do allow multiple inputs treated as one 'transaction'
+- Steady data: functions, current value, all values
+- Input cycle: invalid current values, invalid all values, changed values
+- Event cycle: new values
+
 
 Errors in cached values
 -----------------------
@@ -149,3 +205,49 @@ Storing state
 - Don't memoise functions that don't call other functions
 - Memoise functions that call an all_xyz anywhere below them
 - Memoise no-args functions
+
+Full recalculation approach
+---------------------------
+- Could this work?
+- Pull point of view
+- Idea is that calculating values once not too expensive - it's many times that hurts
+- Cache each value
+- No invalidation - just recalculate everything
+- Use Rx or just compare with previous sheet to see which values have changed
+- New sheet after every input/event
+- Time dimension for all_ and stream functions
+- Sort of functional approach: current state, event -> new state
+- Stream functions could be regarded as inputs that supply themselves - even for first/only value
+
+Transformer network approach
+----------------------------
+- Combines Push point of view and pull point of view
+- Every named value is a node that knows its dependents
+- Or knows its dependents' names to allow loose coupling
+- Each node can calculate its value
+- Each node pushes events to dependents
+- Still use generated simple functions
+
+
+Incremental state approach
+--------------------------
+- Cache is dumb
+- Input cycle function maps old cache, functions, events -> new cache, new values, changed values
+
+New values approach
+------------------
+- Generated functions return only a set of new values - which may be empty
+- Cannot be used for static calculations - or maybe it can if supply no old values
+- Lose closeness with underlying FS expressions - but that only held for static functions anyway
+- Functions must return a new value iff input expr or arguments is a new value
+- Values passed into functions are always wrapped
+- Input function returns a new value if the event is for it
+- Functions called with a this which contains the operations and a datastore for storing persistent data like past values
+- Need a different data store for every use of the function
+- Could this lead to easy memoisation?
+- Can implement all() with this mechanism
+- Good to allow swapping expression while maintaining existing stored values
+- Code gen: all operations functions with value sets, or collect other functions used and pass values into function args
+- Or forget code generation - just create a network of function objects
+- Decouple by name at function boundaries to allow replacement
+

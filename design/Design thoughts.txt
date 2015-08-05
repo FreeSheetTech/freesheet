@@ -571,6 +571,8 @@ Design philosophy (or just how it turned out)
 - Flexible parts do could have use different syntax, different runners, different worksheets, etc
 - AST exposed, use for dev tools
 - Could gen AST differently
+- It's the time dimension that makes it hard
+
 
 Random stuff
 ------------
@@ -586,6 +588,7 @@ Random stuff
 - Sell app by one-off sub to registered users
 - Use for configuring a conventional app - write connector funcs
 - Poker or other card game
+- Run test suite for every sheet in the store before a release
 
 
 FA Cup simulation

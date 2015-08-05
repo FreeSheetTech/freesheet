@@ -50,3 +50,16 @@ Programming in the page
 - How make it clear to user they are editing a shared resource
 - Can you edit a worksheet on its own outside a page?
 
+Pages
+-----
+- Every page is a web component
+- Every page can be shown standalone
+- Can be embedded in others and get its own data
+- Can make its data available to the page
+- Can be embedded just for its data, without UI
+- Web pages can have places for content where other things can be embedded
+- Some pages may exist just as templates - embed them in a page and fill them in
+- Components in page can have attrs set from values of other components
+- Each component advertises its values under compname.valuename
+- List components could advertise current selection, which controls another comp to display it's details
+
