@@ -1,0 +1,35 @@
+Function object runner
+----------------------
+
+- Construct a tree of function evaluator objects reflecting the AST
+- Each object responsible for evaluation and caching etc
+- No code generation
+
+New values approach
+------------------
+- Function evaluators return only a set of new values - which may be empty
+- Can be used for static calculations - if supply no old values
+- Lose closeness with underlying FS expressions - but that only held for static functions anyway
+- Functions must return a new value iff input expr or arguments is a new value
+- Values passed into functions are always as value lists
+- Input function returns a new value if the event is for it
+- Functions called with a this which contains the operations and a datastore for storing persistent data like past values
+- Need a different data store for every use of the function
+- Could this lead to easy memoisation?
+- Can implement all() with this mechanism - so don't need stored values for every named value
+- Good to allow swapping expression while maintaining existing stored values
+- Code gen: all operations functions with value sets, or collect other functions used and pass values into function args
+- Decouple by name at function boundaries to allow replacement
+- Can have standard way of wrapping functions to allow passing in value lists
+- Concept of new values only exists during an event cycle, whereas latest value remains between cycles
+
+
+Literals
+--------
+- Have a new value once, then never again
+
+
+Thoughts
+--------
+- This is like reactive streams, acting on new values, but pulling, not pushing
+- Proactive programming?
