@@ -1,92 +1,10 @@
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
+Eval = require './ExpressionEvaluators'
 FunctionTypes = require '../runtime/FunctionTypes'
 _ = require 'lodash'
 
 tracing = false
 trace = (onOff) -> tracing = onOff
-
-NotCalculated = 'NOT_CALCULATED'
-
-class LiteralValue
-  constructor: (@expr, @value) ->
-    @values = [@value]
-    @latest = @value
-
-  newValues: ->
-#    console.log 'newValues', this
-    @values
-
-  latestValue: -> @latest
-
-  reset: -> @values = []
-
-class Add
-  constructor: (@expr, @left, @right) ->
-    @values = NotCalculated
-    @latest = NotCalculated
-
-  newValues: ->
-    if @values is NotCalculated
-      leftValues = @left.newValues()
-      rightValues = @right.newValues()
-      if leftValues.length or rightValues.length
-        @values = [@left.latestValue() + @right.latestValue()]
-        @latest = NotCalculated
-    @values
-
-  latestValue: ->
-    @newValues() #ensure use any new values
-    if @latest is NotCalculated
-      @latest = @left.latestValue() + @right.latestValue()
-    @latest
-
-  reset: -> @values = NotCalculated
-
-class Subtract
-  constructor: (@expr, @left, @right) ->
-    @values = NotCalculated
-    @latest = NotCalculated
-
-  newValues: ->
-    if @values is NotCalculated
-      leftValues = @left.newValues()
-      rightValues = @right.newValues()
-      if leftValues.length or rightValues.length
-        @values = [@left.latestValue() - @right.latestValue()]
-        @latest = NotCalculated
-    @values
-
-  latestValue: ->
-    @newValues() #ensure use any new values
-    if @latest is NotCalculated
-      @latest = @left.latestValue() - @right.latestValue()
-    @latest
-
-  reset: -> @values = NotCalculated
-
-class FunctionCallNoArgs
-  constructor: (@expr, @name, @sheet) ->
-    @values = NotCalculated
-    @latest = NotCalculated
-
-  newValues: ->
-    if @values is NotCalculated
-      @values = @sheet[@name].newValues()
-      if @values.length
-        @latest = NotCalculated
-
-#    console.log 'newValues', this
-    @values
-
-  latestValue: ->
-    @newValues() #ensure use any new values
-    if @latest is NotCalculated
-      @latest = @sheet[@name].latestValue()
-
-#    console.log 'latestValue', this
-    @latest
-
-  reset: -> @values = NotCalculated
 
 jsOperator = (op) ->
   switch op
@@ -116,14 +34,14 @@ exprFunction = (funcDef, functionInfo, sheet) ->
 
     code = switch
       when expr instanceof Literal
-        new LiteralValue expr, expr.value
+        new Eval.Literal expr, expr.value
 
       when expr instanceof InfixExpression
         left = getCodeAndAccumulateFunctions expr.children[0]
         right = getCodeAndAccumulateFunctions expr.children[1]
         switch expr.operator
-          when '+' then new Add expr, left, right
-          when '-' then new Subtract expr, left, right
+          when '+' then new Eval.Add expr, left, right
+          when '-' then new Eval.Subtract expr, left, right
           else "(#{left} #{jsOperator(expr.operator)} #{right})"
 
       when expr instanceof Aggregation
@@ -161,7 +79,7 @@ exprFunction = (funcDef, functionInfo, sheet) ->
                 else
                   (getCodeAndAccumulateFunctions(e) for e in expr.children)
 
-        new FunctionCallNoArgs expr, functionName, sheet
+        new Eval.FunctionCallNoArgs expr, functionName, sheet
 
       else
         throw new Error("FunctionObjectGenerator: Unknown expression: " + expr?.constructor.name)
