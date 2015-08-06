@@ -1,58 +1,15 @@
 NotCalculated = 'NOT_CALCULATED'
 
-class Literal
-  constructor: (@expr, @value) ->
-    @values = [@value]
-    @latest = @value
-
-  newValues: ->
-#    console.log 'newValues', this
-    @values
-
-  latestValue: -> @latest
-
-  reset: -> @values = []
-
-class BinaryOperator
-  constructor: (@expr, @left, @right) ->
-    @values = NotCalculated
-    @latest = NotCalculated
-
-  op: (a, b) -> throw new Error('op must be defined')
-
-  newValues: ->
-    if @values is NotCalculated
-      leftValues = @left.newValues()
-      rightValues = @right.newValues()
-      if leftValues.length or rightValues.length
-        @values = [@op(@left.latestValue(), @right.latestValue())]
-        @latest = NotCalculated
-    @values
-
-  latestValue: ->
-    @newValues() #ensure use any new values
-    if @latest is NotCalculated
-      @latest = @op @left.latestValue(), @right.latestValue()
-    @latest
-
-  reset: -> @values = NotCalculated
-
-class Add extends BinaryOperator
-  op: (a, b) -> a + b
-
-class Subtract extends BinaryOperator
-  op: (a, b) -> a - b
-
-class FunctionCallNoArgs
-  constructor: (@expr, @name, @sheet) ->
+class Evaluator
+  constructor: (@expr) ->
     @values = NotCalculated
     @latest = NotCalculated
 
   newValues: ->
     if @values is NotCalculated
-      @values = @sheet[@name].newValues()
+      @values = @getNewValues()
       if @values.length
-        @latest = NotCalculated
+        @latest = @values[0]
 
     #    console.log 'newValues', this
     @values
@@ -60,11 +17,48 @@ class FunctionCallNoArgs
   latestValue: ->
     @newValues() #ensure use any new values
     if @latest is NotCalculated
-      @latest = @sheet[@name].latestValue()
+      @latest = @getLatestValue()
 
     #    console.log 'latestValue', this
     @latest
 
+  getNewValues: -> throw new Error('getNewValues must be defined')
+  getLatestValue: -> throw new Error('getLatestValue must be defined')
+
   reset: -> @values = NotCalculated
+
+class Literal extends Evaluator
+  constructor: (expr, value) ->
+    super expr
+    @values = [value]
+    @latest = value
+
+  reset: -> @values = []
+
+
+class BinaryOperator extends Evaluator
+  constructor: (expr, @left, @right) -> super expr
+
+  op: (a, b) -> throw new Error('op must be defined')
+
+  getNewValues: ->
+    leftValues = @left.newValues()
+    rightValues = @right.newValues()
+    if leftValues.length or rightValues.length
+      [@op(@left.latestValue(), @right.latestValue())]
+    else []
+
+  getLatestValue: -> @op @left.latestValue(), @right.latestValue()
+
+class Add extends BinaryOperator
+  op: (a, b) -> a + b
+
+class Subtract extends BinaryOperator
+  op: (a, b) -> a - b
+
+class FunctionCallNoArgs extends Evaluator
+  constructor: (@expr, @name, @sheet) -> super expr
+  getNewValues: -> @sheet[@name].newValues()
+  getLatestValue: -> @sheet[@name].latestValue()
 
 module.exports = {Literal, Add, Subtract, FunctionCallNoArgs}
