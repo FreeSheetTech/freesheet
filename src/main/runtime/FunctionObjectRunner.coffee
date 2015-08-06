@@ -87,7 +87,7 @@ module.exports = class SheetRunner
     replacing = @userFunctions[name]?
     if replacing then @_invalidateDependents name
     @userFunctions[name] = funcDef
-    functionImpl = FunctionObjectGenerator.exprFunction funcDef, @_functionInfo()
+    functionImpl = FunctionObjectGenerator.exprFunction funcDef, @_functionInfo(), @sheet
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'
@@ -106,7 +106,7 @@ module.exports = class SheetRunner
       @sheet['all_' + name] = @_allFunction name
 
 
-    @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue name))
+    @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue(name) or null))
     @_recalculate()
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
@@ -223,6 +223,7 @@ module.exports = class SheetRunner
       f.theFunction.reset()
 
   _newValues: (name) ->
+#    console.log '_newValues', name, @sheet[name]
     ops = new Operations name
     try
       @sheet[name].newValues()
@@ -245,23 +246,6 @@ module.exports = class SheetRunner
         this.storedUpToDate[name] = true
 
       storedValues
-
-  _cachedValueFunction: (name, calcFunction) ->
-    runner = this
-    ops = new Operations name
-    ->
-      if !runner.valid[name]
-        calculated = ops._valueCheck calcFunction.apply runner.sheet, []
-        if calculated?._multipleValues?
-          if calculated._multipleValues.length > 0 then runner.slots[name] = calculated._multipleValues[0]
-          if calculated._multipleValues.length > 1 then runner._queueEvents name, calculated._multipleValues[1..]
-        else
-          runner.slots[name] = calculated
-
-        runner.valid[name] = true
-
-
-      runner.slots[name]
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
 

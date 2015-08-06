@@ -66,15 +66,21 @@ describe 'FunctionObjectRunner runs', ->
 
       changes.should.eql [{a: 100}]
 
+    it 'function calls to constant value', ->
+      parseUserFunctions 'a = 100'
+      parseUserFunctions 'p = a'
+
+      changes.should.eql [{a: 100}, {p: 100}]
+
     it.only 'all arithmetic operations on numbers', ->
       parseUserFunctions 'a=100'
       parseUserFunctions '  x=3+2  '
       parseUserFunctions '  p=a+2  '
       parseUserFunctions 'q = 150   -  a  '
-      parseUserFunctions 'r =1200 / a'
-      parseUserFunctions 's= a * 5.2'
+#      parseUserFunctions 'r =1200 / a'
+#      parseUserFunctions 's= a * 5.2'
 
-      changes.should.eql [{a: 100}, {x: 5}, {p: 102}, {q: 50}, {r :12}, {s: 520}]
+      changes.should.eql [{a: 100}, {x: 5}, {p: 102}, {q: 50}]#, {r :12}, {s: 520}]
 
     it 'operations with null', ->
       parseUserFunctions 'a=100 + none'
