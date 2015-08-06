@@ -6,13 +6,6 @@ _ = require 'lodash'
 tracing = false
 trace = (onOff) -> tracing = onOff
 
-jsOperator = (op) ->
-  switch op
-    when '<>' then '!='
-    when 'and' then '&&'
-    when 'or' then '||'
-    else op
-
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
 exprFunction = (funcDef, functionInfo, sheet) ->
@@ -50,6 +43,8 @@ exprFunction = (funcDef, functionInfo, sheet) ->
           when '<' then new Eval.Lt expr, left, right
           when '>=' then new Eval.GtEq expr, left, right
           when '<=' then new Eval.LtEq expr, left, right
+          when 'and' then new Eval.And expr, left, right
+          when 'or' then new Eval.Or expr, left, right
           else throw new Error "Unknown operator: #{expr.operator}"
 
       when expr instanceof Aggregation

@@ -1,3 +1,6 @@
+_ = require 'lodash'
+Period = require '../functions/Period'
+{CalculationError} = require '../error/Errors'
 NotCalculated = 'NOT_CALCULATED'
 
 class Evaluator
@@ -51,7 +54,19 @@ class BinaryOperator extends Evaluator
   getLatestValue: -> @op @left.latestValue(), @right.latestValue()
 
 class Add extends BinaryOperator
-  op: (a, b) -> a + b
+  op: (a, b) ->
+    switch
+      when a instanceof Period and b instanceof Period
+        new Period(a.millis + b.millis)
+      when a instanceof Date and b instanceof Period
+        new Date(a.getTime() + b.millis)
+      when _.isPlainObject(a) and _.isPlainObject(b)
+        _.merge {}, a, b
+      when _.isArray(a) and _.isArray(b)
+        a.concat b
+      else
+        a + b
+
 
 class Subtract extends BinaryOperator
   op: (a, b) -> a - b
@@ -80,9 +95,15 @@ class Lt extends BinaryOperator
 class LtEq extends BinaryOperator
   op: (a, b) -> a <= b
 
+class And extends BinaryOperator
+  op: (a, b) -> a && b
+
+class Or extends BinaryOperator
+  op: (a, b) -> a || b
+
 class FunctionCallNoArgs extends Evaluator
   constructor: (@expr, @name, @sheet) -> super expr
   getNewValues: -> @sheet[@name].newValues()
   getLatestValue: -> @sheet[@name].latestValue()
 
-module.exports = {Literal, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, FunctionCallNoArgs}
+module.exports = {Literal, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or, FunctionCallNoArgs}
