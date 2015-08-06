@@ -106,7 +106,7 @@ module.exports = class SheetRunner
       @sheet['all_' + name] = @_allFunction name
 
 
-    @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue(name) or null))
+    @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue(name) ? null))
     @_recalculate()
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList

@@ -56,9 +56,33 @@ class Add extends BinaryOperator
 class Subtract extends BinaryOperator
   op: (a, b) -> a - b
 
+class Multiply extends BinaryOperator
+  op: (a, b) -> a * b
+
+class Divide extends BinaryOperator
+  op: (a, b) -> a / b
+
+class Eq extends BinaryOperator
+  op: (a, b) -> a == b
+
+class NotEq extends BinaryOperator
+  op: (a, b) -> a != b
+
+class Gt extends BinaryOperator
+  op: (a, b) -> a > b
+
+class GtEq extends BinaryOperator
+  op: (a, b) -> a >= b
+
+class Lt extends BinaryOperator
+  op: (a, b) -> a < b
+
+class LtEq extends BinaryOperator
+  op: (a, b) -> a <= b
+
 class FunctionCallNoArgs extends Evaluator
   constructor: (@expr, @name, @sheet) -> super expr
   getNewValues: -> @sheet[@name].newValues()
   getLatestValue: -> @sheet[@name].latestValue()
 
-module.exports = {Literal, Add, Subtract, FunctionCallNoArgs}
+module.exports = {Literal, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, FunctionCallNoArgs}
