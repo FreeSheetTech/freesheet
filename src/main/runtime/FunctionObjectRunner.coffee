@@ -6,7 +6,7 @@ Operations = require './Operations'
 FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
 
-module.exports = class SheetRunner
+module.exports = class FunctionObjectRunner
 
   withKind = (func, kind) -> func.kind = kind; func
 
@@ -49,7 +49,7 @@ module.exports = class SheetRunner
 # TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->
     @providedFunctions[name] = fn
-    @sheet[name] = fn
+#    @sheet[name] = fn
 
   addProvidedFunction: (name, fn) ->
     switch
@@ -86,8 +86,9 @@ module.exports = class SheetRunner
     name = funcDef.name
     replacing = @userFunctions[name]?
     if replacing then @_invalidateDependents name
+    @_reset()
     @userFunctions[name] = funcDef
-    functionImpl = FunctionObjectGenerator.exprFunction funcDef, @_functionInfo(), @sheet
+    functionImpl = FunctionObjectGenerator.exprFunction funcDef, @_functionInfo(), @sheet, @providedFunctions, @_getCurrentEvent
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'
@@ -97,7 +98,7 @@ module.exports = class SheetRunner
 
     if funcDef.expr instanceof Input then @inputs[name] = true
 
-    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]?
+    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
       @slots[name] = null
       @valid[name] = false
@@ -125,6 +126,7 @@ module.exports = class SheetRunner
       delete @slots[functionName]
       delete @valid[functionName]
       @sheet[functionName] = unknownNameFunction(functionName)
+      @_reset()
       @_recalculate()
 
   onValueChange: (callback, name) ->
@@ -198,9 +200,13 @@ module.exports = class SheetRunner
 
   _processEvent: (event) ->
     [name, value] = event
+    @_reset()
+    @currentEvent = {name, value}
     @slots[name] = value
     @_invalidateDependents name  #TODO only if value has changed?
     @_updateDependentAllValues name
+    @_recalculate()
+    @currentEvent = null
 
   _invalidateDependents: (name) -> @valid[n] = false for n in @_functionsUsing name
 
@@ -215,12 +221,14 @@ module.exports = class SheetRunner
     result = (n for n, f of @userFunctions when _.includes(@functionsUsedBy(n), name) or _.includes(@functionsUsedBy(n), 'all_' + name))
     result
 
+  _reset: ->
+    for n, f of @userFunctionImpls
+      f.theFunction.reset()
+
   _recalculate: ->
     for name, subj of @userFunctionSubjects
       newVals = @_newValues name
-#      if (newVals.length) then subj.onNext newVals[0]
-    for n, f of @userFunctionImpls
-      f.theFunction.reset()
+      if (newVals.length) then subj.onNext @_sheetValue name
 
   _newValues: (name) ->
 #    console.log '_newValues', name, @sheet[name]
@@ -249,3 +257,4 @@ module.exports = class SheetRunner
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
 
+  _getCurrentEvent: => @currentEvent

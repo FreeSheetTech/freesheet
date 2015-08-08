@@ -45,7 +45,7 @@ describe 'FunctionObjectRunner runs', ->
 
   beforeEach ->
     runner = new FunctionObjectRunner()
-#    parseUserFunctions 'theInput = input'
+    parseUserFunctions 'theInput = input'
 
     changes = []
     bufferedChanges = []
@@ -189,8 +189,8 @@ describe 'FunctionObjectRunner runs', ->
       changesFor('five').should.eql [5]
 
     it 'function using a provided value function with no args', ->
-      ((functionMap) -> providedFunctions functionMap) { theInput: -> 20 }
-      parseUserFunctions '''inputMinusTwo = theInput() - 2 '''
+      ((functionMap) -> providedFunctions functionMap) { theNumber: -> 20 }
+      parseUserFunctions '''inputMinusTwo = theNumber() - 2 '''
       changesFor('inputMinusTwo').should.eql [18]
 
     it 'function using a provided value function with some args', ->

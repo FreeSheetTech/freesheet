@@ -8,7 +8,7 @@ trace = (onOff) -> tracing = onOff
 
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
-exprFunction = (funcDef, functionInfo, sheet) ->
+exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent) ->
 
   exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
     functionNames = []
@@ -71,7 +71,7 @@ exprFunction = (funcDef, functionInfo, sheet) ->
       when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then expr.functionName
 
       when expr instanceof Input
-        "null"
+        new Eval.Input expr, expr.inputName, getCurrentEvent
 
       when expr instanceof FunctionCall
         functionName = expr.functionName
@@ -82,7 +82,10 @@ exprFunction = (funcDef, functionInfo, sheet) ->
                 else
                   (getCodeAndAccumulateFunctions(e) for e in expr.children)
 
-        new Eval.FunctionCallNoArgs expr, functionName, sheet
+        if args.length
+          new Eval.FunctionCallWithArgs expr, functionName, args, sheet, providedFunctions
+        else
+          new Eval.FunctionCallNoArgs expr, functionName, sheet, providedFunctions
 
       else
         throw new Error("FunctionObjectGenerator: Unknown expression: " + expr?.constructor.name)

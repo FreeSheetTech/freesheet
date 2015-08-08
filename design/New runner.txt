@@ -251,3 +251,13 @@ New values approach
 - Or forget code generation - just create a network of function objects
 - Decouple by name at function boundaries to allow replacement
 
+Provided functions
+------------------------
+- For simple function only:
+- Wrapped in ExpressionEvaluator
+- New instance each time used
+- getNewValues: if any arg has new values, array with getLatestValue
+- getLatestValue: function called on latestValues for each arg
+- Should give new values if function itself is changed
+
+
