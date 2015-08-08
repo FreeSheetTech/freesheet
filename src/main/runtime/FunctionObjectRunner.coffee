@@ -2,6 +2,7 @@ Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
 FunctionObjectGenerator = require '../code/FunctionObjectGenerator'
 {CalculationError, FunctionError} = require '../error/Errors'
+Eval = require '../code/ExpressionEvaluators'
 Operations = require './Operations'
 FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
@@ -25,7 +26,7 @@ module.exports = class FunctionObjectRunner
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
-  errorFunction = (name, message) -> -> throw new CalculationError(name, "#{message}: " + name)
+  errorFunction = (name, message) -> new Eval.Error(new CalculationError name, "#{message}: #{name}")
   unknownNameFunction = (name) -> errorFunction name, 'Unknown name'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
@@ -125,8 +126,8 @@ module.exports = class FunctionObjectRunner
           delete @userFunctionImpls[subjName]
       delete @slots[functionName]
       delete @valid[functionName]
-      @sheet[functionName] = unknownNameFunction(functionName)
       @_reset()
+      @sheet[functionName] = unknownNameFunction(functionName)
       @_recalculate()
 
   onValueChange: (callback, name) ->

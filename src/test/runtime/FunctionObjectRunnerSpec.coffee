@@ -313,7 +313,7 @@ describe 'FunctionObjectRunner runs', ->
       runner.getInputs().should.eql ['theInput', 'in1']
       changes.should.eql [{in1: 20}, {in1: null}]
 
-    it 'update other values when a debug input sent to any named value', ->
+    it.skip 'update other values when a debug input sent to any named value', ->
       parseUserFunctions 'materials = none; taxRate = 0.2'
       parseUserFunctions 'total = materials * (1 + taxRate)'
 

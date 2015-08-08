@@ -2,14 +2,18 @@ _ = require 'lodash'
 Period = require '../functions/Period'
 {CalculationError} = require '../error/Errors'
 NotCalculated = 'NOT_CALCULATED'
+Initial = 'INITIAL'
 
 class Evaluator
   constructor: (@expr, @values) ->
     @latest = NotCalculated
 
   newValues: ->
-    if @values is NotCalculated
+    if @values is Initial
+      @values =[@getLatestValue()]
+    else if @values is NotCalculated
       @values = @getNewValues()
+
     if @values.length
       @latest = @values[0]
 
@@ -40,6 +44,14 @@ class Literal extends Evaluator
   reset: -> @values = []
   resetChildExprs: ->
 
+class Error extends Evaluator
+  constructor: (error) ->
+    super null, [error]
+    @latest = error
+
+  reset: -> @values = []
+  resetChildExprs: ->
+
 class Input extends Evaluator
   constructor: (expr, @inputName, @getCurrentEvent) ->
     super expr, [null]
@@ -54,7 +66,7 @@ class Input extends Evaluator
 
 class BinaryOperator extends Evaluator
   constructor: (expr, @left, @right) ->
-    super expr, [@getLatestValue()]
+    super expr, Initial
 
   op: (a, b) -> throw new Error('op must be defined')
 
@@ -65,7 +77,14 @@ class BinaryOperator extends Evaluator
       [@getLatestValue()]
     else []
 
-  getLatestValue: -> @op @left.latestValue(), @right.latestValue()
+  getLatestValue: ->
+    leftVal = @left.latestValue()
+    rightVal = @right.latestValue()
+    switch
+      when leftVal instanceof CalculationError then leftVal
+      when rightVal instanceof CalculationError then rightVal
+      else @op leftVal, rightVal
+
   resetChildExprs: ->
     @left.reset()
     @right.reset()
@@ -133,7 +152,7 @@ class Or extends BinaryOperator
 
 #TODO new values if function changes
 class FunctionCallNoArgs extends Evaluator
-  constructor: (@expr, @name, @sheet, @providedFunctions) -> super expr, [@getLatestValue()]
+  constructor: (expr, @name, @sheet, @providedFunctions) -> super expr, Initial
   getNewValues: ->
     if @sheet[@name]?
       @sheet[@name].newValues()
@@ -153,7 +172,7 @@ class FunctionCallNoArgs extends Evaluator
 
 #TODO new values if function changes
 class FunctionCallWithArgs extends Evaluator
-  constructor: (@expr, @name, @args, @sheet, @providedFunctions) -> super expr, [@getLatestValue()]
+  constructor: (expr, @name, @args, @sheet, @providedFunctions) -> super expr, Initial
 
   getNewValues: ->
     newValuesForArgs = (a.newValues() for a in @args)
@@ -167,5 +186,42 @@ class FunctionCallWithArgs extends Evaluator
   resetChildExprs: -> a.reset() for a in @args
 
 
+class Aggregation extends Evaluator
+  constructor: (expr, @names, @items) -> super expr, Initial
 
-module.exports = {Literal, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or, FunctionCallNoArgs, FunctionCallWithArgs, Input}
+  getNewValues: ->
+    newValuesForItems = (i.newValues() for i in @items)
+    if _.some(newValuesForItems, (i) -> i.length) then [@getLatestValue()] else []
+
+  getLatestValue: ->
+    itemValues = (i.latestValue() for i in @items)
+    _.zipObject @names, itemValues
+
+  resetChildExprs: -> i.reset() for i in @items
+
+
+class Sequence extends Evaluator
+  constructor: (expr, @items) -> super expr, Initial
+
+  getNewValues: ->
+    newValuesForItems = (i.newValues() for i in @items)
+    if _.some(newValuesForItems, (i) -> i.length) then [@getLatestValue()] else []
+
+  getLatestValue: -> (i.latestValue() for i in @items)
+
+  resetChildExprs: -> i.reset() for i in @items
+
+
+class AggregationSelector extends Evaluator
+  constructor: (expr, @aggregation, @elementName) -> super expr, Initial
+
+  getNewValues: ->
+    newValuesForAgg = @aggregation.newValues()
+    if newValuesForAgg.length then [@getLatestValue()] else []
+
+  getLatestValue: -> @aggregation.latestValue()[@elementName]
+
+  resetChildExprs: -> @aggregation.reset()
+
+
+module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or, FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector}

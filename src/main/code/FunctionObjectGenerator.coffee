@@ -48,24 +48,16 @@ exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent
           else throw new Error "Unknown operator: #{expr.operator}"
 
       when expr instanceof Aggregation
-        varDecls = []
-        items = []
-        aggregationNames = (n for n in expr.childNames)
-
-        for i in [0...expr.children.length]
-          name = expr.childNames[i]
-          varDecls.push "#{name} = #{getCodeAndAccumulateFunctions expr.children[i], aggregationNames }"
-          items.push "#{name}: #{name}"
-
-        "function() { var #{varDecls.join(',\n    ')};\nreturn {#{items.join(', ')}}; }.bind(this)()"
+        items = (getCodeAndAccumulateFunctions(e) for e in expr.children)
+        new Eval.Aggregation expr, expr.childNames, items
 
       when expr instanceof Sequence
         items = (getCodeAndAccumulateFunctions(e) for e in expr.children)
-        '[' + items.join(', ') + ']'
+        new Eval.Sequence expr, items
 
       when expr instanceof AggregationSelector
-        aggCode = getCodeAndAccumulateFunctions expr.aggregation
-        "(#{aggCode}).#{expr.elementName}"
+        agg = getCodeAndAccumulateFunctions expr.aggregation
+        new Eval.AggregationSelector expr, agg, expr.elementName
 
       when expr instanceof FunctionCall and expr.functionName == 'in' then '_in'
       when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then expr.functionName

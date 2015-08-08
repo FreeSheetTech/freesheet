@@ -1,7 +1,7 @@
 class CalculationError extends Error
   constructor: (@functionName, @message) ->
 
-class FunctionError
+class FunctionError extends Error
   constructor: (@name, text, @error) ->
     @expr = {text}
 
