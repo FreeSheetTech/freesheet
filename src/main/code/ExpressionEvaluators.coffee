@@ -179,11 +179,37 @@ class FunctionCallWithArgs extends Evaluator
     if _.some(newValuesForArgs, (a) -> a.length) then [@getLatestValue()] else []
 
   getLatestValue: ->
-    providedFunction = @providedFunctions[@name]
     argValues = (a.latestValue() for a in @args)
-    providedFunction.apply null, argValues
+    if @sheet[@name]?
+      @sheet[@name].latestValue(argValues)
+    else
+      providedFunction = @providedFunctions[@name]
+      providedFunction.apply null, argValues
+
 
   resetChildExprs: -> a.reset() for a in @args
+
+class ArgRef
+  constructor: (@name, @getArgValue) ->
+  latestValue: ->
+    result = @getArgValue @name
+    console.log 'ArgRef.latestValue', @name, result
+    result
+
+  newValues: ->  []  #TODO is this good enough?
+  reset: ->
+
+class FunctionEvaluator # extends Evaluator
+  constructor: (@funcDef, @name, @argNames, @evaluator, @argumentManager) ->
+
+  latestValue: (argValues) ->
+    @argumentManager.pushValues _.zipObject @argNames, argValues
+    result = @evaluator.latestValue()
+    @argumentManager.popValues()
+    result
+
+  newValues: -> [@latestValue()]
+  reset: -> @evaluator.reset()
 
 
 class Aggregation extends Evaluator
@@ -224,4 +250,6 @@ class AggregationSelector extends Evaluator
   resetChildExprs: -> @aggregation.reset()
 
 
-module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or, FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector}
+
+module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
+  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator}

@@ -8,14 +8,12 @@ trace = (onOff) -> tracing = onOff
 
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
-exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent) ->
+exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent, argumentManager) ->
 
   exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
     functionNames = []
 
     accumulateFunctionName = (name) -> functionNames.push name if name not in functionNames
-
-    applyTransformFunction = (expr) -> "function(_in) { return #{getCodeAndAccumulateFunctions expr} }.bind(this)"
 
     isTransformFunction = (functionCall) -> functionInfo[functionCall.functionName]?.kind == FunctionTypes.TRANSFORM
 
@@ -59,8 +57,8 @@ exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent
         agg = getCodeAndAccumulateFunctions expr.aggregation
         new Eval.AggregationSelector expr, agg, expr.elementName
 
-      when expr instanceof FunctionCall and expr.functionName == 'in' then '_in'
-      when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then expr.functionName
+      when expr instanceof FunctionCall and expr.functionName == 'in' then new Eval.ArgRef 'in', argumentManager.getValue
+      when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then new Eval.ArgRef expr.functionName, argumentManager.getValue
 
       when expr instanceof Input
         new Eval.Input expr, expr.inputName, getCurrentEvent
@@ -70,7 +68,9 @@ exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent
         accumulateFunctionName functionName
 
         args =  if isTransformFunction expr
-                  [getCodeAndAccumulateFunctions(expr.children[0]), applyTransformFunction(expr.children[1])]
+                  transformExpr = expr.children[1]
+                  transformFunction = new Eval.TransformFunction transformExpr, getCodeAndAccumulateFunctions(transformExpr)
+                  [getCodeAndAccumulateFunctions(expr.children[0]), transformFunction]
                 else
                   (getCodeAndAccumulateFunctions(e) for e in expr.children)
 
@@ -85,7 +85,11 @@ exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent
     {code: code, functionNames}
 
   {code, functionNames} = exprCode funcDef.expr, functionInfo, funcDef.argNames()
-  {theFunction: code, functionNames}
+  theFunction = if funcDef.argNames().length
+      new Eval.FunctionEvaluator funcDef, funcDef.name, funcDef.argNames(), code, argumentManager
+    else
+      code
+  {theFunction, functionNames}
 
 
 module.exports = {exprFunction, trace}

@@ -260,4 +260,34 @@ Provided functions
 - getLatestValue: function called on latestValues for each arg
 - Should give new values if function itself is changed
 
+Transform functions
+-------------------
+- eg fromEach(seq, expr)
+- new values if either seq has new values or anything contributing to expr has new values
+- for seq, just call newValues on it
+- for expr, can't get new values directly until pass in elements of sequence BUT can see whether any of named values used have new values
+- new value detection needs to be recursive
+- need a hasChanged method on the expr rather than newValues
+- provided function (JavaScript) takes array and function as arguments
+- Eval function call has Eval sequence as first arg, needs Eval as second arg that returns a one-arg JS function as its value
+- So need Eval.TransformExpression
+
+Functions with arguments
+------------------------
+- Their evaluator trees have ArgRef objects in them
+- ArgRef similar to FunctionCallNoArgs
+- Needs a place to get the value of its argument from
+- The FunctionCallWithArgs knows what the values are when it makes the call from its latestValues()
+- Can be only one current function in a thread of execution, but it may call others
+- So the answer seems to be a stack, like in any other program execution environment
+- Poss: ArgRefs are given a function to get one current arg value by name
+- Runner has a stack
+- FunctionEvaluator.latestValue pushes arg values it is given on the stack, asks its expression evaluator for latestValue, pops stack
+- New values question is: for this set of arg values, do you have new values?
+  - answer depends on *both* the arg values and the other values it uses, as with no args functions
+  - answer also yes if the function itself has been updated - as with no args functions
+- Poss: have arg map of expressions, not values
+- Caller should know what exprs/values it is passing to which arguments
+- Maybe every function should take a map of arguments rather than a list
+
 

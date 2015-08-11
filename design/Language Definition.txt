@@ -114,7 +114,8 @@ Possible changes
 - if then else operator
 - case function which takes alternate conditions and results
 - match function that looks like switch
-
+- function can take map of named arguments
+- optional/default arguments
 
 
 HTML

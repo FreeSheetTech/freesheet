@@ -7,6 +7,20 @@ Operations = require './Operations'
 FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
 
+class ArgumentManager
+  constructor: ->
+    @stack = []
+
+  getValue: (name) =>
+    throw new Error('Call stack is empty') if not @stack.length
+    currentArgs = @stack[0]
+    throw new Error("Unknown argument name: #{name}") if not _.has currentArgs, name
+    currentArgs[name]
+
+  pushValues: (argMap) -> @stack.unshift argMap
+  popValues: (argMap) -> @stack.shift
+
+
 module.exports = class FunctionObjectRunner
 
   withKind = (func, kind) -> func.kind = kind; func
@@ -39,6 +53,7 @@ module.exports = class FunctionObjectRunner
     @slots = {}
     @valid = {}
     @events = []
+    @argumentManager = new ArgumentManager()
 
     @sheet = _.assign {}, @providedFunctions, {
       operations: new Operations(null)
@@ -89,7 +104,7 @@ module.exports = class FunctionObjectRunner
     if replacing then @_invalidateDependents name
     @_reset()
     @userFunctions[name] = funcDef
-    functionImpl = FunctionObjectGenerator.exprFunction funcDef, @_functionInfo(), @sheet, @providedFunctions, @_getCurrentEvent
+    functionImpl = FunctionObjectGenerator.exprFunction funcDef, @_functionInfo(), @sheet, @providedFunctions, @_getCurrentEvent, @argumentManager
     @userFunctionImpls[name] = functionImpl
     @sheet[name] = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'
@@ -106,9 +121,8 @@ module.exports = class FunctionObjectRunner
       @sheet.stored[name] = []
       @sheet.storedUpToDate[name] = true
       @sheet['all_' + name] = @_allFunction name
+      @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue(name) ? null))
 
-
-    @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue(name) ? null))
     @_recalculate()
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
