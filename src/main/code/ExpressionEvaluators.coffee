@@ -17,7 +17,7 @@ class Evaluator
     if @values.length
       @latest = @values[0]
 
-    #    console.log 'newValues', this
+#    console.log this.constructor.name, 'newValues', @values
     @values
 
   latestValue: ->
@@ -25,7 +25,7 @@ class Evaluator
     if @latest is NotCalculated
       @latest = @getLatestValue()
 
-    #    console.log 'latestValue', this
+#    console.log this.constructor.name, 'latestValue', @latest
     @latest
 
   getNewValues: -> throw new Error('getNewValues must be defined')
@@ -176,12 +176,20 @@ class FunctionCallWithArgs extends Evaluator
 
   getNewValues: ->
     newValuesForArgs = (a.newValues() for a in @args)
-    if _.some(newValuesForArgs, (a) -> a.length) then [@getLatestValue()] else []
+    argsHaveNewValues =_.some(newValuesForArgs, (a) -> a.length)
+
+    argValues = (a.latestValue() for a in @args)
+    functionHasNewValues = @sheet[@name]?.newValues(argValues).length
+
+    if argsHaveNewValues or functionHasNewValues then [@getLatestValue()] else []
+
 
   getLatestValue: ->
     argValues = (a.latestValue() for a in @args)
     if @sheet[@name]?
-      @sheet[@name].latestValue(argValues)
+      result = @sheet[@name].latestValue(argValues)
+      console.log 'FunctionCallWithArgs.getLatestValue', @name, argValues, '->', result
+      result
     else
       providedFunction = @providedFunctions[@name]
       providedFunction.apply null, argValues
@@ -196,7 +204,7 @@ class ArgRef
     console.log 'ArgRef.latestValue', @name, result
     result
 
-  newValues: ->  []  #TODO is this good enough?
+  newValues: ->  [@latestValue()]  #TODO is this good enough?
   reset: ->
 
 class FunctionEvaluator # extends Evaluator
@@ -206,9 +214,18 @@ class FunctionEvaluator # extends Evaluator
     @argumentManager.pushValues _.zipObject @argNames, argValues
     result = @evaluator.latestValue()
     @argumentManager.popValues()
+    console.log 'FunctionEvaluator.latestValue', @name, argValues, '->', result
     result
 
-  newValues: -> [@latestValue()]
+  newValues: (argValues) ->
+    @evaluator.reset()
+    @argumentManager.pushValues _.zipObject @argNames, argValues
+#    result = @evaluator.newValues()
+    result = [@evaluator.latestValue()]
+    @argumentManager.popValues()
+    console.log 'FunctionEvaluator.newValues', @name, argValues, '->', result
+    result
+
   reset: -> @evaluator.reset()
 
 

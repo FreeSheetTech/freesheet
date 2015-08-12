@@ -226,7 +226,7 @@ describe 'FunctionObjectRunner runs', ->
 
   describe 'functions with arguments', ->
 
-    it.only 'can be defined and evaluated with one literal argument', ->
+    it 'can be defined and evaluated with one literal argument', ->
       parseUserFunctions 'addFive(n) = n + 5; total = addFive(14)'
       changesFor('total').should.eql [19]
 
