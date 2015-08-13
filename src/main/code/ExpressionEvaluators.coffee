@@ -20,6 +20,8 @@ class Evaluator
 #    console.log this.constructor.name, 'newValues', @values
     @values
 
+  hasChanged: -> !! @newValues().length
+
   latestValue: ->
     @newValues() #ensure use any new values
     if @latest is NotCalculated
@@ -175,8 +177,8 @@ class FunctionCallWithArgs extends Evaluator
   constructor: (expr, @name, @args, @sheet, @providedFunctions) -> super expr, Initial
 
   getNewValues: ->
-    newValuesForArgs = (a.newValues() for a in @args)
-    argsHaveNewValues =_.some(newValuesForArgs, (a) -> a.length)
+    hasChangedForArgs = (a.hasChanged() for a in @args)
+    argsHaveNewValues =_.some(hasChangedForArgs, (a) -> a)
 
     argValues = (a.latestValue() for a in @args)
     functionHasNewValues = @sheet[@name]?.newValues(argValues).length
@@ -205,6 +207,7 @@ class ArgRef
     result
 
   newValues: ->  [@latestValue()]  #TODO is this good enough?
+  hasChanged: -> true #TODO is this good enough?
   reset: ->
 
 class FunctionEvaluator # extends Evaluator
@@ -233,13 +236,16 @@ class TransformExpression
 
   latestValue: ->
     (_in) =>
+      @evaluator.reset()
       @argumentManager.pushValues {'in': _in}
       result = @evaluator.latestValue()
       @argumentManager.popValues()
       console.log 'TransformExpression.latestValue', _in, '->', result
       result
 
+  hasChanged: ->@evaluator.hasChanged()
 
+  reset: -> @evaluator.reset()
 
 class Aggregation extends Evaluator
   constructor: (expr, @names, @items) -> super expr, Initial

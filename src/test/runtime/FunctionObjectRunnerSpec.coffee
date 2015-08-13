@@ -369,7 +369,7 @@ describe 'FunctionObjectRunner runs', ->
 
   describe 'expressions as function arguments with sequences', ->
 
-    it.only 'transforms all elements of a sequence to a literal', ->
+    it 'transforms all elements of a sequence to a literal', ->
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
       parseUserFunctions 'points = fromEach( games, 10 )'
 
@@ -415,7 +415,7 @@ describe 'FunctionObjectRunner runs', ->
 
       changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]
 
-    it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
+    it.skip 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, {basicTime: in.time, fullTime: basicTime + 2, maxTime: fullTime + 3} )'
 
@@ -432,10 +432,19 @@ describe 'FunctionObjectRunner runs', ->
 
   describe 'sequence and stream functions', ->
 
+    it.only 'collects all the values in a stream using all function', ->
+      providedStreamReturnFunctions
+        all: (s) -> s.scan((acc, x) -> (acc or []).concat x)
+      parseUserFunctions 'allInputs = all(theInput)'
+
+      inputs 20, 30, 40
+
+      changesFor("allInputs").should.eql [null, [20], [20, 30], [20, 30, 40]]
+
     it 'finds the total of the values in a stream using all_ function', ->
       providedAggregateFunctions
         total: (s) -> s.scan((acc, x) -> acc + x)
-      parseUserFunctions 'tot = total(all_theInput)'
+      parseUserFunctions 'tot = total(all(theInput))'
 
       inputs 20, 30, 40
 
