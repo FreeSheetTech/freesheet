@@ -50,16 +50,9 @@ module.exports = class FunctionObjectRunner
     @inputs = {}
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
-    @slots = {}
-    @valid = {}
     @events = []
     @argumentManager = new ArgumentManager()
-
-    @sheet = _.assign {}, @providedFunctions, {
-      operations: new Operations(null)
-      stored: {}
-      storedUpToDate: {}
-    }
+    @sheet = _.assign {}, @providedFunctions
 
 
 # TODO  rationalise this zoo of add...Functions
@@ -116,11 +109,6 @@ module.exports = class FunctionObjectRunner
 
     @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
-      @slots[name] = null
-      @valid[name] = false
-      @sheet.stored[name] = []
-      @sheet.storedUpToDate[name] = true
-      @sheet['all_' + name] = @_allFunction name
       @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, @_sheetValue(name) ? null))
 
     @_recalculate()
@@ -138,8 +126,6 @@ module.exports = class FunctionObjectRunner
         if not subj.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
-      delete @slots[functionName]
-      delete @valid[functionName]
       @_reset()
       @sheet[functionName] = unknownNameFunction(functionName)
       @_recalculate()
@@ -188,10 +174,8 @@ module.exports = class FunctionObjectRunner
     throw new Error "Unknown function name: #{name}" unless  @userFunctions[name]
 
     collectFunctions = (name, functionsCollectedSoFar) =>
-      isAllFunction = !!name.match /^all_/
-      plainName = name.replace /^all_/, ''
-      return functionsCollectedSoFar if not @userFunctions[plainName] and !isAllFunction
-      newFunctions = if isAllFunction then [plainName] else (n for n in @userFunctionImpls[name].functionNames when not _.includes functionsCollectedSoFar, n)
+      return functionsCollectedSoFar if not @userFunctions[name]
+      newFunctions =  (n for n in @userFunctionImpls[name].functionNames when not _.includes functionsCollectedSoFar, n)
       functionsPlusNew = functionsCollectedSoFar.concat newFunctions
       newCalledFunctions = _.flatten(collectFunctions(n, functionsPlusNew) for n in newFunctions)
       _.uniq functionsPlusNew.concat(newCalledFunctions)
@@ -217,23 +201,14 @@ module.exports = class FunctionObjectRunner
     [name, value] = event
     @_reset()
     @currentEvent = {name, value}
-    @slots[name] = value
     @_invalidateDependents name  #TODO only if value has changed?
-    @_updateDependentAllValues name
     @_recalculate()
     @currentEvent = null
 
-  _invalidateDependents: (name) -> @valid[n] = false for n in @_functionsUsing name
-
-  _updateDependentAllValues: (name) ->
-    # TODO     does every all_ value currently
-    @sheet.storedUpToDate[k] = false for k,a of @sheet.stored
-    for n, f of @sheet when n.match /^all_/
-      f.apply(@sheet)
-
+  _invalidateDependents: (name) -> # ??? for n in @_functionsUsing name
 
   _functionsUsing: (name) ->
-    result = (n for n, f of @userFunctions when _.includes(@functionsUsedBy(n), name) or _.includes(@functionsUsedBy(n), 'all_' + name))
+    result = (n for n, f of @userFunctions when _.includes(@functionsUsedBy(n), name) )
     result
 
   _reset: ->
@@ -259,16 +234,6 @@ module.exports = class FunctionObjectRunner
       @sheet[name].latestValue()
     catch e
       ops._error e
-
-  _allFunction: (name) ->
-    runner = this
-    ->
-      storedValues = this.stored[name]
-      if not this.storedUpToDate[name]
-        storedValues.push runner._sheetValue(name)
-        this.storedUpToDate[name] = true
-
-      storedValues
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
 

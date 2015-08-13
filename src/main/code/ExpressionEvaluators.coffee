@@ -294,6 +294,5 @@ class AggregationSelector extends Evaluator
   resetChildExprs: -> @aggregation.reset()
 
 
-
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
   FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression}
