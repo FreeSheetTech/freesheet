@@ -63,8 +63,6 @@ module.exports = class FunctionObjectRunner
   addProvidedFunction: (name, fn) ->
     switch
       when fn.kind is FunctionTypes.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
-      when fn.returnKind is FunctionTypes.AGGREGATE_RETURN then @addProvidedAggregateFunction name, fn
-      when fn.returnKind is FunctionTypes.SEQUENCE_RETURN then @addProvidedSequenceFunction name, fn
       when fn.returnKind is FunctionTypes.STREAM_RETURN then @addProvidedStreamReturnFunction name, fn
       else @_addProvidedFunction name, fn
 
@@ -81,15 +79,6 @@ module.exports = class FunctionObjectRunner
     fn.returnKind = FunctionTypes.STREAM_RETURN
 
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
-
-  addProvidedSequenceFunction: (name, fn) -> @_addProvidedFunction name, asImmediateFunction(fn)
-  addProvidedSequenceFunctions: (functionMap) -> @addProvidedSequenceFunction n, f for n, f of functionMap
-
-  addProvidedAggregateFunction: (name, fn) ->
-    @_addProvidedFunction name, asImmediateFunction(fn)
-    fn.returnKind = FunctionTypes.AGGREGATE_RETURN
-
-  addProvidedAggregateFunctions: (functionMap) -> @addProvidedAggregateFunction n, f for n, f of functionMap
 
   addUserFunction: (funcDef) ->
     name = funcDef.name
