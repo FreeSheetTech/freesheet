@@ -18,7 +18,7 @@ class Evaluator
     if @values.length
       @latest = @values[0]
 
-#    console.log this.constructor.name, 'newValues', @values
+#    console.log this.constructor.name, 'newValues', @expr.name, @values
     @values
 
   hasNewValues: -> !! @newValues().length
@@ -88,6 +88,8 @@ class BinaryOperator extends Evaluator
       when leftVal instanceof CalculationError then leftVal
       when rightVal instanceof CalculationError then rightVal
       else @op leftVal, rightVal
+
+  hasNewValues: -> @left.hasNewValues() or @right.hasNewValues()
 
   resetChildExprs: ->
     @left.reset()
@@ -189,11 +191,9 @@ class FunctionCallWithArgs extends Evaluator
     argValues = (a.latestValue() for a in @args)
     functionHasNewValues = @sheet[@name]?.newValues(argValues).length
 
-    if argsHaveNewValues or functionHasNewValues
-      console.log 'FunctionCallWithArgs.getNewValues', argsHaveNewValues, functionHasNewValues
-      [@getLatestValue()]
-    else []
-
+    result = if argsHaveNewValues or functionHasNewValues then [@getLatestValue()] else []
+#    console.log 'FunctionCallWithArgs.getNewValues' , @name, argsHaveNewValues, functionHasNewValues, result
+    result
 
   getLatestValue: ->
     argValues = (a.latestValue() for a in @args)
@@ -203,7 +203,7 @@ class FunctionCallWithArgs extends Evaluator
       providedFunction = @providedFunctions[@name]
       result = providedFunction.apply @previousData, argValues
 
-    console.log 'FunctionCallWithArgs.getLatestValue', @name, argValues, '->', result
+#    console.log 'FunctionCallWithArgs.getLatestValue', @name, argValues, '->', result
     result
 
   resetChildExprs: -> a.reset() for a in @args
@@ -212,7 +212,7 @@ class ArgRef
   constructor: (@name, @getArgValue) ->
   latestValue: ->
     result = @getArgValue @name
-    console.log 'ArgRef.latestValue', @name, result
+#    console.log 'ArgRef.latestValue', @name, result
     result
 
   newValues: ->  [@latestValue()]  #TODO is this good enough?
@@ -226,7 +226,7 @@ class FunctionEvaluator # extends Evaluator
     @argumentManager.pushValues _.zipObject @argNames, argValues
     result = @evaluator.latestValue()
     @argumentManager.popValues()
-    console.log 'FunctionEvaluator.latestValue', @name, argValues, '->', result
+#    console.log 'FunctionEvaluator.latestValue', @name, argValues, '->', result
     result
 
   newValues: (argValues) ->
@@ -249,10 +249,10 @@ class TransformExpression
       @argumentManager.pushValues {'in': _in}
       result = @evaluator.latestValue()
       @argumentManager.popValues()
-      console.log 'TransformExpression.latestValue', _in, '->', result
+#      console.log 'TransformExpression.latestValue', _in, '->', result
       result
 
-  hasNewValues: ->@evaluator.hasNewValues()
+  hasNewValues: -> @evaluator.hasNewValues()
 
   reset: -> @evaluator.reset()
 

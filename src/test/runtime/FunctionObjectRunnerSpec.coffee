@@ -1,5 +1,6 @@
 should = require 'should'
 Rx = require 'rx'
+_ = require 'lodash'
 TextParser = require '../parser/TextParser'
 FunctionObjectRunner = require './FunctionObjectRunner'
 TimeFunctions = require '../functions/TimeFunctions'
@@ -17,6 +18,11 @@ describe 'FunctionObjectRunner runs', ->
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
   fromEachFunction = (s, func) -> s.map (x) -> apply(func, x)
   selectFunction = (s, func) -> s.filter (x) -> apply(func, x)
+  allFunction = (x) ->
+    previousItems = @previousItems or []
+    @previousItems = if x? then previousItems.concat x else previousItems
+
+
 
   providedFunctions = (functionMap) -> runner.addProvidedFunctions functionMap
   providedAggregateFunctions = (functionMap) -> runner.addProvidedAggregateFunctions functionMap
@@ -55,6 +61,9 @@ describe 'FunctionObjectRunner runs', ->
     inputSubj = new Rx.Subject()
 
     providedFunctions TimeFunctions
+    providedFunctions
+      all: allFunction
+
     providedTransformFunctions
       fromEach: fromEachFunction
       select: selectFunction
@@ -434,9 +443,7 @@ describe 'FunctionObjectRunner runs', ->
 
     it 'collects all the values in a stream using all function', ->
       providedFunctions
-        all: (x) ->
-          previousItems = @previousItems or []
-          @previousItems = if x? then previousItems.concat x else previousItems
+        all: allFunction
 
       parseUserFunctions 'allInputs = all(theInput)'
 
@@ -445,33 +452,35 @@ describe 'FunctionObjectRunner runs', ->
       changesFor("allInputs").should.eql [[], [20], [20, 30], [20, 30, 40]]
 
     it 'finds the total of the values in a stream using all_ function', ->
-      providedAggregateFunctions
-        total: (s) -> s.scan((acc, x) -> acc + x)
+      providedFunctions
+        all: allFunction
+        total: (s) -> _.sum s
       parseUserFunctions 'tot = total(all(theInput))'
 
       inputs 20, 30, 40
 
-      changesFor("tot").should.eql [null, 20, 50, 90]
+      changesFor("tot").should.eql [0, 20, 50, 90]
 
     it 'finds the totals of the sequence values in a stream using plain version and their running total', ->
-      providedAggregateFunctions
-        total: (s) -> s.scan (acc, x) -> acc + x
+      providedFunctions
+        all: allFunction
+        total: (s) ->  _.sum s
       parseUserFunctions 'tot = total(theInput)'
-      parseUserFunctions 'totAll = total(all_tot)'
+      parseUserFunctions 'totAll = total(all(tot))'
 
       inputs [2, 3, 4], [5, 6], [7]
 
-      changesFor("tot").should.eql [null, 9, 11, 7]
-      changesFor("totAll").should.eql [null, 9, 20, 27]
+      changesFor("tot").should.eql [0, 9, 11, 7]
+      changesFor("totAll").should.eql [0, 9, 20, 27]
 
-    it 'finds the squares of all  the values in a stream using all_ function', ->
-      providedSequenceFunctions
-        square: (s) -> s.map((x) -> x * x)
-      parseUserFunctions 'sq = square(all_theInput)'
+    it 'finds the squares of all the values in a stream using all function', ->
+      providedFunctions
+        square: (x) ->  x * x
+      parseUserFunctions 'sq = all(square(theInput))'
 
       inputs 20, 30, 40
 
-      changesFor("sq").should.eql [[], [400], [400, 900], [400, 900, 1600]]
+      changesFor("sq").should.eql [[0], [0, 400], [0, 400, 900], [0, 400, 900, 1600]]
 
     it 'finds the squares of the sequence values in a stream using plain version', ->
       providedSequenceFunctions
@@ -482,12 +491,12 @@ describe 'FunctionObjectRunner runs', ->
 
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]
 
-    it 'applies a transform function to an input stream using all_ version of function', ->
-      parseUserFunctions 'sq = fromEach(all_theInput, in * in)'
+    it 'applies a transform function to an input stream using all function', ->
+      parseUserFunctions 'sq = fromEach(all(theInput), in * in)'
       inputs 20, 30, 40
       changesFor("sq").should.eql [[], [400], [400, 900], [400, 900, 1600]]
 
-    it 'applies a transform function to the sequence values in a stream using plain version', ->
+    it 'applies a transform function to the sequence values in a stream using plain value', ->
       parseUserFunctions 'sq = fromEach(theInput, in * in)'
       inputs [2, 3, 4], [5, 6], [7]
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]       # TODO should first be null or []?
