@@ -271,6 +271,9 @@ Transform functions
 - provided function (JavaScript) takes array and function as arguments
 - Eval function call has Eval sequence as first arg, needs Eval as second arg that returns a one-arg JS function as its value
 - So need Eval.TransformExpression
+- The latestValue() returns a function
+- Need to know the transform function requires a function arg so use TransformExpression - or can you work it out?
+- Can't tell from the expr itself - it could be a literal value or not use the input
 
 Functions with arguments
 ------------------------

@@ -228,6 +228,18 @@ class FunctionEvaluator # extends Evaluator
 
   reset: -> @evaluator.reset()
 
+class TransformExpression
+  constructor: (@expr, @evaluator, @argumentManager) ->
+
+  latestValue: ->
+    (_in) =>
+      @argumentManager.pushValues {'in': _in}
+      result = @evaluator.latestValue()
+      @argumentManager.popValues()
+      console.log 'TransformExpression.latestValue', _in, '->', result
+      result
+
+
 
 class Aggregation extends Evaluator
   constructor: (expr, @names, @items) -> super expr, Initial
@@ -269,4 +281,4 @@ class AggregationSelector extends Evaluator
 
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
-  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator}
+  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression}

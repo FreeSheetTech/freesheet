@@ -69,7 +69,7 @@ exprFunction = (funcDef, functionInfo, sheet, providedFunctions, getCurrentEvent
 
         args =  if isTransformFunction expr
                   transformExpr = expr.children[1]
-                  transformFunction = new Eval.TransformFunction transformExpr, getCodeAndAccumulateFunctions(transformExpr)
+                  transformFunction = new Eval.TransformExpression transformExpr, getCodeAndAccumulateFunctions(transformExpr), argumentManager
                   [getCodeAndAccumulateFunctions(expr.children[0]), transformFunction]
                 else
                   (getCodeAndAccumulateFunctions(e) for e in expr.children)

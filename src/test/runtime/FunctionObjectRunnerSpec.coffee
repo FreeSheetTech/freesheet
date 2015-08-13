@@ -369,7 +369,7 @@ describe 'FunctionObjectRunner runs', ->
 
   describe 'expressions as function arguments with sequences', ->
 
-    it 'transforms all elements of a sequence to a literal', ->
+    it.only 'transforms all elements of a sequence to a literal', ->
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
       parseUserFunctions 'points = fromEach( games, 10 )'
 
