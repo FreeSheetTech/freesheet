@@ -293,4 +293,18 @@ Functions with arguments
 - Caller should know what exprs/values it is passing to which arguments
 - Maybe every function should take a map of arguments rather than a list
 
-
+Stream functions
+----------------
+- Like all()
+- Needs to have the new values, not the latest value
+- Needs to store all values received to that point
+- Or maybe something derived from previous values - for example, total and count would be enough for average
+- Returns the combined result of previous values and new value - just concat for all()
+- Needs a separate store for each "usage"
+- "Usage" is the function call, not the function evaluator
+- Possible optimisation to share store for function calls with exactly the same argument "sources"
+  - working that out needs idea of "equivalent" functions calls
+- Need to give the stream function its current context
+- Poss: FunctionCallWithArgs holds a store, passes it to function as this or an extra context argument
+- Note: new values needed for deciding when to recalculate AND for for feeding to stream functions
+- Functions must always be called with new value

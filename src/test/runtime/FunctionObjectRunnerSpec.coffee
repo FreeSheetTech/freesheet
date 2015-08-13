@@ -432,14 +432,17 @@ describe 'FunctionObjectRunner runs', ->
 
   describe 'sequence and stream functions', ->
 
-    it.only 'collects all the values in a stream using all function', ->
-      providedStreamReturnFunctions
-        all: (s) -> s.scan((acc, x) -> (acc or []).concat x)
+    it 'collects all the values in a stream using all function', ->
+      providedFunctions
+        all: (x) ->
+          previousItems = @previousItems or []
+          @previousItems = if x? then previousItems.concat x else previousItems
+
       parseUserFunctions 'allInputs = all(theInput)'
 
       inputs 20, 30, 40
 
-      changesFor("allInputs").should.eql [null, [20], [20, 30], [20, 30, 40]]
+      changesFor("allInputs").should.eql [[], [20], [20, 30], [20, 30, 40]]
 
     it 'finds the total of the values in a stream using all_ function', ->
       providedAggregateFunctions

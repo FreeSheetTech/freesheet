@@ -3,6 +3,7 @@ Period = require '../functions/Period'
 {CalculationError} = require '../error/Errors'
 NotCalculated = 'NOT_CALCULATED'
 Initial = 'INITIAL'
+NoNewValue = 'NO_NEW_VALUE'
 
 class Evaluator
   constructor: (@expr, @values) ->
@@ -10,7 +11,7 @@ class Evaluator
 
   newValues: ->
     if @values is Initial
-      @values =[@getLatestValue()]
+      @values = @getInitialValues()
     else if @values is NotCalculated
       @values = @getNewValues()
 
@@ -20,7 +21,7 @@ class Evaluator
 #    console.log this.constructor.name, 'newValues', @values
     @values
 
-  hasChanged: -> !! @newValues().length
+  hasNewValues: -> !! @newValues().length
 
   latestValue: ->
     @newValues() #ensure use any new values
@@ -30,6 +31,7 @@ class Evaluator
 #    console.log this.constructor.name, 'latestValue', @latest
     @latest
 
+  getInitialValues: -> [@getLatestValue()]
   getNewValues: -> throw new Error('getNewValues must be defined')
   getLatestValue: -> throw new Error('getLatestValue must be defined')
   resetChildExprs: -> throw new Error('resetChildExprs must be defined')
@@ -174,28 +176,35 @@ class FunctionCallNoArgs extends Evaluator
 
 #TODO new values if function changes
 class FunctionCallWithArgs extends Evaluator
-  constructor: (expr, @name, @args, @sheet, @providedFunctions) -> super expr, Initial
+  constructor: (expr, @name, @args, @sheet, @providedFunctions) ->
+    super expr, Initial
+    @previousData = {}
+
+#  getInitialValues: -> [null]
 
   getNewValues: ->
-    hasChangedForArgs = (a.hasChanged() for a in @args)
-    argsHaveNewValues =_.some(hasChangedForArgs, (a) -> a)
+    hasNewValuesForArgs = (a.hasNewValues() for a in @args)
+    argsHaveNewValues =_.some(hasNewValuesForArgs, (a) -> a)
 
     argValues = (a.latestValue() for a in @args)
     functionHasNewValues = @sheet[@name]?.newValues(argValues).length
 
-    if argsHaveNewValues or functionHasNewValues then [@getLatestValue()] else []
+    if argsHaveNewValues or functionHasNewValues
+      console.log 'FunctionCallWithArgs.getNewValues', argsHaveNewValues, functionHasNewValues
+      [@getLatestValue()]
+    else []
 
 
   getLatestValue: ->
     argValues = (a.latestValue() for a in @args)
     if @sheet[@name]?
       result = @sheet[@name].latestValue(argValues)
-      console.log 'FunctionCallWithArgs.getLatestValue', @name, argValues, '->', result
-      result
     else
       providedFunction = @providedFunctions[@name]
-      providedFunction.apply null, argValues
+      result = providedFunction.apply @previousData, argValues
 
+    console.log 'FunctionCallWithArgs.getLatestValue', @name, argValues, '->', result
+    result
 
   resetChildExprs: -> a.reset() for a in @args
 
@@ -207,7 +216,7 @@ class ArgRef
     result
 
   newValues: ->  [@latestValue()]  #TODO is this good enough?
-  hasChanged: -> true #TODO is this good enough?
+  hasNewValues: -> true #TODO is this good enough?
   reset: ->
 
 class FunctionEvaluator # extends Evaluator
@@ -243,7 +252,7 @@ class TransformExpression
       console.log 'TransformExpression.latestValue', _in, '->', result
       result
 
-  hasChanged: ->@evaluator.hasChanged()
+  hasNewValues: ->@evaluator.hasNewValues()
 
   reset: -> @evaluator.reset()
 
