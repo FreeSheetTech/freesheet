@@ -61,28 +61,6 @@ class BinaryOperator extends Evaluator
 
   op: (a, b) -> throw new Error('op must be defined')
 
-  getNewValues: ->
-    leftValues = @left.newValues()
-    rightValues = @right.newValues()
-    if leftValues.length or rightValues.length
-      [@getLatestValue()]
-    else []
-
-  getLatestValue: ->
-    leftVal = @left.latestValue()
-    rightVal = @right.latestValue()
-    switch
-      when leftVal instanceof CalculationError then leftVal
-      when rightVal instanceof CalculationError then rightVal
-      else @op leftVal, rightVal
-
-  hasNewValues: -> @left.hasNewValues() or @right.hasNewValues()
-
-  resetChildExprs: ->
-    @left.reset()
-    @right.reset()
-
-
 class Add extends BinaryOperator
   op: (a, b) ->
     switch
@@ -147,43 +125,39 @@ class Or extends BinaryOperator
 class FunctionCallNoArgs extends Evaluator
   constructor: (expr, @name, @userFunctions, @providedFunctions) ->
     super expr
-    @subject = new Rx.BehaviorSubject
-    source = @userFunctions[name]
-    source.subscribe @subject
+    if @userFunctions[name]
+      @subject = new Rx.BehaviorSubject
+      source = @userFunctions[name]
+      source.subscribe @subject
+    else
+      source = @providedFunctions[name]
+      value = source()
+      @subject = new Rx.BehaviorSubject(value)
 
   observable: -> @subject
 
 #TODO new values if function changes
 class FunctionCallWithArgs extends Evaluator
-  constructor: (expr, @name, @args, @sheet, @providedFunctions) ->
-    super expr, Initial
-    @previousData = {}
+  constructor: (expr, @name, @args, @userFunctions, @providedFunctions) ->
+    super expr
+    @subject = new Rx.BehaviorSubject
+    @func = @providedFunctions[name]
+    @argValues = (Initial for i in [0...args.length])
+    thisEval = this
 
-#  getInitialValues: -> [null]
+    for arg, i in args
+      arg.observable().subscribe (value) ->
+        thisEval.argValues[i] = value
+        thisEval._evaluateIfReady()
 
-  getNewValues: ->
-    hasNewValuesForArgs = (a.hasNewValues() for a in @args)
-    argsHaveNewValues =_.some(hasNewValuesForArgs, (a) -> a)
+  observable: -> @subject
 
-    argValues = (a.latestValue() for a in @args)
-    functionHasNewValues = @sheet[@name]?.newValues(argValues).length
+  _evaluateIfReady: ->
+    haveAllValues = not _.some @argValues, (x) -> x is Initial
+    if haveAllValues
+      @subject.onNext @func.apply null, @argValues
 
-    result = if argsHaveNewValues or functionHasNewValues then [@getLatestValue()] else []
-#    console.log 'FunctionCallWithArgs.getNewValues' , @name, argsHaveNewValues, functionHasNewValues, result
-    result
 
-  getLatestValue: ->
-    argValues = (a.latestValue() for a in @args)
-    if @sheet[@name]?
-      result = @sheet[@name].latestValue(argValues)
-    else
-      providedFunction = @providedFunctions[@name]
-      result = providedFunction.apply @previousData, argValues
-
-#    console.log 'FunctionCallWithArgs.getLatestValue', @name, argValues, '->', result
-    result
-
-  resetChildExprs: -> a.reset() for a in @args
 
 class ArgRef
   constructor: (@name, @getArgValue) ->

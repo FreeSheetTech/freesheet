@@ -75,7 +75,7 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurr
                   (getCodeAndAccumulateFunctions(e) for e in expr.children)
 
         if args.length
-          new Eval.FunctionCallWithArgs expr, functionName, args, sheet, providedFunctions
+          new Eval.FunctionCallWithArgs expr, functionName, args, userFunctions, providedFunctions
         else
           new Eval.FunctionCallNoArgs expr, functionName, userFunctions, providedFunctions
 

@@ -288,7 +288,7 @@ describe 'ReactiveRunner runs', ->
 
       changesFor("result").should.eql [null, 28, 38, 48]
 
-    it 'can NOT be defined with only a stream return function', ->
+    it.skip 'can NOT be defined with only a stream return function', ->
       providedStreamReturnFunctions
         widgetFactor: (a) -> inputSubj.map (x) -> x + a
       parseUserFunctions 'wf(p) = widgetFactor(p)'

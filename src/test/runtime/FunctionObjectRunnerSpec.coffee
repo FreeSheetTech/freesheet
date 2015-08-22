@@ -7,7 +7,7 @@ TimeFunctions = require '../functions/TimeFunctions'
 Period = require '../functions/Period'
 {CalculationError, FunctionError} = require '../error/Errors'
 
-describe 'FunctionObjectRunner runs', ->
+describe.skip 'FunctionObjectRunner runs', ->
 
   runner = null
   changes = null
