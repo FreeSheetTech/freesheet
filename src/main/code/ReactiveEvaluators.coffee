@@ -38,7 +38,26 @@ class Input extends Evaluator
 
 class BinaryOperator extends Evaluator
   constructor: (expr, @left, @right) ->
-    super expr, Initial
+    super expr
+
+    @subject = new Rx.BehaviorSubject
+    @leftValue = Initial
+    @rightValue = Initial
+    thisEval = this
+    @left.observable().subscribe (value) ->
+      thisEval.leftValue = value
+      thisEval._evaluateIfReady()
+    @right.observable().subscribe (value) ->
+      thisEval.rightValue = value
+      thisEval._evaluateIfReady()
+
+
+  observable: -> @subject
+
+  _evaluateIfReady: ->
+    if @leftValue isnt Initial and @rightValue isnt Initial
+      @subject.onNext @op(@leftValue, @rightValue)
+
 
   op: (a, b) -> throw new Error('op must be defined')
 
@@ -128,30 +147,11 @@ class Or extends BinaryOperator
 class FunctionCallNoArgs extends Evaluator
   constructor: (expr, @name, @userFunctions, @providedFunctions) ->
     super expr
-
     @subject = new Rx.BehaviorSubject
     source = @userFunctions[name]
     source.subscribe @subject
 
   observable: -> @subject
-
-
-  getNewValues: ->
-    if @sheet[@name]?
-      @sheet[@name].newValues()
-    else
-      []
-
-  getLatestValue: ->
-    if @sheet[@name]?
-      @sheet[@name].latestValue()
-    else
-      providedFunction = @providedFunctions[@name]
-      providedFunction.apply null, []
-
-  resetChildExprs: ->
-
-
 
 #TODO new values if function changes
 class FunctionCallWithArgs extends Evaluator
