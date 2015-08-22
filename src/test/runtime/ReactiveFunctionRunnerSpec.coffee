@@ -68,12 +68,12 @@ describe 'ReactiveFunctionRunner runs', ->
 
 
   describe 'runs expressions', ->
-    it.only 'constant values', ->
+    it 'constant values', ->
       parseUserFunctions 'a=100'
 
       changes.should.eql [{a: 100}]
 
-    it 'function calls to constant value', ->
+    it.only 'function calls to constant value', ->
       parseUserFunctions 'a = 100'
       parseUserFunctions 'p = a'
 

@@ -83,7 +83,7 @@ module.exports = class ReactiveFunctionRunner
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @sheet, @providedFunctions, @_getCurrentEvent, @argumentManager
+    functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @userFunctionSubjects, @providedFunctions, @_getCurrentEvent, @argumentManager
     @userFunctionImpls[name] = functionImpl
     reactiveFunction = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'

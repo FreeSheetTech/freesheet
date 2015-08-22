@@ -126,7 +126,16 @@ class Or extends BinaryOperator
 
 #TODO new values if function changes
 class FunctionCallNoArgs extends Evaluator
-  constructor: (expr, @name, @sheet, @providedFunctions) -> super expr, Initial
+  constructor: (expr, @name, @userFunctions, @providedFunctions) ->
+    super expr
+
+    @subject = new Rx.BehaviorSubject
+    source = @userFunctions[name]
+    source.subscribe @subject
+
+  observable: -> @subject
+
+
   getNewValues: ->
     if @sheet[@name]?
       @sheet[@name].newValues()
