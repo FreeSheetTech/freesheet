@@ -94,7 +94,13 @@ module.exports = class ReactiveFunctionRunner
 
 #    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
-      @userFunctionSubjects[name] or (@userFunctionSubjects[name] = @_newUserFunctionSubject(name, reactiveFunction))
+      subj = @userFunctionSubjects[name]
+      if subj
+        subj.sourceSub.dispose()
+        source = reactiveFunction.observable()
+        subj.sourceSub = source.subscribe subj
+      else
+        @userFunctionSubjects[name] = @_newUserFunctionSubject(name, reactiveFunction)
 
 #    @_recalculate()
 

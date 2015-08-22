@@ -79,7 +79,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
       changes.should.eql [{a: 100}, {p: 100}]
 
-    it.only 'all arithmetic operations on numbers', ->
+    it 'all arithmetic operations on numbers', ->
       parseUserFunctions 'a=100'
       parseUserFunctions '  x=3+2  '
       parseUserFunctions '  p=a+2  '
