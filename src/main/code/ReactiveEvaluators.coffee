@@ -25,15 +25,16 @@ class Error extends Evaluator
   resetChildExprs: ->
 
 class Input extends Evaluator
-  constructor: (expr, @inputName, @getCurrentEvent) ->
-    super expr, [null]
+  constructor: (expr, @inputName) ->
+    super expr
     @latest = null
+    @subject = new Rx.BehaviorSubject null
 
-  getNewValues: ->
-    event = @getCurrentEvent()
-    if event?.name is @inputName then [event.value] else []
-  getLatestValue: -> throw new Error 'Input.getLatestValue should never be called'
-  resetChildExprs: ->
+  observable: -> @subject
+
+  sendInput: (value) ->
+    @latest = value
+    @subject.onNext @latest
 
 
 class BinaryOperator extends Evaluator

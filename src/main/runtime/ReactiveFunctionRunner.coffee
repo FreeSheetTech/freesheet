@@ -90,7 +90,7 @@ module.exports = class ReactiveFunctionRunner
       when _.includes(@functionsUsedBy(name), name) then errorFunction name, 'Formula uses itself through another formula'
       else functionImpl.theFunction
 
-    if funcDef.expr instanceof Input then @inputs[name] = true
+    if funcDef.expr instanceof Input then @inputs[name] = reactiveFunction
 
 #    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
@@ -141,19 +141,12 @@ module.exports = class ReactiveFunctionRunner
   getInputs: -> (k for k, v of @inputs)
 
   sendInput: (name, value) ->
-    @sendPartialInput name, value
-    @inputComplete()
-
-  sendPartialInput: (name, value) ->
     throw  new Error 'Unknown input name' unless @inputs[name]?
-    @events.push [name, value]
-    @_processEvents()
+    @inputs[name].sendInput value
 
   sendDebugInput: (name, value) ->
     throw new Error 'Unknown value name' unless @userFunctions[name]?.argDefs.length is 0
-    @events.push [name, value]
-    @_processEvents()
-    @inputComplete()
+    @userFunctionSubjects[name].onNext value
 
   inputComplete: ->
     @_recalculate()
