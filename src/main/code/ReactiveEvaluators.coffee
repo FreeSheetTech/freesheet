@@ -208,42 +208,63 @@ class TransformExpression
   reset: -> @evaluator.reset()
 
 class Aggregation extends Evaluator
-  constructor: (expr, @names, @items) -> super expr, Initial
+  constructor: (expr, @names, @items) ->
+    super expr
+    @subject = new Rx.BehaviorSubject
+    @itemValues = (Initial for i in [0...items.length])
+    thisEval = this
 
-  getNewValues: ->
-    newValuesForItems = (i.newValues() for i in @items)
-    if _.some(newValuesForItems, (i) -> i.length) then [@getLatestValue()] else []
+    for item, i in items
+      item.observable().subscribe (value) ->
+        thisEval.itemValues[i] = value
+        thisEval._evaluateIfReady()
 
-  getLatestValue: ->
-    itemValues = (i.latestValue() for i in @items)
-    _.zipObject @names, itemValues
+  observable: -> @subject
 
-  resetChildExprs: -> i.reset() for i in @items
+  _evaluateIfReady: ->
+    haveAllValues = not _.some @itemValues, (x) -> x is Initial
+    if haveAllValues
+      @subject.onNext _.zipObject @names, @itemValues
 
 
 class Sequence extends Evaluator
-  constructor: (expr, @items) -> super expr, Initial
+  constructor: (expr, @items) ->
+    super expr
+    @subject = new Rx.BehaviorSubject
+    @itemValues = (Initial for i in [0...items.length])
+    thisEval = this
 
-  getNewValues: ->
-    newValuesForItems = (i.newValues() for i in @items)
-    if _.some(newValuesForItems, (i) -> i.length) then [@getLatestValue()] else []
+    for item, i in items
+      item.observable().subscribe (value) ->
+        thisEval.itemValues[i] = value
+        thisEval._evaluateIfReady()
 
-  getLatestValue: -> (i.latestValue() for i in @items)
+  observable: -> @subject
 
-  resetChildExprs: -> i.reset() for i in @items
+  _evaluateIfReady: ->
+    haveAllValues = not _.some @itemValues, (x) -> x is Initial
+    if haveAllValues
+      @subject.onNext @itemValues
 
 
 class AggregationSelector extends Evaluator
-  constructor: (expr, @aggregation, @elementName) -> super expr, Initial
+  constructor: (expr, @aggregation, @elementName) ->
+    super expr
+    @subject = new Rx.BehaviorSubject
+    @aggregationValue = Initial
 
-  getNewValues: ->
-    newValuesForAgg = @aggregation.newValues()
-    if newValuesForAgg.length then [@getLatestValue()] else []
+    thisEval = this
 
-  getLatestValue: -> @aggregation.latestValue()[@elementName]
+    @aggregation.observable().subscribe (value) ->
+      thisEval.aggregationValue = value
+      thisEval._evaluateIfReady()
 
-  resetChildExprs: -> @aggregation.reset()
+  observable: -> @subject
 
+  _evaluateIfReady: ->
+    haveAllValues = @aggregationValue isnt Initial
+    if haveAllValues
+      @subject.onNext @aggregationValue[@elementName]
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
   FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression}
