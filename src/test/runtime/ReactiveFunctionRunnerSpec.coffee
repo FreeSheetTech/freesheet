@@ -619,7 +619,13 @@ describe 'ReactiveFunctionRunner runs', ->
 
   describe 'buffers value changes', ->
 
-    it 'for each input', ->
+    it 'for input used multiple times in one formula', ->
+      parseUserFunctions 'x = input'
+      parseUserFunctions 'y = 2 * (x * x) + (5 * x) + 7'
+      sendInputs 'x', 2, 3
+      changesFor('y').should.eql [25, 40]
+
+    it 'for each input in unpacked list', ->
       providedStreamReturnFunctions
         unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
 

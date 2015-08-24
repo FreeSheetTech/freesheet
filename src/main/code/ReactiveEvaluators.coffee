@@ -7,16 +7,39 @@ Initial = 'INITIAL'
 NoNewValue = 'NO_NEW_VALUE'
 
 class Evaluator
-  constructor: (@expr) ->
+  constructor: (@expr, @args) ->
+    @subject = new Rx.BehaviorSubject
+    @values = (Initial for i in [0...args.length])
+    thisEval = this
 
-class Literal extends Evaluator
-  constructor: (expr, @value) ->
-    super expr
-    @subject = new Rx.BehaviorSubject @value
+    for arg, i in args
+      @_subscribeToArg arg, i
+
+    @_evaluateIfReady()
 
   observable: -> @subject
 
-class Error extends Evaluator
+  _evaluateIfReady: ->
+    haveAllValues = not _.some @values, (x) -> x is Initial
+    if haveAllValues
+      @subject.onNext @_calculateNextValue()
+
+  _calculateNextValue: -> throw new Error('_calculateNextValue must be defined')
+
+  _subscribeToArg: (arg, i) ->
+    thisEval = this
+    arg.observable().subscribe (value) ->
+      thisEval.values[i] = value
+      thisEval._evaluateIfReady()
+
+
+class Literal extends Evaluator
+  constructor: (expr, @value) ->
+    super expr, []
+
+  _calculateNextValue: -> @value
+
+class CalcError extends Evaluator
   constructor: (error) ->
     super null, [error]
     @latest = error
@@ -26,39 +49,22 @@ class Error extends Evaluator
 
 class Input extends Evaluator
   constructor: (expr, @inputName) ->
-    super expr
-    @latest = null
-    @subject = new Rx.BehaviorSubject null
+    @inputStream = inputStream = new Rx.BehaviorSubject(null)
+    dummyArg = {observable: -> inputStream}
+    super expr, [dummyArg]
 
-  observable: -> @subject
+  _calculateNextValue: ->
+    @values[0]
 
   sendInput: (value) ->
-    @latest = value
-    @subject.onNext @latest
+    @inputStream.onNext value
 
 
 class BinaryOperator extends Evaluator
   constructor: (expr, @left, @right) ->
-    super expr
+    super expr, [@left, @right]
 
-    @subject = new Rx.BehaviorSubject
-    @leftValue = Initial
-    @rightValue = Initial
-    thisEval = this
-    @left.observable().subscribe (value) ->
-      thisEval.leftValue = value
-      thisEval._evaluateIfReady()
-    @right.observable().subscribe (value) ->
-      thisEval.rightValue = value
-      thisEval._evaluateIfReady()
-
-
-  observable: -> @subject
-
-  _evaluateIfReady: ->
-    if @leftValue isnt Initial and @rightValue isnt Initial
-      @subject.onNext @op(@leftValue, @rightValue)
-
+  _calculateNextValue: -> @op(@values[0], @values[1])
 
   op: (a, b) -> throw new Error('op must be defined')
 
@@ -125,7 +131,7 @@ class Or extends BinaryOperator
 #TODO new values if function changes
 class FunctionCallNoArgs extends Evaluator
   constructor: (expr, @name, @userFunctions, @providedFunctions) ->
-    super expr
+    super expr, [@_makeSource(name)]
     if @userFunctions[name]
       @subject = new Rx.BehaviorSubject
       source = @userFunctions[name]
@@ -135,30 +141,27 @@ class FunctionCallNoArgs extends Evaluator
       value = source()
       @subject = new Rx.BehaviorSubject(value)
 
-  observable: -> @subject
+  _makeSource: (name) ->
+    self = this
+    observable: ->
+      if self.userFunctions[name]
+        self.userFunctions[name]
+      else
+        source = self.providedFunctions[name]
+        value = source()
+        new Rx.BehaviorSubject(value)
+
+
+  _calculateNextValue: -> @values[0]
 
 #TODO new values if function changes
 class FunctionCallWithArgs extends Evaluator
-  constructor: (expr, @name, @args, @userFunctions, @providedFunctions) ->
-    super expr
-    @subject = new Rx.BehaviorSubject
+  constructor: (expr, @name, args, @userFunctions, @providedFunctions) ->
     @func = @providedFunctions[name]
-    @argValues = (Initial for i in [0...args.length])
-    thisEval = this
-
-    for arg, i in args
-      arg.observable().subscribe (value) ->
-        thisEval.argValues[i] = value
-        thisEval._evaluateIfReady()
-
-  observable: -> @subject
-
-  _evaluateIfReady: ->
-    haveAllValues = not _.some @argValues, (x) -> x is Initial
-    if haveAllValues
-      @subject.onNext @func.apply null, @argValues
+    super expr, args
 
 
+  _calculateNextValue: -> @func.apply null, @values
 
 class ArgRef
   constructor: (@name, @getArgValue) ->
@@ -210,62 +213,22 @@ class TransformExpression
 
 class Aggregation extends Evaluator
   constructor: (expr, @names, @items) ->
-    super expr
-    @subject = new Rx.BehaviorSubject
-    @itemValues = (Initial for i in [0...items.length])
-    thisEval = this
+    super expr, items
 
-    for item, i in items
-      item.observable().subscribe (value) ->
-        thisEval.itemValues[i] = value
-        thisEval._evaluateIfReady()
-
-  observable: -> @subject
-
-  _evaluateIfReady: ->
-    haveAllValues = not _.some @itemValues, (x) -> x is Initial
-    if haveAllValues
-      @subject.onNext _.zipObject @names, @itemValues
-
+  _calculateNextValue: -> _.zipObject @names, @values
 
 class Sequence extends Evaluator
   constructor: (expr, @items) ->
-    super expr
-    @subject = new Rx.BehaviorSubject
-    @itemValues = (Initial for i in [0...items.length])
-    thisEval = this
+    super expr, items
 
-    for item, i in items
-      item.observable().subscribe (value) ->
-        thisEval.itemValues[i] = value
-        thisEval._evaluateIfReady()
-
-  observable: -> @subject
-
-  _evaluateIfReady: ->
-    haveAllValues = not _.some @itemValues, (x) -> x is Initial
-    if haveAllValues
-      @subject.onNext @itemValues
+  _calculateNextValue: -> @values
 
 
 class AggregationSelector extends Evaluator
   constructor: (expr, @aggregation, @elementName) ->
-    super expr
-    @subject = new Rx.BehaviorSubject
-    @aggregationValue = Initial
+    super expr, [aggregation]
 
-    thisEval = this
-
-    @aggregation.observable().subscribe (value) ->
-      thisEval.aggregationValue = value
-      thisEval._evaluateIfReady()
-
-  observable: -> @subject
-
-  _evaluateIfReady: ->
-    haveAllValues = @aggregationValue isnt Initial
-    if haveAllValues
-      @subject.onNext @aggregationValue[@elementName]
+  _calculateNextValue: -> @values[0][@elementName]
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
   FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression}
