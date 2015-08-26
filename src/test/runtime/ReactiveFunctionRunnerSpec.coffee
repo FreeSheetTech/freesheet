@@ -623,7 +623,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'x = input'
       parseUserFunctions 'y = 2 * (x * x) + (5 * x) + 7'
       sendInputs 'x', 2, 3
-      changesFor('y').should.eql [25, 40]
+      changesFor('y').should.eql [7, 25, 40]
 
     it 'for each input in unpacked list', ->
       providedStreamReturnFunctions

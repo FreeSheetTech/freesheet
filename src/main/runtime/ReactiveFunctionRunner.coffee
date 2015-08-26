@@ -2,7 +2,7 @@ Rx = require 'rx'
 {Literal, InfixExpression, Aggregation, Sequence, FunctionCall, AggregationSelector, Input} = require '../ast/Expressions'
 ReactiveFunctionGenerator = require '../code/ReactiveFunctionGenerator'
 {CalculationError, FunctionError} = require '../error/Errors'
-Eval = require '../code/ExpressionEvaluators'
+Eval = require '../code/ReactiveEvaluators'
 Operations = require './Operations'
 FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
@@ -147,6 +147,7 @@ module.exports = class ReactiveFunctionRunner
   sendDebugInput: (name, value) ->
     throw new Error 'Unknown value name' unless @userFunctions[name]?.argDefs.length is 0
     @userFunctionSubjects[name].onNext value
+    @userFunctionSubjects[name].onNext Eval.EvaluationComplete
 
   inputComplete: ->
     @_recalculate()
@@ -175,9 +176,12 @@ module.exports = class ReactiveFunctionRunner
 
   _newUserFunctionSubject: (name, reactiveFunction) ->
     source = reactiveFunction.observable()
-    subj = new Rx.BehaviorSubject()
+    subj = new Rx.ReplaySubject(2)
     subj.sourceSub = source.subscribe subj
-    subj.valueChangesSub = subj.distinctUntilChanged().subscribe (value) =>
+    notEvalComplete = (x)->
+      console.log 'notEvalComplete', x, x isnt Eval.EvaluationComplete
+      x isnt Eval.EvaluationComplete
+    subj.valueChangesSub = subj.filter(notEvalComplete).distinctUntilChanged().subscribe (value) =>
       @valueChanges.onNext [name, value]
     subj
 
