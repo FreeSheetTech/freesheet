@@ -213,6 +213,8 @@ class FunctionCallWithArgs extends Evaluator
     contextWithArgs = _.merge {}, @context, {argSubjects}
     @evaluator.activate(contextWithArgs)
     @_subscribeTo @evaluator.observable(), 0
+    #TODO hack
+    @values = (null for i in [1...@args.length])
 
   _calculateNextValue: ->
     console.log @toString(), '_calculateNextValue', @values
