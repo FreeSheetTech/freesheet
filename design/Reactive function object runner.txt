@@ -37,7 +37,7 @@ User function definition implementation
 - Create evaluator tree as for a normal expression
 - Put ArgRefs in where needed
 - Tree is only a template - not activated
-- Function Calls No args or With args do not subscribe to the user function subject
+- Function Calls No args or With args do not subscribe to the user function subject until activated
 - User function subject emits the definition only when it is updated
 
 User function call implementation

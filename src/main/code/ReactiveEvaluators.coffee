@@ -15,7 +15,7 @@ class Evaluator
   observable: -> @subject
 
   activate: ->
-    @_subscribeToArg arg, i for arg, i in @args
+    @_subscribeTo arg.observable(), i for arg, i in @args
     arg.activate() for arg in @args
 
   _evaluateIfReady: ->
@@ -30,9 +30,9 @@ class Evaluator
 
   _calculateNextValue: -> throw new Error('_calculateNextValue must be defined')
 
-  _subscribeToArg: (arg, i) ->
+  _subscribeTo: (obs, i) ->
     thisEval = this
-    arg.observable().subscribe (value) ->
+    obs.subscribe (value) ->
       if value is EvaluationComplete
         thisEval.eventsInProgress = thisEval.eventsInProgress - 1
         console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress
@@ -157,18 +157,16 @@ class Or extends BinaryOperator
 #TODO new values if function changes
 class FunctionCallNoArgs extends Evaluator
   constructor: (expr, @name, @userFunctions, @providedFunctions) ->
-    super expr, [@_makeSource(name)]
+    super expr, [null]
 
-  _makeSource: (name) ->
-    self = this
-    obs = if self.userFunctions[name]
-            self.userFunctions[name]
+  activate: ->
+    obs = if @userFunctions[@name]
+            @userFunctions[@name]
           else
-            source = self.providedFunctions[name]
+            source = @providedFunctions[@name]
             value = source()
             new Rx.Observable.from([value, EvaluationComplete])
-    observable: -> obs
-    activate: ->
+    @_subscribeTo obs, 0
 
   _calculateNextValue: -> @values[0]
 
@@ -180,22 +178,15 @@ class FunctionCallWithArgs extends Evaluator
 
   _calculateNextValue: -> @func.apply null, @values
 
+#TODO does this belong in here?
 class FunctionDefinition
   constructor: (@argNames, @evaluatorTemplate) ->
 
 class ArgRef extends Evaluator
-  constructor: (@name, @getArgValue) ->
-    super expr, [@_makeSource(name)]
+  constructor: (@name) ->
+    super name, [null]
 
-  _makeSource: (name) ->
-    self = this
-    obs = if self.userFunctions[name]
-      self.userFunctions[name]
-    else
-      source = self.providedFunctions[name]
-      value = source()
-      new Rx.Observable.from([value, EvaluationComplete])
-    observable: -> obs
+  activate: (argSubjects) ->
 
   _calculateNextValue: -> @values[0]
 
@@ -253,4 +244,4 @@ class AggregationSelector extends Evaluator
   _calculateNextValue: -> @values[0][@elementName]
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
-  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression, EvaluationComplete}
+  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression, EvaluationComplete, FunctionDefinition}

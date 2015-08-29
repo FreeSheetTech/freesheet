@@ -91,10 +91,10 @@ module.exports = class ReactiveFunctionRunner
       else functionImpl.theFunction
 
     if funcDef.expr instanceof Input then @inputs[name] = reactiveFunction
-    reactiveFunction.activate()
 
 #    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
+      reactiveFunction.activate()
       subj = @userFunctionSubjects[name]
       if subj
         subj.sourceSub.dispose()
@@ -102,6 +102,10 @@ module.exports = class ReactiveFunctionRunner
         subj.sourceSub = source.subscribe subj
       else
         @userFunctionSubjects[name] = @_newUserFunctionSubject(name, reactiveFunction)
+    else
+      evalFunctionDefinition = new Eval.FunctionDefinition(funcDef.argNames(), reactiveFunction)
+      subj = @userFunctionSubjects[name] or @userFunctionSubjects[name] = new Rx.BehaviorSubject()
+      subj.onNext evalFunctionDefinition
 
 #    @_recalculate()
 

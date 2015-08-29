@@ -57,8 +57,8 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurr
         agg = getCodeAndAccumulateFunctions expr.aggregation
         new Eval.AggregationSelector expr, agg, expr.elementName
 
-      when expr instanceof FunctionCall and expr.functionName == 'in' then new Eval.ArgRef 'in', argumentManager.getValue
-      when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then new Eval.ArgRef expr.functionName, argumentManager.getValue
+      when expr instanceof FunctionCall and expr.functionName == 'in' then new Eval.ArgRef 'in'
+      when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then new Eval.ArgRef expr.functionName
 
       when expr instanceof Input
         new Eval.Input expr, expr.inputName, getCurrentEvent
