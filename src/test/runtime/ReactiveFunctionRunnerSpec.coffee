@@ -270,12 +270,12 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'addFiveToSquare(p) = 5 + square(p); result = addFiveToSquare(9)'
       changesFor('result').should.eql [86]
 
-    it 'can use user-defined functions in the definition', ->
+    it.skip 'can use user-defined functions in the definition', ->
       parseUserFunctions 'addFive(n) = n + 5; addTen(n) = addFive(addFive(n))'
       parseUserFunctions 'result = addTen(20)'
       changesFor('result').should.eql [30]
 
-    it 'can be called with two nested function calls', ->
+    it.skip 'can be called with two nested function calls', ->
       providedFunctions {square: (x) -> x * x }
       parseUserFunctions 'addFive(n) = n + 5;'
       parseUserFunctions 'addTenToSquare(p) = addFive(addFive(square(p))); result = addTenToSquare(9)'

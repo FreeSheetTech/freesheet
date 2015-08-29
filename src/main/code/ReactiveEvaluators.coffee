@@ -18,6 +18,7 @@ class Evaluator
     @_subscribeTo arg.observable(), i for arg, i in @args
     @_activateArgs context
 
+  copy: -> throw new Error('copy must be defined')
 
   _activateArgs: (context) -> arg.activate(context) for arg in @args
 
@@ -58,6 +59,8 @@ class Literal extends Evaluator
 
     super expr, [dummyArg]
 
+  copy: -> new Literal @expr, @value
+
   _calculateNextValue: -> @value
 
 class CalcError extends Evaluator
@@ -79,6 +82,8 @@ class Input extends Evaluator
 
     super expr, [dummyArg]
 
+  copy: -> new Input @expr, @inputName
+
   _calculateNextValue: ->
     @values[0]
 
@@ -94,6 +99,9 @@ class BinaryOperator extends Evaluator
     super expr, [@left, @right]
 
   _calculateNextValue: -> @op(@values[0], @values[1])
+
+  copy: ->
+    new @constructor @expr, @left, @right
 
   op: (a, b) -> throw new Error('op must be defined')
 
@@ -159,17 +167,19 @@ class Or extends BinaryOperator
 
 #TODO new values if function changes
 class FunctionCallNoArgs extends Evaluator
-  constructor: (expr, @name, @userFunctions, @providedFunctions) ->
+  constructor: (expr, @name) ->
     super expr, [null]
 
-  activate: ->
-    obs = if @userFunctions[@name]
-            @userFunctions[@name]
+  activate: (context) ->
+    obs = if context.userFunctions[@name]
+            context.userFunctions[@name]
           else
-            source = @providedFunctions[@name]
+            source = context.providedFunctions[@name]
             value = source()
             new Rx.Observable.from([value, EvaluationComplete])
     @_subscribeTo obs, 0
+
+  copy: -> new FunctionCallNoArgs @expr, @name
 
   _calculateNextValue: -> @values[0]
 
@@ -179,13 +189,37 @@ class FunctionCallWithArgs extends Evaluator
     super expr, args
 
   activate: (context) ->
-    @func = context.providedFunctions[@name]
-    @_subscribeTo arg.observable(), i for arg, i in @args
+    if @func = context.userFunctions[@name]
+      @isUserFunction = true
+      @context = context
+      @func.subscribe @_updateFunction
+    else
+      @func = context.providedFunctions[@name]
+      @isUserFunction = false
+      @_subscribeTo arg.observable(), i for arg, i in @args
+
     @_activateArgs context
 
+  copy: -> new FunctionCallWithArgs @expr, @name, @args
+
+  _updateFunction: (funcDef) =>
+    argSubject = (arg) ->
+      subj = new Rx.Subject()
+      arg.observable().subscribe subj
+      subj
+    subjects = (argSubject arg for arg in @args)
+    argSubjects = _.zipObject funcDef.argNames, subjects
+    @evaluator = funcDef.evaluatorTemplate.copy()
+    contextWithArgs = _.merge {}, @context, {argSubjects}
+    @evaluator.activate(contextWithArgs)
+    @_subscribeTo @evaluator.observable(), 0
+
   _calculateNextValue: ->
-    console.log this, '_calculateNextValue', @values
-    @func.apply null, @values
+    console.log @toString(), '_calculateNextValue', @values
+    if @isUserFunction
+      @values[0]
+    else
+      @func.apply null, @values
 
 #TODO does this belong in here?
 class FunctionDefinition
@@ -193,9 +227,13 @@ class FunctionDefinition
 
 class ArgRef extends Evaluator
   constructor: (@name) ->
-    super name, [null]
+    super {text: name}, [null]
 
   activate: (context) ->
+    obs = context.argSubjects[@name]
+    @_subscribeTo obs, 0
+
+  copy: -> new ArgRef @name
 
   _calculateNextValue: -> @values[0]
 
@@ -237,11 +275,15 @@ class Aggregation extends Evaluator
   constructor: (expr, @names, @items) ->
     super expr, items
 
+  copy: -> new Aggregation @expr, @names, @items
+
   _calculateNextValue: -> _.zipObject @names, @values
 
 class Sequence extends Evaluator
   constructor: (expr, @items) ->
     super expr, items
+
+  copy: -> new Sequence @expr, @items
 
   _calculateNextValue: -> @values
 
@@ -249,6 +291,8 @@ class Sequence extends Evaluator
 class AggregationSelector extends Evaluator
   constructor: (expr, @aggregation, @elementName) ->
     super expr, [aggregation]
+
+  copy: -> new AggregationSelector @expr, @aggregation, @elementName
 
   _calculateNextValue: -> @values[0][@elementName]
 

@@ -85,11 +85,7 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurr
     {code: code, functionNames}
 
   {code, functionNames} = exprCode funcDef.expr, functionInfo, funcDef.argNames()
-  theFunction = if funcDef.argNames().length
-      new Eval.FunctionEvaluator funcDef, funcDef.name, funcDef.argNames(), code, argumentManager
-    else
-      code
-  {theFunction, functionNames}
+  {theFunction: code, functionNames}
 
 
 module.exports = {exprFunction, trace}
