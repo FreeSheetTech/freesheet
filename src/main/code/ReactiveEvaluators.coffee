@@ -11,9 +11,12 @@ class Evaluator
     @subject = subj or new Rx.ReplaySubject(2, null)
     @eventsInProgress = 0
     @values = (Initial for i in [0...args.length])
-    @_subscribeToArg arg, i for arg, i in args
 
   observable: -> @subject
+
+  activate: ->
+    @_subscribeToArg arg, i for arg, i in @args
+    arg.activate() for arg in @args
 
   _evaluateIfReady: ->
     if @eventsInProgress is 0
@@ -44,12 +47,13 @@ class Evaluator
 class Literal extends Evaluator
   constructor: (expr, @value) ->
     @inputStream = inputStream = new Rx.Subject()
-    dummyArg = {observable: -> inputStream}
+    dummyArg =
+      observable: -> inputStream
+      activate: ->
+        inputStream.onNext value
+        inputStream.onNext EvaluationComplete
+
     super expr, [dummyArg]
-
-    inputStream.onNext value
-    inputStream.onNext EvaluationComplete
-
 
   _calculateNextValue: -> @value
 
@@ -64,12 +68,13 @@ class CalcError extends Evaluator
 class Input extends Evaluator
   constructor: (expr, @inputName) ->
     @inputStream = inputStream = new Rx.Subject()
-    dummyArg = {observable: -> inputStream}
+    dummyArg =
+      observable: -> inputStream
+      activate: ->
+        inputStream.onNext null
+        inputStream.onNext EvaluationComplete
+
     super expr, [dummyArg]
-
-    inputStream.onNext null
-    inputStream.onNext EvaluationComplete
-
 
   _calculateNextValue: ->
     @values[0]
@@ -163,6 +168,7 @@ class FunctionCallNoArgs extends Evaluator
             value = source()
             new Rx.Observable.from([value, EvaluationComplete])
     observable: -> obs
+    activate: ->
 
   _calculateNextValue: -> @values[0]
 
@@ -174,16 +180,24 @@ class FunctionCallWithArgs extends Evaluator
 
   _calculateNextValue: -> @func.apply null, @values
 
-class ArgRef
-  constructor: (@name, @getArgValue) ->
-  latestValue: ->
-    result = @getArgValue @name
-#    console.log 'ArgRef.latestValue', @name, result
-    result
+class FunctionDefinition
+  constructor: (@argNames, @evaluatorTemplate) ->
 
-  newValues: ->  [@latestValue()]  #TODO is this good enough?
-  hasNewValues: -> true #TODO is this good enough?
-  reset: ->
+class ArgRef extends Evaluator
+  constructor: (@name, @getArgValue) ->
+    super expr, [@_makeSource(name)]
+
+  _makeSource: (name) ->
+    self = this
+    obs = if self.userFunctions[name]
+      self.userFunctions[name]
+    else
+      source = self.providedFunctions[name]
+      value = source()
+      new Rx.Observable.from([value, EvaluationComplete])
+    observable: -> obs
+
+  _calculateNextValue: -> @values[0]
 
 class FunctionEvaluator # extends Evaluator
   constructor: (@funcDef, @name, @argNames, @evaluator, @argumentManager) ->

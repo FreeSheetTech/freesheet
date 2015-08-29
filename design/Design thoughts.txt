@@ -427,6 +427,7 @@ Domain modelling
 - EFs can form a bridge to traditional database world
 - EFs can substitute their cached value when needed
 - Some inputs may become EFs directly eg Transactions
+- May have a worksheet for each entity (large granularity)
 
 Output events and output functions
 ----------------------------------

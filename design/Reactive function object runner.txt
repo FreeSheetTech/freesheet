@@ -1,0 +1,58 @@
+Reactive Function Object Runner
+===============================
+
+What is a function?
+-------------------
+- Question: does a function represent a mapping of input values to an output value OR a mapping of input streams to an output stream?
+- Does handling infinite streams affect the answer?
+- Is recursion relevant - no place in infinite streams, or spreadsheet style evaluation
+- Concept of function must always include functions with stream outputs
+- Eg plus5 maps a stream of integers -> stream of integers with 5 added to them, instead of int -> int
+- But for convenience want to be able to define value->value functions and have it wrapped
+- And functions passed to transform expressions need to act on single values
+- Maybe have concept of function output cardinality, which could be either exactly 1 or 0..n
+- In general, don't know whether will get 1 value out of a function for a set of input values, 0 or many
+- And - input values don't come in sets - they arrive independently, and any of them can result in 0 or more new output values
+- So a function that gives one output whenever any of its inputs has a new value is a special case
+- Viewing functions as logic circuits that take in and emit values, not necessarily at the same time, is probably a useful view
+- So a function definition defines one of those 'circuits', and a function call is an instance of it used in the app
+
+User Function concepts
+----------------------
+- Possible view: Named function gives out a stream of functions, like named value gives out a stream of values
+- Could view named value as giving out a stream of no-args functions
+- More convenient for debugging to view named values as value streams
+- Provided functions could also change at runtime
+- Expressions have both functions and values as input, and combine them together - functions and values both data in a way
+- Simple operations can also be seen as functions anyway, even though they will not change at runtime
+- A function call combines function definition with other input values
+- Another possible view: Named function definition is a factory that gives out a one-off function instance with stream inputs and outputs
+  - some inputs are linked back to global values in the app or definition, and some come from arguments of the call where it is used
+  - replacing the function assumes functions are one-off calls, not continuous streams
+  - could still be updated if actual function definition changes
+
+
+User function definition implementation
+---------------------------------------
+- Create evaluator tree as for a normal expression
+- Put ArgRefs in where needed
+- Tree is only a template - not activated
+- Function Calls No args or With args do not subscribe to the user function subject
+- User function subject emits the definition only when it is updated
+
+User function call implementation
+---------------------------------
+- Constructed with function name and arguments
+- Subscribe to the user function subject for the function name to get the definition
+- On receiving function definition:
+    - Array of subjects with subscriptions to each of the arguments
+    - Map of argument names (from definition) to argument subjects
+    - Ask the definition for a copy of its evaluator tree
+    - Get all Function Call No Args and subscribe them to the function subject
+    - Get all Function Call With Args and subscribe them to the function subject - which will in turn activate that call
+    - Get all Arg Refs and subscribe them to the argument map
+    - Subscribe to evaluator tree as output of this function call
+- Updating the definition: dispose ArgRef subscriptions to argument subjects, function calls, dispose sub to eval tree
+- Evaluator should have a dispose method on it
+- Need access to function subjects when activating function call on receiving definition
+- Maybe all expressions should be activated in the same way

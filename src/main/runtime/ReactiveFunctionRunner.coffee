@@ -91,6 +91,7 @@ module.exports = class ReactiveFunctionRunner
       else functionImpl.theFunction
 
     if funcDef.expr instanceof Input then @inputs[name] = reactiveFunction
+    reactiveFunction.activate()
 
 #    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
@@ -178,10 +179,9 @@ module.exports = class ReactiveFunctionRunner
     source = reactiveFunction.observable()
     subj = new Rx.ReplaySubject(2)
     subj.sourceSub = source.subscribe subj
-    notEvalComplete = (x)->
-      console.log 'notEvalComplete', x, x isnt Eval.EvaluationComplete
-      x isnt Eval.EvaluationComplete
-    subj.valueChangesSub = subj.filter(notEvalComplete).distinctUntilChanged().subscribe (value) =>
+    logValueChange = (x)-> console.log 'value change', name, x
+    notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
+    subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged().subscribe (value) =>
       @valueChanges.onNext [name, value]
     subj
 
