@@ -42,8 +42,8 @@ User function definition implementation
 
 User function call implementation
 ---------------------------------
-- Constructed with function name and arguments
-- Subscribe to the user function subject for the function name to get the definition
+- Constructed with function name and argument evaluators
+- When activated, subscribe to the user function subject for the function name to get the definition
 - On receiving function definition:
     - Array of subjects with subscriptions to each of the arguments
     - Map of argument names (from definition) to argument subjects

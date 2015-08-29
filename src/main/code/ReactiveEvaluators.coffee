@@ -14,9 +14,12 @@ class Evaluator
 
   observable: -> @subject
 
-  activate: ->
+  activate: (context) ->
     @_subscribeTo arg.observable(), i for arg, i in @args
-    arg.activate() for arg in @args
+    @_activateArgs context
+
+
+  _activateArgs: (context) -> arg.activate(context) for arg in @args
 
   _evaluateIfReady: ->
     if @eventsInProgress is 0
@@ -172,11 +175,17 @@ class FunctionCallNoArgs extends Evaluator
 
 #TODO new values if function changes
 class FunctionCallWithArgs extends Evaluator
-  constructor: (expr, @name, args, @userFunctions, @providedFunctions) ->
-    @func = @providedFunctions[name]
+  constructor: (expr, @name, args) ->
     super expr, args
 
-  _calculateNextValue: -> @func.apply null, @values
+  activate: (context) ->
+    @func = context.providedFunctions[@name]
+    @_subscribeTo arg.observable(), i for arg, i in @args
+    @_activateArgs context
+
+  _calculateNextValue: ->
+    console.log this, '_calculateNextValue', @values
+    @func.apply null, @values
 
 #TODO does this belong in here?
 class FunctionDefinition
@@ -186,7 +195,7 @@ class ArgRef extends Evaluator
   constructor: (@name) ->
     super name, [null]
 
-  activate: (argSubjects) ->
+  activate: (context) ->
 
   _calculateNextValue: -> @values[0]
 
