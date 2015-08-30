@@ -101,7 +101,7 @@ class BinaryOperator extends Evaluator
   _calculateNextValue: -> @op(@values[0], @values[1])
 
   copy: ->
-    new @constructor @expr, @left, @right
+    new @constructor @expr, @left.copy(), @right.copy()
 
   op: (a, b) -> throw new Error('op must be defined')
 
@@ -200,7 +200,7 @@ class FunctionCallWithArgs extends Evaluator
 
     @_activateArgs context
 
-  copy: -> new FunctionCallWithArgs @expr, @name, @args
+  copy: -> new FunctionCallWithArgs @expr, @name, (a.copy() for a in @args)
 
   _updateFunction: (funcDef) =>
     argSubject = (arg) ->
@@ -239,25 +239,6 @@ class ArgRef extends Evaluator
 
   _calculateNextValue: -> @values[0]
 
-class FunctionEvaluator # extends Evaluator
-  constructor: (@funcDef, @name, @argNames, @evaluator, @argumentManager) ->
-
-  latestValue: (argValues) ->
-    @argumentManager.pushValues _.zipObject @argNames, argValues
-    result = @evaluator.latestValue()
-    @argumentManager.popValues()
-    result
-
-  newValues: (argValues) ->
-    @evaluator.reset()
-    @argumentManager.pushValues _.zipObject @argNames, argValues
-    result = [@evaluator.latestValue()]
-    @argumentManager.popValues()
-    console.log 'FunctionEvaluator.newValues', @name, argValues, '->', result
-    result
-
-  reset: -> @evaluator.reset()
-
 class TransformExpression
   constructor: (@expr, @evaluator, @argumentManager) ->
 
@@ -277,7 +258,7 @@ class Aggregation extends Evaluator
   constructor: (expr, @names, @items) ->
     super expr, items
 
-  copy: -> new Aggregation @expr, @names, @items
+  copy: -> new Aggregation @expr, @names, (a.copy() for a in @items)
 
   _calculateNextValue: -> _.zipObject @names, @values
 
@@ -285,7 +266,7 @@ class Sequence extends Evaluator
   constructor: (expr, @items) ->
     super expr, items
 
-  copy: -> new Sequence @expr, @items
+  copy: -> new Sequence @expr, (a.copy() for a in @items)
 
   _calculateNextValue: -> @values
 
@@ -294,9 +275,9 @@ class AggregationSelector extends Evaluator
   constructor: (expr, @aggregation, @elementName) ->
     super expr, [aggregation]
 
-  copy: -> new AggregationSelector @expr, @aggregation, @elementName
+  copy: -> new AggregationSelector @expr, @aggregation.copy(), @elementName
 
   _calculateNextValue: -> @values[0][@elementName]
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
-  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, FunctionEvaluator, TransformExpression, EvaluationComplete, FunctionDefinition}
+  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, TransformExpression, EvaluationComplete, FunctionDefinition}
