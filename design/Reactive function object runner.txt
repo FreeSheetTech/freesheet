@@ -8,7 +8,7 @@ What is a function?
 - Is recursion relevant - no place in infinite streams, or spreadsheet style evaluation
 - Concept of function must always include functions with stream outputs
 - Eg plus5 maps a stream of integers -> stream of integers with 5 added to them, instead of int -> int
-- But for convenience want to be able to define value->value functions and have it wrapped
+- But for convenience want to be able to define value(s)->value functions and have it wrapped
 - And functions passed to transform expressions need to act on single values
 - Maybe have concept of function output cardinality, which could be either exactly 1 or 0..n
 - In general, don't know whether will get 1 value out of a function for a set of input values, 0 or many
@@ -56,3 +56,12 @@ User function call implementation
 - Evaluator should have a dispose method on it
 - Need access to function subjects when activating function call on receiving definition
 - Maybe all expressions should be activated in the same way
+
+Using stream input/output functions
+-----------------------------------
+- Output events need to have eval complete (EC) inserted after each one - don't they?
+- Poss: Filter out EC on inputs, let function handle it
+- Stream functions need to know which inputs have new events on them
+- Poss: Store new values on each input until no events in progress, then send to function - but why?
+- Poss: stream output functions return a multiple values object, which function call impl sends to output subject one at a time, with ECs inserted
+  - works against Rx, not good for very long streams

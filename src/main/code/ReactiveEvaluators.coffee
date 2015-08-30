@@ -1,6 +1,7 @@
 Rx = require 'rx'
 _ = require 'lodash'
 Period = require '../functions/Period'
+FunctionTypes = require '../runtime/FunctionTypes'
 {CalculationError} = require '../error/Errors'
 NotCalculated = 'NOT_CALCULATED'
 Initial = 'INITIAL'
@@ -196,7 +197,10 @@ class FunctionCallWithArgs extends Evaluator
     else
       @func = context.providedFunctions[@name]
       @isUserFunction = false
-      @_subscribeTo arg.observable(), i for arg, i in @args
+      if @func.returnKind == FunctionTypes.STREAM_RETURN
+        @_subscribeStreamFunction @func
+      else
+        @_subscribeTo arg.observable(), i for arg, i in @args
 
     @_activateArgs context
 
@@ -215,6 +219,12 @@ class FunctionCallWithArgs extends Evaluator
     @_subscribeTo @evaluator.observable(), 0
     #TODO hack
     @values = (null for i in [1...@args.length])
+
+  _subscribeStreamFunction: (fn) ->
+    argObs = (arg.observable().filter((x) -> x isnt EvaluationComplete) for arg in @args)
+    outputObs = fn.apply null, argObs
+    outputObsWithEC = outputObs.flatMap (x)-> [x, EvaluationComplete]
+    outputObsWithEC.subscribe @subject
 
   _calculateNextValue: ->
     console.log @toString(), '_calculateNextValue', @values

@@ -75,7 +75,7 @@ module.exports = class ReactiveFunctionRunner
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
   addProvidedStreamReturnFunction: (name, fn) ->
-    @_addProvidedFunction name, asImmediateFunction(fn)
+    @_addProvidedFunction name, fn
     fn.returnKind = FunctionTypes.STREAM_RETURN
 
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap

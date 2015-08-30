@@ -442,7 +442,7 @@ describe 'ReactiveFunctionRunner runs', ->
                           {pointsFactor: 6}, {fudgeFactor: 4},
                           {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
 
-  describe 'sequence and stream functions', ->
+  describe.only 'sequence and stream functions', ->
 
     it 'collects all the values in a stream using all function', ->
       providedFunctions
@@ -524,9 +524,9 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'itemsIn = input'
       parseUserFunctions 'items = unpackLists(itemsIn)'
       parseUserFunctions 'doubled = items * 2'
-      sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
+      sendInputs 'itemsIn', [4, 5], 7, [], [8, 9]
 
-      changesFor("doubled").should.eql([0, 10, 14, 18])
+      changesFor("doubled").should.eql([0, 8, 10, 14, 16, 18])
 
     it 'collects all items from unpacked lists', ->
 
@@ -537,7 +537,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
       parseUserFunctions 'itemsIn = input'
       parseUserFunctions 'items = unpackLists(itemsIn)'
-      parseUserFunctions 'tot = total(all_items)'
+      parseUserFunctions 'tot = total(all(items))'
       sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
 
       changesFor("tot").should.eql([null, 9, 16, 33])
