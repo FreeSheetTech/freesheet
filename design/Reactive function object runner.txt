@@ -59,7 +59,7 @@ User function call implementation
 
 Using stream input/output functions
 -----------------------------------
-- Output events need to have eval complete (EC) inserted after each one - don't they?
+- Output needs to have an eval complete (EC) inserted after all the outputs for one set of input events
 - Poss: Filter out EC on inputs, let function handle it
 - Stream functions need to know which inputs have new events on them
 - Poss: Store new values on each input until no events in progress, then send to function - but why?

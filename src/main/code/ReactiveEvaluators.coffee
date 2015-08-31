@@ -10,7 +10,7 @@ EvaluationComplete = 'EVALUATION_COMPLETE'
 class Evaluator
   constructor: (@expr, @args, subj) ->
     @subject = subj or new Rx.ReplaySubject(2, null)
-    @eventsInProgress = 0
+    @eventsInProgress = (false for i in [0...args.length])
     @values = (Initial for i in [0...args.length])
 
   observable: -> @subject
@@ -24,13 +24,13 @@ class Evaluator
   _activateArgs: (context) -> arg.activate(context) for arg in @args
 
   _evaluateIfReady: ->
-    if @eventsInProgress is 0
-      haveAllValues = not _.some @values, (x) -> x is Initial
-      if haveAllValues
-        nextValue = @_calculateNextValue()
-        console.log 'Send:', @toString(), nextValue
-        @subject.onNext nextValue
-        @subject.onNext EvaluationComplete
+    eventsComplete = not _.some @eventsInProgress
+    haveAllValues = not _.some @values, (x) -> x is Initial
+    if eventsComplete and haveAllValues
+      nextValue = @_calculateNextValue()
+      console.log 'Send:', @toString(), nextValue
+      @subject.onNext nextValue
+      @subject.onNext EvaluationComplete
 
 
   _calculateNextValue: -> throw new Error('_calculateNextValue must be defined')
@@ -39,11 +39,11 @@ class Evaluator
     thisEval = this
     obs.subscribe (value) ->
       if value is EvaluationComplete
-        thisEval.eventsInProgress = thisEval.eventsInProgress - 1
+        thisEval.eventsInProgress[i] = false
         console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress
         thisEval._evaluateIfReady()
       else
-        thisEval.eventsInProgress = thisEval.eventsInProgress + 1
+        thisEval.eventsInProgress[i] = true
         console.log 'Rcvd:', thisEval.toString(), value, '-- events', thisEval.eventsInProgress
         thisEval.values[i] = value
 
@@ -222,9 +222,13 @@ class FunctionCallWithArgs extends Evaluator
 
   _subscribeStreamFunction: (fn) ->
     argObs = (arg.observable().filter((x) -> x isnt EvaluationComplete) for arg in @args)
+    ecObs = (arg.observable().filter((x) -> x is EvaluationComplete) for arg in @args)
     outputObs = fn.apply null, argObs
-    outputObsWithEC = outputObs.flatMap (x)-> [x, EvaluationComplete]
-    outputObsWithEC.subscribe @subject
+
+    #TODO this will not work if more than one arg at a time receives an event
+    allEC = Rx.Observable.merge ecObs
+    outputObs.subscribe @subject
+    allEC.subscribe @subject
 
   _calculateNextValue: ->
     console.log @toString(), '_calculateNextValue', @values

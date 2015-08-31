@@ -18,9 +18,15 @@ describe 'ReactiveFunctionRunner runs', ->
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
   fromEachFunction = (s, func) -> s.map (x) -> apply(func, x)
   selectFunction = (s, func) -> s.filter (x) -> apply(func, x)
-  allFunction = (x) ->
-    previousItems = @previousItems or []
-    @previousItems = if x? then previousItems.concat x else previousItems
+  allFunction = (s) -> s.scan [], (acc, x) -> acc.concat x
+  unpackListsFunction =  (s) ->
+    subj = new Rx.Subject()
+    s.subscribe (x) ->
+      if _.isArray(x)
+        subj.onNext y for y in x
+      else
+        subj.onNext x
+    subj
 
 
 
@@ -59,7 +65,7 @@ describe 'ReactiveFunctionRunner runs', ->
     inputSubj = new Rx.Subject()
 
     providedFunctions TimeFunctions
-    providedFunctions
+    providedStreamReturnFunctions
       all: allFunction
 
     providedTransformFunctions
@@ -442,7 +448,7 @@ describe 'ReactiveFunctionRunner runs', ->
                           {pointsFactor: 6}, {fudgeFactor: 4},
                           {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
 
-  describe.only 'sequence and stream functions', ->
+  describe 'sequence and stream functions', ->
 
     it 'collects all the values in a stream using all function', ->
       providedFunctions
@@ -519,19 +525,31 @@ describe 'ReactiveFunctionRunner runs', ->
     it 'uses items from unpacked lists', ->
 
       providedStreamReturnFunctions
-        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
+        unpackLists: unpackListsFunction
 
       parseUserFunctions 'itemsIn = input'
       parseUserFunctions 'items = unpackLists(itemsIn)'
       parseUserFunctions 'doubled = items * 2'
-      sendInputs 'itemsIn', [4, 5], 7, [], [8, 9]
+      sendInputs 'itemsIn', [4, 5, 6], 7, [], [8, 9]
 
-      changesFor("doubled").should.eql([0, 8, 10, 14, 16, 18])
+      changesFor("doubled").should.eql([0, 12, 14, 18])
 
     it 'collects all items from unpacked lists', ->
 
       providedStreamReturnFunctions
-        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
+        unpackLists: unpackListsFunction
+
+      parseUserFunctions 'itemsIn = input'
+      parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'allItems = all(items)'
+      sendInputs 'itemsIn', [4, 5], 7, [], [8, 9]
+
+      changesFor("allItems").should.eql([[], [4, 5], [4, 5, 7], [4, 5, 7, 8, 9]])
+
+    it 'totals all items from unpacked lists', ->
+
+      providedStreamReturnFunctions
+        unpackLists: unpackListsFunction
       providedFunctions
         total: (s) -> _.sum s
 

@@ -23,6 +23,7 @@ Sequences and objects
 - Poss: No foreach - just a function with a single stream input that produces another stream, and may select, transform or aggregate each input event value
 - Could use stream functions for streams and sequences, but say which you are doing?
 - May want to define a literal sequence but have it treated like a stream
+- In general may want to have a list value treated as separate values, which leads to unpackLists
 
 Transform functions for sequences and objects
 ---------------------------------------------
@@ -116,6 +117,23 @@ Dual-use function implementation
 - Use as is for the Over version
 - For the individual value version, use Observable.from, subscribe and collect output
 - Need to know whether function gives you a single value or a sequence so know whether to return an array or not
+
+Another view?
+-------------
+- Is the difference whether you apply the function to just the latest item, forgetting all previous, or to all the items that have arrived so far?
+- This applies even if you are applying something to the result of unpackLists, where obviously you intend to have many items
+- Normal expectation is just to apply to latest item, sya if want to apply to all values
+- Getting all values should be a function in its own right,
+- So all() gives a value which is an ever-growing sequence
+- If treating an unpacked list as one event, may sometimes want unpacked items to be treated as own events - could have a separate() function
+
+Efficiency
+----------
+- Want to use fold-type processing wherever possible
+- Collecting all values into an ever-growing array and then scanning that every time likely to be very inefficient
+- Need to give functions the chance to handle items one at a time
+- Also need to be able to use the same functions on sequences
+- Need a stream function with an all() as input to use stream directly if it can
 
 In domain modelling
 -------------------

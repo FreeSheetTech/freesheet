@@ -394,6 +394,8 @@ Teaching people to use it
 - Freesheet phrase book
 - Events vs signals - both views useful
 - Cooking ingredients - ready made vs from scratch
+- How to break down a problem eg describe something, then describe its parts, then their parts
+- Lasagne down to basic ingredients
 
 
 Domain modelling
