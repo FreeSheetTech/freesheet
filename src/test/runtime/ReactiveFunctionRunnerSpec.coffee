@@ -3,6 +3,7 @@ Rx = require 'rx'
 _ = require 'lodash'
 TextParser = require '../parser/TextParser'
 ReactiveFunctionRunner = require './ReactiveFunctionRunner'
+Eval = require '../code/ReactiveEvaluators'
 TimeFunctions = require '../functions/TimeFunctions'
 Period = require '../functions/Period'
 {CalculationError, FunctionError} = require '../error/Errors'
@@ -22,8 +23,11 @@ describe 'ReactiveFunctionRunner runs', ->
     items = []
     subj = new Rx.Subject(items)
     s.subscribe (x) ->
-      items = items.concat x
-      subj.onNext items
+      if x is Eval.EvaluationComplete
+        subj.onNext items
+        subj.onNext Eval.EvaluationComplete
+      else
+        items = items.concat x
     subj
 
   unpackListsFunction =  (s) ->
@@ -511,19 +515,6 @@ describe 'ReactiveFunctionRunner runs', ->
       inputs [2, 3, 4], [5, 6], [7]
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]
 
-    it 'does not collect items for all_ if a stream function returns no values', ->
-
-      providedStreamReturnFunctions
-        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
-
-      parseUserFunctions 'itemsIn = input'
-      parseUserFunctions 'items = unpackLists(itemsIn)'
-      parseUserFunctions 'everyItem = all_items'
-
-      sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
-
-      changesFor("everyItem").should.eql([[4, 5, 7, 8, 9]])
-
     it 'uses items from unpacked lists', ->
 
       providedStreamReturnFunctions
@@ -546,7 +537,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'allItems = all(items)'
       sendInputs 'itemsIn', [4, 5, 6], 7, [], [8, 9]
 
-      changesFor("allItems").should.eql([[], [4, 5, 6], [4, 5, 6, 7], [4, 5, 6, 7, 8, 9]])
+      changesFor("allItems").should.eql([[null], [null, 4, 5, 6], [null, 4, 5, 6, 7], [null, 4, 5, 6, 7, 8, 9]])
 
     it 'totals all items from unpacked lists', ->
 
@@ -560,7 +551,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'tot = total(all(items))'
       sendInputs 'itemsIn', [4, 5], [7], [], [8, 9]
 
-      changesFor("tot").should.eql([null, 9, 16, 33])
+      changesFor("tot").should.eql([0, 9, 16, 33])
 
 
   describe 'updates dependent expressions and notifies changes', ->

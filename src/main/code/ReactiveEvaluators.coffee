@@ -24,9 +24,8 @@ class Evaluator
   _activateArgs: (context) -> arg.activate(context) for arg in @args
 
   _evaluateIfReady: ->
-    eventsComplete = not _.some @eventsInProgress
     haveAllValues = not _.some @values, (x) -> x is Initial
-    if eventsComplete and haveAllValues
+    if haveAllValues
       nextValue = @_calculateNextValue()
       console.log 'Send:', @toString(), nextValue
       @subject.onNext nextValue
@@ -39,9 +38,11 @@ class Evaluator
     thisEval = this
     obs.subscribe (value) ->
       if value is EvaluationComplete
+        eventsWereInProgress = _.some thisEval.eventsInProgress
         thisEval.eventsInProgress[i] = false
         console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress
-        thisEval._evaluateIfReady()
+        eventsAreNowInProgress = _.some thisEval.eventsInProgress
+        if eventsWereInProgress and not eventsAreNowInProgress then thisEval._evaluateIfReady()
       else
         thisEval.eventsInProgress[i] = true
         console.log 'Rcvd:', thisEval.toString(), value, '-- events', thisEval.eventsInProgress
@@ -172,13 +173,14 @@ class FunctionCallNoArgs extends Evaluator
     super expr, [null]
 
   activate: (context) ->
-    obs = if context.userFunctions[@name]
-            context.userFunctions[@name]
-          else
-            source = context.providedFunctions[@name]
-            value = source()
-            new Rx.Observable.from([value, EvaluationComplete])
-    @_subscribeTo obs, 0
+    if context.userFunctions[@name]
+      obs = context.userFunctions[@name]
+      obs.subscribe @subject
+    else
+      source = context.providedFunctions[@name]
+      value = source()
+      obs = new Rx.Observable.from([value, EvaluationComplete])
+      @_subscribeTo obs, 0
 
   copy: -> new FunctionCallNoArgs @expr, @name
 
@@ -221,14 +223,15 @@ class FunctionCallWithArgs extends Evaluator
     @values = (null for i in [1...@args.length])
 
   _subscribeStreamFunction: (fn) ->
+    rawArgObs = (arg.observable() for arg in @args)
     argObs = (arg.observable().filter((x) -> x isnt EvaluationComplete) for arg in @args)
     ecObs = (arg.observable().filter((x) -> x is EvaluationComplete) for arg in @args)
-    outputObs = fn.apply null, argObs
+    outputObs = fn.apply null, rawArgObs
 
     #TODO this will not work if more than one arg at a time receives an event
     allEC = Rx.Observable.merge ecObs
     outputObs.subscribe @subject
-    allEC.subscribe @subject
+#    allEC.subscribe @subject
 
   _calculateNextValue: ->
     console.log @toString(), '_calculateNextValue', @values
