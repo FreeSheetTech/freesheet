@@ -186,7 +186,8 @@ module.exports = class ReactiveFunctionRunner
     subj.sourceSub = source.subscribe subj
     logValueChange = (x)-> console.log 'value change', name, x
     notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
-    subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged().subscribe (value) =>
+    compareValue = (x, y) -> _.isEqual x, y
+    subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).subscribe (value) =>
       @valueChanges.onNext [name, value]
     subj
 

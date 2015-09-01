@@ -18,7 +18,14 @@ describe 'ReactiveFunctionRunner runs', ->
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
   fromEachFunction = (s, func) -> s.map (x) -> apply(func, x)
   selectFunction = (s, func) -> s.filter (x) -> apply(func, x)
-  allFunction = (s) -> s.scan [], (acc, x) -> acc.concat x
+  allFunction = (s) ->
+    items = []
+    subj = new Rx.Subject(items)
+    s.subscribe (x) ->
+      items = items.concat x
+      subj.onNext items
+    subj
+
   unpackListsFunction =  (s) ->
     subj = new Rx.Subject()
     s.subscribe (x) ->
@@ -451,18 +458,14 @@ describe 'ReactiveFunctionRunner runs', ->
   describe 'sequence and stream functions', ->
 
     it 'collects all the values in a stream using all function', ->
-      providedFunctions
-        all: allFunction
-
       parseUserFunctions 'allInputs = all(theInput)'
 
       inputs 20, 30, 40
 
-      changesFor("allInputs").should.eql [[], [20], [20, 30], [20, 30, 40]]
+      changesFor("allInputs").should.eql [[null], [null, 20], [null, 20, 30], [null, 20, 30, 40]]
 
     it 'finds the total of the values in a stream using all_ function', ->
       providedFunctions
-        all: allFunction
         total: (s) -> _.sum s
       parseUserFunctions 'tot = total(all(theInput))'
 
@@ -472,7 +475,6 @@ describe 'ReactiveFunctionRunner runs', ->
 
     it 'finds the totals of the sequence values in a stream using plain version and their running total', ->
       providedFunctions
-        all: allFunction
         total: (s) ->  _.sum s
       parseUserFunctions 'tot = total(theInput)'
       parseUserFunctions 'totAll = total(all(tot))'
@@ -542,9 +544,9 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'itemsIn = input'
       parseUserFunctions 'items = unpackLists(itemsIn)'
       parseUserFunctions 'allItems = all(items)'
-      sendInputs 'itemsIn', [4, 5], 7, [], [8, 9]
+      sendInputs 'itemsIn', [4, 5, 6], 7, [], [8, 9]
 
-      changesFor("allItems").should.eql([[], [4, 5], [4, 5, 7], [4, 5, 7, 8, 9]])
+      changesFor("allItems").should.eql([[], [4, 5, 6], [4, 5, 6, 7], [4, 5, 6, 7, 8, 9]])
 
     it 'totals all items from unpacked lists', ->
 

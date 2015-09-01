@@ -65,3 +65,10 @@ Using stream input/output functions
 - Poss: Store new values on each input until no events in progress, then send to function - but why?
 - Poss: stream output functions return a multiple values object, which function call impl sends to output subject one at a time, with ECs inserted
   - works against Rx, not good for very long streams
+
+To Do
+-----
+- TODOs in code
+- Rx v3
+- All values instead of distinct on value changes
+- No null from Input when created
