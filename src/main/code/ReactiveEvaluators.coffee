@@ -25,7 +25,10 @@ class Evaluator
     @_subscribeTo arg.observable(), i for arg, i in @args
     @_activateArgs context
 
-  copy: -> throw new Error('copy must be defined')
+  copy: -> throw new Error("copy must be defined in #{@toString()}")
+  currentValue: (argValues) ->
+    throw new Error("currentValue not available: #{@name}") if @values[0] is Initial
+    @values[0]
 
   _activateArgs: (context) -> arg.activate(context) for arg in @args
 
@@ -39,6 +42,7 @@ class Evaluator
 
 
   _calculateNextValue: -> throw new Error('_calculateNextValue must be defined')
+  _currentValues: (argValues) -> (a.currentValue(argValues) for a in @args)
 
   _subscribeTo: (obs, i) ->
     thisEval = this
@@ -68,6 +72,7 @@ class Literal extends Evaluator
     super expr, [dummyArg]
 
   copy: -> new Literal @expr, @value
+  currentValue: (argValues) -> @value
 
   _calculateNextValue: -> @value
 
@@ -91,6 +96,7 @@ class Input extends Evaluator
     super expr, [dummyArg]
 
   copy: -> new Input @expr, @inputName
+  currentValue: (argValues) -> @values[0]
 
   _calculateNextValue: ->
     @values[0]
@@ -108,8 +114,8 @@ class BinaryOperator extends Evaluator
 
   _calculateNextValue: -> @op(@values[0], @values[1])
 
-  copy: ->
-    new @constructor @expr, @left.copy(), @right.copy()
+  copy: -> new @constructor @expr, @left.copy(), @right.copy()
+  currentValue: (argValues) -> @op(@left.currentValue(argValues), @right.currentValue(argValues))
 
   op: (a, b) -> throw new Error('op must be defined')
 
@@ -182,7 +188,8 @@ class FunctionCallNoArgs extends Evaluator
     if context.userFunctions[@name]
       obs = context.userFunctions[@name]
       log = (x) => console.log 'Pass:', @toString(), x
-      obs.do(log).subscribe @subject
+      storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
+      obs.do(storeValue).do(log).subscribe @subject
     else
       source = context.providedFunctions[@name]
       value = source()
@@ -190,6 +197,7 @@ class FunctionCallNoArgs extends Evaluator
       @_subscribeTo obs, 0
 
   copy: -> new FunctionCallNoArgs @expr, @name
+  currentValue: (argValues) -> @values[0]
 
   _calculateNextValue: -> @values[0]
 
@@ -255,6 +263,7 @@ class ArgRef extends Evaluator
     @_subscribeTo obs, 0
 
   copy: -> new ArgRef @name
+  currentValue: (argValues) -> argValues[@name]
 
   _calculateNextValue: -> @values[0]
 
@@ -263,6 +272,7 @@ class Aggregation extends Evaluator
     super expr, items
 
   copy: -> new Aggregation @expr, @names, (a.copy() for a in @items)
+  currentValue: (argValues) -> _.zipObject @names, @_currentValues(argValues)
 
   _calculateNextValue: -> _.zipObject @names, @values
 
@@ -271,6 +281,7 @@ class Sequence extends Evaluator
     super expr, items
 
   copy: -> new Sequence @expr, (a.copy() for a in @items)
+  currentValue: (argValues) -> @_currentValues(argValues)
 
   _calculateNextValue: -> @values
 
@@ -280,6 +291,7 @@ class AggregationSelector extends Evaluator
     super expr, [aggregation]
 
   copy: -> new AggregationSelector @expr, @aggregation.copy(), @elementName
+  currentValue: (argValues) -> @aggregation.currentValue(argValues)[@elementName]
 
   _calculateNextValue: -> @values[0][@elementName]
 
@@ -296,17 +308,8 @@ class ExpressionFunction extends Evaluator
   copy: -> new ExpressionFunction @evaluator.copy()
 
   _calculateNextValue: ->
-    result = undefined
-    evaluator = @evaluator.copy()
-    evaluator.observable().subscribe (x) ->
-      if x isnt EvaluationComplete then result = x
-    argInput = new Rx.Subject()
-    context = _.merge {}, @context, {argSubjects: {in: argInput}}
-    evaluator.activate context
-    (_in) ->
-      argInput.onNext _in
-      argInput.onNext EvaluationComplete
-      result
+    evaluator = @evaluator
+    (_in) -> evaluator.currentValue {'in': _in}
 
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,

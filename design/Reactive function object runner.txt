@@ -120,6 +120,8 @@ Callable function from evaluators
 - Some evaluators may not be able to do that, like stream functions, but ok not to allow those in transform functions
 - Maybe optimise later for values that cannot change
 - SO evaluators can act in two modes - pull and push
+- Probably don't need to copy the Evaluator tree, so may be able to remove that code
+- Can't use _calculateNextValue as this doesn't work in template Evaluator trees
 
 To Do
 -----
