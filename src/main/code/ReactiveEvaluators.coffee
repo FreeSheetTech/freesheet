@@ -3,19 +3,25 @@ _ = require 'lodash'
 Period = require '../functions/Period'
 FunctionTypes = require '../runtime/FunctionTypes'
 {CalculationError} = require '../error/Errors'
-NotCalculated = 'NOT_CALCULATED'
+Updated = 'UPDATED'
 Initial = 'INITIAL'
+NotUsed = 'NOTUSED'
 EvaluationComplete = 'EVALUATION_COMPLETE'
+
+nextId = 1
 
 class Evaluator
   constructor: (@expr, @args, subj) ->
+    @id = "[#{nextId++}]"
     @subject = subj or new Rx.ReplaySubject(2, null)
     @eventsInProgress = (false for i in [0...args.length])
     @values = (Initial for i in [0...args.length])
+    @isTemplate = false
 
   observable: -> @subject
 
   activate: (context) ->
+    @isTemplate = context.isTemplate or false
     @_subscribeTo arg.observable(), i for arg, i in @args
     @_activateArgs context
 
@@ -26,7 +32,7 @@ class Evaluator
   _evaluateIfReady: ->
     haveAllValues = not _.some @values, (x) -> x is Initial
     if haveAllValues
-      nextValue = @_calculateNextValue()
+      nextValue = if @isTemplate then Updated else @_calculateNextValue()
       console.log 'Send:', @toString(), nextValue
       @subject.onNext nextValue
       @subject.onNext EvaluationComplete
@@ -40,7 +46,7 @@ class Evaluator
       if value is EvaluationComplete
         eventsWereInProgress = _.some thisEval.eventsInProgress
         thisEval.eventsInProgress[i] = false
-        console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress
+        console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress, ' -- values', thisEval.values
         eventsAreNowInProgress = _.some thisEval.eventsInProgress
         if eventsWereInProgress and not eventsAreNowInProgress then thisEval._evaluateIfReady()
       else
@@ -48,7 +54,7 @@ class Evaluator
         console.log 'Rcvd:', thisEval.toString(), value, '-- events', thisEval.eventsInProgress
         thisEval.values[i] = value
 
-  toString: -> "#{@constructor.name} #{@expr?.text}"
+  toString: -> "#{@constructor.name} #{@expr?.text} #{@id}"
 
 class Literal extends Evaluator
   constructor: (expr, @value) ->
@@ -175,7 +181,8 @@ class FunctionCallNoArgs extends Evaluator
   activate: (context) ->
     if context.userFunctions[@name]
       obs = context.userFunctions[@name]
-      obs.subscribe @subject
+      log = (x) => console.log 'Pass:', @toString(), x
+      obs.do(log).subscribe @subject
     else
       source = context.providedFunctions[@name]
       value = source()
@@ -223,15 +230,10 @@ class FunctionCallWithArgs extends Evaluator
     @values = (null for i in [1...@args.length])
 
   _subscribeStreamFunction: (fn) ->
+    #TODO requires function to handle EvaluationComplete
     rawArgObs = (arg.observable() for arg in @args)
-    argObs = (arg.observable().filter((x) -> x isnt EvaluationComplete) for arg in @args)
-    ecObs = (arg.observable().filter((x) -> x is EvaluationComplete) for arg in @args)
     outputObs = fn.apply null, rawArgObs
-
-    #TODO this will not work if more than one arg at a time receives an event
-    allEC = Rx.Observable.merge ecObs
     outputObs.subscribe @subject
-#    allEC.subscribe @subject
 
   _calculateNextValue: ->
     console.log @toString(), '_calculateNextValue', @values
@@ -249,27 +251,12 @@ class ArgRef extends Evaluator
     super {text: name}, [null]
 
   activate: (context) ->
-    obs = context.argSubjects[@name]
+    obs = context.argSubjects[@name] or context.argSubjects.__anyArg
     @_subscribeTo obs, 0
 
   copy: -> new ArgRef @name
 
   _calculateNextValue: -> @values[0]
-
-class TransformExpression
-  constructor: (@expr, @evaluator, @argumentManager) ->
-
-  latestValue: ->
-    (_in) =>
-      @evaluator.reset()
-      @argumentManager.pushValues {'in': _in}
-      result = @evaluator.latestValue()
-      @argumentManager.popValues()
-      result
-
-  hasNewValues: -> @evaluator.hasNewValues()
-
-  reset: -> @evaluator.reset()
 
 class Aggregation extends Evaluator
   constructor: (expr, @names, @items) ->
@@ -296,5 +283,31 @@ class AggregationSelector extends Evaluator
 
   _calculateNextValue: -> @values[0][@elementName]
 
+class ExpressionFunction extends Evaluator
+  constructor: (@evaluator) ->
+    super evaluator.expr, []
+
+  activate: (context) ->
+    @context = context
+    exprContext = _.merge {}, context, {argSubjects: {__anyArg: Rx.Observable.from([NotUsed, EvaluationComplete])}, isTemplate: true }
+    @evaluator.activate exprContext
+    @_subscribeTo @evaluator.observable(), 0
+
+  copy: -> new ExpressionFunction @evaluator.copy()
+
+  _calculateNextValue: ->
+    result = undefined
+    evaluator = @evaluator.copy()
+    evaluator.observable().subscribe (x) ->
+      if x isnt EvaluationComplete then result = x
+    argInput = new Rx.Subject()
+    context = _.merge {}, @context, {argSubjects: {in: argInput}}
+    evaluator.activate context
+    (_in) ->
+      argInput.onNext _in
+      argInput.onNext EvaluationComplete
+      result
+
+
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
-  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, TransformExpression, EvaluationComplete, FunctionDefinition}
+  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, EvaluationComplete, FunctionDefinition, ExpressionFunction}

@@ -66,8 +66,43 @@ Using stream input/output functions
 - Poss: stream output functions return a multiple values object, which function call impl sends to output subject one at a time, with ECs inserted
   - works against Rx, not good for very long streams
 
+Transform expressions
+---------------------
+- Similar to FunctionCallWith Args, 1 argument
+- Argument is fed in one at a time from array
+- Most convenient if had a callable function to use with normal functions like map, filter, etc
+- To make a callable function from an evaluator:
+  - Instantiate copy of evaluator
+  - Get the ArgRef for in
+  - Subscribe to evaluator observable and save to local variable
+  - Make a context with a Subject for 'in'
+  - Activate the evaluator with the context
+  - Make a function with one arg that sends arg to subject's onNext, then returns the value of the variable
+  - Must all be on an immediate scheduler
+- If any input to function changes, need to re-evaluate where it is used, so need a stream of functions or evaluators
+- Need to re-evaluate the expression it is used in each time anything changes
+- So really need a stream of events with the function as their value
+- Fits with everything else, because the function is the argument passed to the next expression
+- Like FunctionCallWithArgs, but passing function itself rather than value from calling it
+- Do you need to re-create a function each time - or just do it anyway as that's safer?
+- Unlike a named function, a transform expression cannot change unless the expression it is part of is replaced
+- Need a ExpressionFunction evaluator between the evaluator for the expression and the FCWA where it is used
+- FCWA OR the generator needs to know the type of argument required and put an ExpressionFunction in between itself and the expression evaluator
+- ExpressionFunction needs to:
+  - generate a plain function as its output stream
+  - not wait for ArgRefs to be filled in
+  - respond to changes in input streams to the expression by generating a new output function
+- So evaluator in the ExpressionFunction needs to send events to the EF even though not all its values are there
+- When ExpressionFunction evaluator is activated:
+  - activate its expression evaluator with context containing a subject with the special value NotUsed for the ArgRef
+  - all evaluators send out a general Updated value if receive an input event and values are ready but it is a template
+  - subscribe to the expression evaluator, create and output a new plain function when any value received
+
+
+
 To Do
 -----
+- When/which should evaluator send out Updated
 - TODOs in code
 - Rx v3
 - All values instead of distinct on value changes

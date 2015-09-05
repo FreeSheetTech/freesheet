@@ -80,7 +80,7 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurr
           new Eval.FunctionCallNoArgs expr, functionName, userFunctions, providedFunctions
 
       else
-        throw new Error("FunctionObjectGenerator: Unknown expression: " + expr?.constructor.name)
+        throw new Error("ReactiveFunctionGenerator: Unknown expression: " + expr?.constructor.name)
 
     {code: code, functionNames}
 
