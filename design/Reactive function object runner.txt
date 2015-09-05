@@ -98,7 +98,28 @@ Transform expressions
   - all evaluators send out a general Updated value if receive an input event and values are ready but it is a template
   - subscribe to the expression evaluator, create and output a new plain function when any value received
 
+Transform expressions take 2
+----------------------------
+- Problem: generating a plain function is difficult as it is difficult to force Rx operations to be synchronous
+- So maybe use the evaluator in a transformer object which has an input stream and an output stream
+- Feed the values from the sequence into the input stream
+- Subscribe to the output and turn into an array
+- The input stream needs to complete to make the output array be generated
+- Need to have an Eval Complete after each input stream value to make the evaluator work
+- BUT probably more complicated than problem of generating a plain function
+- AND cannot use standard functions - both lodash and Rx need plain functions
+- AND hard to write new functions
 
+Callable function from evaluators
+---------------------------------
+- Poss: find a way to make Rx work synchronously
+- Poss: generate different kinds of evaluators that do own synchronous observer management
+- Poss: go more low-level in Rx
+- Poss: evaluators responsible for returning a function that does what they would do
+- Could be achieved with a getCurrentValue call on Evaluator, pass in named argument map
+- Some evaluators may not be able to do that, like stream functions, but ok not to allow those in transform functions
+- Maybe optimise later for values that cannot change
+- SO evaluators can act in two modes - pull and push
 
 To Do
 -----

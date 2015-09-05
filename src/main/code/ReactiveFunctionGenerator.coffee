@@ -69,7 +69,8 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurr
 
         args =  if isTransformFunction expr
                   transformExpr = expr.children[1]
-                  transformFunction = new Eval.TransformExpression transformExpr, getCodeAndAccumulateFunctions(transformExpr), argumentManager
+                  transformEval = getCodeAndAccumulateFunctions(transformExpr)
+                  transformFunction = new Eval.ExpressionFunction transformEval
                   [getCodeAndAccumulateFunctions(expr.children[0]), transformFunction]
                 else
                   (getCodeAndAccumulateFunctions(e) for e in expr.children)

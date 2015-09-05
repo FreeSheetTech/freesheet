@@ -54,3 +54,22 @@ describe 'ReactiveEvaluators', ->
       aSubject.onNext Eval.EvaluationComplete
       latestFunction()(5).should.eql 15
 
+    it 'callable function can use same input value twice', ->
+      inArg = new Eval.ArgRef('in')
+      sq = new Eval.Multiply(null, inArg, inArg)
+      exprFunc = new Eval.ExpressionFunction sq
+
+      functionsReceived = []
+      evalCompletesReceived = []
+      exprFunc.observable().subscribe (f) ->
+        if _.isFunction(f)
+          functionsReceived.push f
+        else
+          evalCompletesReceived.push f
+
+      exprFunc.activate({userFunctions: {}, providedFunctions: {}, argSubjects: {}})
+      latestFunction = -> _.last functionsReceived
+
+      latestFunction()(5).should.eql 25
+      latestFunction()(7).should.eql 49
+

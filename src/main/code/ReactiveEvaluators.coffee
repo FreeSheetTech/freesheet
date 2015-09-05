@@ -310,4 +310,5 @@ class ExpressionFunction extends Evaluator
 
 
 module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
-  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef, EvaluationComplete, FunctionDefinition, ExpressionFunction}
+  FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef,
+  EvaluationComplete, FunctionDefinition, ExpressionFunction}
