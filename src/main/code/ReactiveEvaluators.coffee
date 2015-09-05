@@ -222,6 +222,10 @@ class FunctionCallWithArgs extends Evaluator
     @_activateArgs context
 
   copy: -> new FunctionCallWithArgs @expr, @name, (a.copy() for a in @args)
+  currentValue: (argValues) ->
+    if @isUserFunction then throw new Error("Unexpected call to currentValue for user function in #{@toString()}")
+    if @func.returnKind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
+    @func.apply null, @_currentValues(argValues)
 
   _updateFunction: (funcDef) =>
     argSubject = (arg) ->
