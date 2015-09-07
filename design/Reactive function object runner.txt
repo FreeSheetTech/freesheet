@@ -123,6 +123,11 @@ Callable function from evaluators
 - Probably don't need to copy the Evaluator tree, so may be able to remove that code
 - Can't use _calculateNextValue as this doesn't work in template Evaluator trees
 
+Using local names from an aggregate
+------------------------------------
+- Maybe add names to argValues as progress through arguments
+- Names will lead to FCNA being created by generator
+
 To Do
 -----
 - When/which should evaluator send out Updated
@@ -130,3 +135,5 @@ To Do
 - Rx v3
 - All values instead of distinct on value changes
 - No null from Input when created
+- More info on expr and value and evaluator reference in CalculationError
+- Ensure everything goes through error checking

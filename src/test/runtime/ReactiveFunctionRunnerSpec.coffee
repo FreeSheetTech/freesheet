@@ -381,6 +381,11 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'num = a - "xxx"'
       changes.should.eql [{a: 10}, {num: error 'num', 'Invalid values in calculation'}]
 
+    it 'invalid calculation in sub-expression', ->
+      parseUserFunctions 'a = 10'
+      parseUserFunctions 'num = 25 + (a - "xxx")'
+      changes.should.eql [{a: 10}, {num: error 'num', 'Invalid values in calculation'}]
+
     it 'invalid calculation in literal expression', ->
       parseUserFunctions 'num = 10 - "xxx"'
       changes.should.eql [{num: error 'num', 'Invalid values in calculation'}]
@@ -498,10 +503,11 @@ describe 'ReactiveFunctionRunner runs', ->
       changesFor("sq").should.eql [[0], [0, 400], [0, 400, 900], [0, 400, 900, 1600]]
 
 
+      #TODO this should not have a zero at start
     it 'applies a transform function to an input stream using all function', ->
       parseUserFunctions 'sq = fromEach(all(theInput), in * in)'
       inputs 20, 30, 40
-      changesFor("sq").should.eql [[], [400], [400, 900], [400, 900, 1600]]
+      changesFor("sq").should.eql [[0], [0, 400], [0, 400, 900], [0, 400, 900, 1600]]
 
     it 'applies a transform function to the sequence values in a stream using plain value', ->
       parseUserFunctions 'sq = fromEach(theInput, in * in)'

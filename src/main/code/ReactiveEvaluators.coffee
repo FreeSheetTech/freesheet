@@ -34,11 +34,25 @@ class Evaluator
 
   _evaluateIfReady: ->
     haveAllValues = not _.some @values, (x) -> x is Initial
+    errorInValues = _.find @values, (x) -> x instanceof CalculationError
     if haveAllValues
-      nextValue = if @isTemplate then Updated else @_calculateNextValue()
+      nextValue = switch
+        when errorInValues then errorInValues
+        when @isTemplate then Updated
+        else @_calculateCheckNextValue()
       console.log 'Send:', @toString(), nextValue
       @subject.onNext nextValue
       @subject.onNext EvaluationComplete
+
+  _calculateCheckNextValue: ->
+    try
+      value = @_calculateNextValue()
+      switch
+        when value == Number.POSITIVE_INFINITY or value == Number.NEGATIVE_INFINITY then throw new Error 'Divide by zero'
+        when _.isNaN value then throw new Error 'Invalid values in calculation'
+        else value
+    catch e
+      if e instanceof CalculationError then e else new CalculationError(null, e.message)
 
 
   _calculateNextValue: -> throw new Error('_calculateNextValue must be defined')
@@ -211,13 +225,15 @@ class FunctionCallWithArgs extends Evaluator
       @isUserFunction = true
       @context = context
       @func.subscribe @_updateFunction
-    else
-      @func = context.providedFunctions[@name]
+    else if @func = context.providedFunctions[@name]
       @isUserFunction = false
       if @func.returnKind == FunctionTypes.STREAM_RETURN
         @_subscribeStreamFunction @func
       else
         @_subscribeTo arg.observable(), i for arg, i in @args
+    else
+      @subject.onNext new CalculationError(@name, 'Unknown name: ' + @name)
+      @subject.onNext EvaluationComplete
 
     @_activateArgs context
 

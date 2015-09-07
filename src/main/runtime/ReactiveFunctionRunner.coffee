@@ -187,7 +187,8 @@ module.exports = class ReactiveFunctionRunner
     logValueChange = (x)-> console.log 'value change', name, x
     notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
     compareValue = (x, y) -> _.isEqual x, y
-    subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).subscribe (value) =>
+    fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
+    subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).map(fillErrorName).subscribe (value) =>
       @valueChanges.onNext [name, value]
     subj
 
