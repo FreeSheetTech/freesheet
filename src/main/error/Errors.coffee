@@ -3,6 +3,8 @@ class CalculationError extends Error
 
   fillName: (name) -> if @functionName then this else new CalculationError name, @message
 
+  toString: -> "CalculationError - #{@functionName}: #{@message}"
+
 class FunctionError extends Error
   constructor: (@name, text, @error) ->
     @expr = {text}

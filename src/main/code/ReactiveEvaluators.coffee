@@ -329,7 +329,7 @@ class ExpressionFunction extends Evaluator
 
   activate: (context) ->
     @context = context
-    exprContext = _.merge {}, context, {argSubjects: {__anyArg: Rx.Observable.from([NotUsed, EvaluationComplete])}, isTemplate: true }
+    exprContext = _.merge {}, context, {argSubjects: {__anyArg: Rx.Observable.from([null, EvaluationComplete])}, isTemplate: true }
     @evaluator.activate exprContext
     @_subscribeTo @evaluator.observable(), 0
 
