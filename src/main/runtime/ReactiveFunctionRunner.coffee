@@ -40,7 +40,7 @@ module.exports = class ReactiveFunctionRunner
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
-  errorFunction = (name, message) -> new Eval.Error(new CalculationError name, "#{message}: #{name}")
+  errorFunction = (name, expr, message) -> new Eval.CalcError(expr, new CalculationError name, "#{message}: #{name}")
   unknownNameFunction = (name) -> errorFunction name, 'Unknown name'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
@@ -86,8 +86,8 @@ module.exports = class ReactiveFunctionRunner
     functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @userFunctionSubjects, @providedFunctions, @_getCurrentEvent, @argumentManager
     @userFunctionImpls[name] = functionImpl
     reactiveFunction = switch
-      when _.includes(functionImpl.functionNames, name) then errorFunction name, 'Formula uses itself'
-      when _.includes(@functionsUsedBy(name), name) then errorFunction name, 'Formula uses itself through another formula'
+      when _.includes(functionImpl.functionNames, name) then errorFunction name, funcDef.expr, 'Formula uses itself'
+      when _.includes(@functionsUsedBy(name), name) then errorFunction name, funcDef.expr, 'Formula uses itself through another formula'
       else functionImpl.theFunction
 
     if funcDef.expr instanceof Input then @inputs[name] = reactiveFunction

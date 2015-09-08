@@ -91,12 +91,20 @@ class Literal extends Evaluator
   _calculateNextValue: -> @value
 
 class CalcError extends Evaluator
-  constructor: (error) ->
-    super null, [error]
-    @latest = error
+  constructor: (expr, @error) ->
+    @inputStream = inputStream = new Rx.Subject()
+    dummyArg =
+      observable: -> inputStream
+      activate: ->
+        inputStream.onNext error
+        inputStream.onNext EvaluationComplete
 
-  reset: -> @values = []
-  resetChildExprs: ->
+    super expr, [dummyArg]
+
+  copy: -> new CalcError @expr, @error
+  currentValue: (argValues) -> @error
+
+  _calculateNextValue: -> @error
 
 class Input extends Evaluator
   constructor: (expr, @inputName) ->
@@ -332,6 +340,6 @@ class ExpressionFunction extends Evaluator
     (_in) -> evaluator.currentValue {'in': _in}
 
 
-module.exports = {Literal, Error, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
+module.exports = {Literal, CalcError, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
   FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef,
   EvaluationComplete, FunctionDefinition, ExpressionFunction}
