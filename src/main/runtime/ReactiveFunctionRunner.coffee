@@ -113,7 +113,6 @@ module.exports = class ReactiveFunctionRunner
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
   removeUserFunction: (functionName) ->
-    @_invalidateDependents functionName
     delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
       subj.onNext(null)
@@ -123,15 +122,12 @@ module.exports = class ReactiveFunctionRunner
         if not subj.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
-      @_reset()
-      @sheet[functionName] = unknownNameFunction(functionName)
-      @_recalculate()
 
   onValueChange: (callback, name) ->
     if name
       @valueChanges.subscribe (nameValue) -> if nameValue[0] == name then callback nameValue[0], nameValue[1]
       if subj = @userFunctionSubjects[name]
-        callback name, subj.value
+        callback name, subj.q[0].value   #TODO hack - relies on internal implementation of ReplySubject
       else
         @sheet[name] = unknownNameFunction(name)
         @userFunctionSubjects[name] = @_newUserFunctionSubject name, @_sheetValue name

@@ -521,7 +521,7 @@ describe 'ReactiveFunctionRunner runs', ->
       inputs [2, 3, 4], [5, 6], [7]
       changesFor("sq").should.eql [[], [4, 9, 16], [25, 36], [49]]
 
-    it 'uses items from unpacked lists', ->
+    it 'uses items from unpacked lists but reports change only for last value in each list', ->
 
       providedStreamReturnFunctions
         unpackLists: unpackListsFunction
@@ -647,22 +647,7 @@ describe 'ReactiveFunctionRunner runs', ->
       sendInputs 'x', 2, 3
       changesFor('y').should.eql [7, 25, 40]
 
-    it 'for each input in unpacked list', ->
-      providedStreamReturnFunctions
-        unpackLists: (s) -> s.flatMap( (x) -> [].concat x)
-
-      parseUserFunctions 'itemsIn = input'
-      parseUserFunctions 'items = unpackLists(itemsIn)'
-      parseUserFunctions 'doubled = items * 2'
-      sendInputs 'itemsIn', [4, 5, 6], [7], [], [8, 9]
-
-      bufferedChanges.should.eql [{itemsIn: [4, 5, 6]}, {items: 6}, {doubled: 12},
-        {itemsIn: [7]}, {items: 7}, {doubled: 14},
-        {itemsIn: []},
-        {itemsIn: [8, 9]}, {items: 9}, {doubled: 18}]
-
-
-  describe 'removes named functions so that', ->
+  describe.only 'removes named functions so that', ->
 
     it 'is no longer in the functions collection', ->
       parseUserFunctions 'a = 10; b = 20'
@@ -701,7 +686,7 @@ describe 'ReactiveFunctionRunner runs', ->
       removeUserFunction 'aliens'
       removeUserFunction 'aliens'
 
-    it 'sends unknown name to other functions that use it', ->
+    it 'other functions that use it have an unknown name error', ->
       parseUserFunctions 'aliens = theInput()'
       parseUserFunctions 'greetings = "Hi " + aliens '
       observeNamedChanges 'greetings'
