@@ -570,7 +570,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'price = 20; tax_rate = 0.2; total = price + (price * tax_rate)'
       runner.removeUserFunction 'price'
       parseUserFunctions 'price = 30'
-      changes.should.eql [{price:20}, {'tax_rate':0.2}, {total: 24}, {price: null}, {total: unknown 'price'}, {price: 30}, {total: 36}]
+      changes.should.eql [{price:20}, {'tax_rate':0.2}, {total: 24}, {price: unknown 'price'}, {total: unknown 'price'}, {total: 36}, {price: 30}]
 
     it 'to a function set after it is observed', ->
       observeNamedChanges 'price'
@@ -647,7 +647,7 @@ describe 'ReactiveFunctionRunner runs', ->
       sendInputs 'x', 2, 3
       changesFor('y').should.eql [7, 25, 40]
 
-  describe.only 'removes named functions so that', ->
+  describe 'removes named functions so that', ->
 
     it 'is no longer in the functions collection', ->
       parseUserFunctions 'a = 10; b = 20'
@@ -696,14 +696,14 @@ describe 'ReactiveFunctionRunner runs', ->
       inputs 'Zorgon'
 
       namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings: unknown 'aliens'}]
-      changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens:null}, {greetings: unknown 'aliens'}, {"theInput": "Zorgon"}]
+      changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens: unknown 'aliens'}, {greetings: unknown 'aliens'}, {"theInput": "Zorgon"}]
 
     it 'can add a function with the same name as one removed', ->
       parseUserFunctions 'a = 10; b = 20; c = a * b'
       removeUserFunction 'c'
       parseUserFunctions 'c = a + b'
 
-      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {c: null}, {c: 30}]
+      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {c: unknown 'c'}, {c: 30}]
 
     it 'can add a function with the same name after removing all functions', ->
       parseUserFunctions 'a = 10; b = 20; c = a * b'
@@ -712,7 +712,7 @@ describe 'ReactiveFunctionRunner runs', ->
       removeUserFunction 'c'
       parseUserFunctions 'a = 10; b = 20; c = a + b'
 
-      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {a: null}, {c: unknown 'a'}, {b: null}, {c: null}, {a: 10}, {b: 20}, {c: 30}]
+      changes.should.eql [{a: 10}, {b: 20}, {c: 200}, {a: unknown 'a'}, {c: unknown 'a'}, {b: unknown 'b'}, {c: unknown 'c'}, {a: 10}, {b: 20}, {c: 30}]
 
     it 'can add a function with the same name and forward reference after removing all functions', ->
       parseUserFunctions 'c = a * 2; a = 10'
@@ -738,7 +738,8 @@ describe 'ReactiveFunctionRunner runs', ->
       runner.destroy()
       inputs 'Zorgon'
 
-      changes.should.eql [{aliens:null}, {humans:null}, {theInput:'Aarhon'}, {aliens:'Aarhon'}, {humans:'Aarhon'}, {theInput: null}, {aliens: unknown 'theInput'}, {humans: unknown 'theInput'}, {aliens:null}, {humans:null}]
+      changes.should.eql [{aliens:null}, {humans:null}, {theInput:'Aarhon'}, {aliens:'Aarhon'}, {humans:'Aarhon'},
+                            {theInput: unknown 'theInput'}, {aliens: unknown 'theInput'}, {humans: unknown 'theInput'}, {aliens: unknown 'aliens'}, {humans: unknown 'humans'}]
 
 
     #      test of internals

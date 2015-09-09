@@ -42,7 +42,8 @@ module.exports = class ReactiveFunctionRunner
 
   calcError = (name, message) -> new CalculationError name, "#{message}: #{name}"
   errorFunction = (name, expr, message) -> new Eval.CalcError(expr, calcError(name, message))
-  unknownNameFunction = (name) -> errorFunction name, 'Unknown name'
+  unknownNameFunction = (name) -> errorFunction name, null, 'Unknown name'
+
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
@@ -102,6 +103,9 @@ module.exports = class ReactiveFunctionRunner
         subj.sourceSub.dispose()
         source = reactiveFunction.observable()
         subj.sourceSub = source.subscribe subj
+        if not subj.valueChangesSub
+          @_subscribeValueChanges name, subj
+
       else
         @userFunctionSubjects[name] = @_newUserFunctionSubject(name, reactiveFunction)
     else
@@ -118,10 +122,11 @@ module.exports = class ReactiveFunctionRunner
     if subj = @userFunctionSubjects[functionName]
       subj.onNext calcError functionName, 'Unknown name'
       subj.onNext Eval.EvaluationComplete
+      subj.sourceSub?.dispose()
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
-      for subjName, subj of @userFunctionSubjects
-        if not subj.hasObservers()
+      for subjName, s of @userFunctionSubjects
+        if not s.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
 
@@ -131,8 +136,9 @@ module.exports = class ReactiveFunctionRunner
       if subj = @userFunctionSubjects[name]
         callback name, subj.q[0].value   #TODO hack - relies on internal implementation of ReplySubject
       else
-        @sheet[name] = unknownNameFunction(name)
-        @userFunctionSubjects[name] = @_newUserFunctionSubject name, @_sheetValue name
+        unknown = unknownNameFunction(name)
+        unknown.activate {}
+        subj = @userFunctionSubjects[name] = @_newUserFunctionSubject name, unknown
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
@@ -182,13 +188,16 @@ module.exports = class ReactiveFunctionRunner
     source = reactiveFunction.observable()
     subj = new Rx.ReplaySubject(2)
     subj.sourceSub = source.subscribe subj
+    @_subscribeValueChanges name, subj
+    subj
+
+  _subscribeValueChanges: (name, subj) ->
     logValueChange = (x)-> console.log 'value change', name, x
     notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
     compareValue = (x, y) -> _.isEqual x, y
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
     subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).map(fillErrorName).subscribe (value) =>
-      @valueChanges.onNext [name, value]
-    subj
+        @valueChanges.onNext [name, value]
 
   _processEvents: -> @_processEvent @events.shift() while @events.length
 
