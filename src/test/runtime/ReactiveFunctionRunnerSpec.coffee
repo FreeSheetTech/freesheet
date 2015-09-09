@@ -661,7 +661,7 @@ describe 'ReactiveFunctionRunner runs', ->
       removeUserFunction 'aliens'
       inputs 'Zorgon'
 
-      changes.should.eql [{aliens:null}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {aliens:null}, {"theInput": "Zorgon"}]
+      changes.should.eql [{aliens:null}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {aliens: unknown('aliens')}, {"theInput": "Zorgon"}]
 
     it 'named change sends a null and no longer invokes callback', ->
       parseUserFunctions 'aliens = theInput()'
@@ -671,7 +671,7 @@ describe 'ReactiveFunctionRunner runs', ->
       removeUserFunction 'aliens'
       inputs 'Zorgon'
 
-      namedChanges.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens:null}]
+      namedChanges.should.eql [{aliens:null}, {aliens:'Aarhon'}, {aliens: unknown('aliens')}]
 
     it 'does nothing for a non-existent function', ->
       removeUserFunction 'xxx'
@@ -686,7 +686,7 @@ describe 'ReactiveFunctionRunner runs', ->
       removeUserFunction 'aliens'
       removeUserFunction 'aliens'
 
-    it 'other functions that use it have an unknown name error', ->
+    it 'other functions that use it have an unknown name error and no longer get changes', ->
       parseUserFunctions 'aliens = theInput()'
       parseUserFunctions 'greetings = "Hi " + aliens '
       observeNamedChanges 'greetings'

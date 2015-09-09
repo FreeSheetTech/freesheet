@@ -40,7 +40,8 @@ module.exports = class ReactiveFunctionRunner
     collectChanges = (changes) -> _.zipObject(changes)
     valueChanges.buffer(-> trigger).map(collectChanges)
 
-  errorFunction = (name, expr, message) -> new Eval.CalcError(expr, new CalculationError name, "#{message}: #{name}")
+  calcError = (name, message) -> new CalculationError name, "#{message}: #{name}"
+  errorFunction = (name, expr, message) -> new Eval.CalcError(expr, calcError(name, message))
   unknownNameFunction = (name) -> errorFunction name, 'Unknown name'
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
@@ -115,7 +116,8 @@ module.exports = class ReactiveFunctionRunner
   removeUserFunction: (functionName) ->
     delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
-      subj.onNext(null)
+      subj.onNext calcError functionName, 'Unknown name'
+      subj.onNext Eval.EvaluationComplete
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
       for subjName, subj of @userFunctionSubjects
