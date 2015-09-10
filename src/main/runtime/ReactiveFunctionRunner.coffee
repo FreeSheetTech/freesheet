@@ -122,6 +122,7 @@ module.exports = class ReactiveFunctionRunner
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
   removeUserFunction: (functionName) ->
+    console.log 'removeUserFunction', functionName
     delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
       subj.onNext calcError functionName, 'Unknown name'   #TODO handle this with a CalcError
@@ -130,6 +131,7 @@ module.exports = class ReactiveFunctionRunner
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
       for subjName, s of @userFunctionSubjects
+        console.log 'hasObservers', subjName, s.hasObservers()
         if not s.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
