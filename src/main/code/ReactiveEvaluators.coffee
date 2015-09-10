@@ -207,16 +207,19 @@ class FunctionCallNoArgs extends Evaluator
     super expr, [null]
 
   activate: (context) ->
+    log = (x) => console.log 'Pass:', @toString(), x
+    storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
     if context.userFunctions[@name]
       obs = context.userFunctions[@name]
-      log = (x) => console.log 'Pass:', @toString(), x
-      storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
       obs.do(storeValue).do(log).subscribe @subject
-    else
-      source = context.providedFunctions[@name]
+    else if source = context.providedFunctions[@name]
       value = source()
       obs = new Rx.Observable.from([value, EvaluationComplete])
       @_subscribeTo obs, 0
+    else
+      obs = context.unknownName(@name)
+      obs.do(storeValue).do(log).subscribe @subject
+
 
   copy: -> new FunctionCallNoArgs @expr, @name
   currentValue: (argValues) -> @values[0]

@@ -605,7 +605,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'materials = 35; labour = 25'
 
-      changes.should.eql [{total: unknown('materials') }, {materials: 35 }, {total: unknown('labour') }, {labour: 25 }, {total: 60 }]
+      changes.should.eql [{materials: unknown('materials') }, {labour: unknown('labour') }, {total: unknown('materials') }, {materials: 35 }, {total: unknown('labour') }, {labour: 25 }, {total: 60 }]
 
     it 'adds two changing values in formula set afterwards', ->
       parseUserFunctions 'materials = 35'
@@ -625,7 +625,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
       inputs 25
 
-      changes.should.eql [{materials: 35}, {total: unknown 'labour'}, {labour: null}, {total: 35}, {theInput: 25}, {total: 60}, {labour: 25}]
+      changes.should.eql [{materials: 35}, {labour: unknown 'labour'}, {total: unknown 'labour'}, {labour: null}, {total: 35}, {theInput: 25}, {labour: 25}, {total: 60}]
 
     it 'on individual named value including initial value', ->
       parseUserFunctions 'aaa = 10'
@@ -721,14 +721,15 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'c = a + 2; a = 10'
 
       changes.should.eql [
+        { a: unknown 'a'}
         { c: unknown 'a'}
         { a: 10}
         { c: 20}
-        { c: null}
-        { a: null}
+        { c: unknown 'c'}
+        { a: unknown 'a'}
         { c: unknown 'a'}
-        { a: 10}
         { c: 12}
+        { a: 10}
       ]
 
     it 'destroy removes all user functions', ->

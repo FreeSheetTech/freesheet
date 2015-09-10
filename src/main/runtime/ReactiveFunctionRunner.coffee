@@ -96,7 +96,11 @@ module.exports = class ReactiveFunctionRunner
 
 #    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
-      context = {userFunctions: @userFunctionSubjects, providedFunctions: @providedFunctions}
+      unknownName = (name) =>
+        unknownError = unknownNameFunction(name)
+        unknownError.activate({})
+        @userFunctionSubjects[name] = @_newUserFunctionSubject(name, unknownError)
+      context = {userFunctions: @userFunctionSubjects, providedFunctions: @providedFunctions, unknownName}
       reactiveFunction.activate(context)
       subj = @userFunctionSubjects[name]
       if subj
@@ -120,7 +124,7 @@ module.exports = class ReactiveFunctionRunner
   removeUserFunction: (functionName) ->
     delete @userFunctions[functionName]
     if subj = @userFunctionSubjects[functionName]
-      subj.onNext calcError functionName, 'Unknown name'
+      subj.onNext calcError functionName, 'Unknown name'   #TODO handle this with a CalcError
       subj.onNext Eval.EvaluationComplete
       subj.sourceSub?.dispose()
       subj.valueChangesSub?.dispose()
