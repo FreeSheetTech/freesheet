@@ -101,6 +101,9 @@ Use cases
 - Command line runner can take script file, parse args to inputs, output one or more values eg one called 'main' or specify
 - Chat server
 - Server side sheet for test with hidden data
+- elfworker.com
+- Embed script in larger app
+- Compile to standalone JS app
 
 How people could make use of it
 -------------------------------

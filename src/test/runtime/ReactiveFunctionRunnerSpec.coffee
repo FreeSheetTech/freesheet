@@ -727,9 +727,10 @@ describe 'ReactiveFunctionRunner runs', ->
         { c: 20}
         { c: unknown 'c'}
         { a: unknown 'a'}
+        { a: unknown 'a'}
         { c: unknown 'a'}
-        { c: 12}
         { a: 10}
+        { c: 12}
       ]
 
     it 'destroy removes all user functions', ->

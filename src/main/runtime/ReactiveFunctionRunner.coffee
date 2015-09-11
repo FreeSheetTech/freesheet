@@ -117,6 +117,7 @@ module.exports = class ReactiveFunctionRunner
       subj = @userFunctionSubjects[name] or @userFunctionSubjects[name] = new Rx.BehaviorSubject()
       subj.onNext evalFunctionDefinition
 
+    console.log 'addUserFunction', name, @userFunctionSubjects[name].observers.length
 #    @_recalculate()
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
@@ -124,6 +125,8 @@ module.exports = class ReactiveFunctionRunner
   removeUserFunction: (functionName) ->
     console.log 'removeUserFunction', functionName
     delete @userFunctions[functionName]
+    @userFunctionImpls[functionName]?.theFunction.deactivate()
+
     if subj = @userFunctionSubjects[functionName]
       subj.onNext calcError functionName, 'Unknown name'   #TODO handle this with a CalcError
       subj.onNext Eval.EvaluationComplete
@@ -131,7 +134,7 @@ module.exports = class ReactiveFunctionRunner
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
       for subjName, s of @userFunctionSubjects
-        console.log 'hasObservers', subjName, s.hasObservers()
+        console.log ' - observers', subjName, s.observers.length
         if not s.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]

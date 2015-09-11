@@ -17,6 +17,7 @@ class Evaluator
     @eventsInProgress = (false for i in [0...args.length])
     @values = (Initial for i in [0...args.length])
     @isTemplate = false
+    @argSubscriptions = []
 
   observable: -> @subject
 
@@ -24,6 +25,11 @@ class Evaluator
     @isTemplate = context.isTemplate or false
     @_subscribeTo arg.observable(), i for arg, i in @args
     @_activateArgs context
+
+  deactivate: ->
+    console.log 'deactivate:', @expr.text
+    s.dispose() for s in @argSubscriptions
+    arg.deactivate() for arg in @args
 
   copy: -> throw new Error("copy must be defined in #{@toString()}")
   currentValue: (argValues) ->
@@ -60,7 +66,7 @@ class Evaluator
 
   _subscribeTo: (obs, i) ->
     thisEval = this
-    obs.subscribe (value) ->
+    subscription = obs.subscribe (value) ->
       if value is EvaluationComplete
         eventsWereInProgress = _.some thisEval.eventsInProgress
         thisEval.eventsInProgress[i] = false
@@ -72,6 +78,8 @@ class Evaluator
         console.log 'Rcvd:', thisEval.toString(), value, '-- events', thisEval.eventsInProgress
         thisEval.values[i] = value
 
+    @argSubscriptions.push subscription
+
   toString: -> "#{@constructor.name} #{@expr?.text} #{@id}"
 
 class Literal extends Evaluator
@@ -82,6 +90,7 @@ class Literal extends Evaluator
       activate: ->
         inputStream.onNext value
         inputStream.onNext EvaluationComplete
+      deactivate: ->
 
     super expr, [dummyArg]
 
@@ -98,6 +107,7 @@ class CalcError extends Evaluator
       activate: ->
         inputStream.onNext error
         inputStream.onNext EvaluationComplete
+      deactivate: ->
 
     super expr, [dummyArg]
 
@@ -114,6 +124,7 @@ class Input extends Evaluator
       activate: ->
         inputStream.onNext null
         inputStream.onNext EvaluationComplete
+      deactivate: ->
 
     super expr, [dummyArg]
 
@@ -211,15 +222,17 @@ class FunctionCallNoArgs extends Evaluator
     storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
     if context.userFunctions[@name]
       obs = context.userFunctions[@name]
-      obs.do(storeValue).do(log).subscribe @subject
+      @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
     else if source = context.providedFunctions[@name]
       value = source()
       obs = new Rx.Observable.from([value, EvaluationComplete])
       @_subscribeTo obs, 0
     else
       obs = context.unknownName(@name)
-      obs.do(storeValue).do(log).subscribe @subject
+      @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
 
+  deactivate: ->
+    @funcSubscription?.dispose()
 
   copy: -> new FunctionCallNoArgs @expr, @name
   currentValue: (argValues) -> @values[0]
@@ -227,6 +240,7 @@ class FunctionCallNoArgs extends Evaluator
   _calculateNextValue: -> @values[0]
 
 #TODO new values if function changes
+#TODO ensure deactivate unsubscribes everything
 class FunctionCallWithArgs extends Evaluator
   constructor: (expr, @name, args) ->
     super expr, args

@@ -130,6 +130,9 @@ Using local names from an aggregate
 
 To Do
 -----
+- Refactor FCWA
+- Ensure all Evaluators deactivate correctly
+- Refactor dummyArgs
 - When/which should evaluator send out Updated
 - TODOs in code
 - Rx v3
