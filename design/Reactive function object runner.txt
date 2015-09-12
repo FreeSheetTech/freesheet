@@ -127,9 +127,22 @@ Using local names from an aggregate
 ------------------------------------
 - Maybe add names to argValues as progress through arguments
 - Names will lead to FCNA being created by generator
+- Treat similar way to arguments
+- Create subjects where necessary attached to the names
+- Could become a general implementation of local names in expressions
+- Evaluators can have local names
+- Local names are attached to observables
+- Local names are added to the context passed to sub-expressions through the activate chain
+- They exist only within the expression where they originate
+- In an aggregate, the item names become the local names
+- The observables for each local name are the same as the observables for the arguments
+- FCNA needs to be attached to local names as well as wider context
+- Local names should be searched before global names, and before local names in containing expressions
+- Maybe move to general concept of name reference instead of ArgRef and FCNA
 
 To Do
 -----
+- Turn off debugging prints
 - Refactor FCWA
 - Ensure all Evaluators deactivate correctly
 - Refactor dummyArgs

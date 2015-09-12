@@ -575,6 +575,18 @@ Design philosophy (or just how it turned out)
 - AST exposed, use for dev tools
 - Could gen AST differently
 - It's the time dimension that makes it hard
+- Versatile glue for pre-made components
+- Make your own components easily
+
+Freesheet and current FP
+------------------------
+- Debugging of expressions
+- Liveness
+- Sequences of events, not just one-off
+- Input/output - don't do it in this language
+- Typing - not part of the aims of this language
+- FS might form the basis of a different strongly-typed language
+
 
 
 Random stuff

@@ -100,7 +100,7 @@ module.exports = class ReactiveFunctionRunner
         unknownError = unknownNameFunction(name)
         unknownError.activate({})
         @userFunctionSubjects[name] = @_newUserFunctionSubject(name, unknownError)
-      context = {userFunctions: @userFunctionSubjects, providedFunctions: @providedFunctions, unknownName}
+      context = {localNames: {}, userFunctions: @userFunctionSubjects, providedFunctions: @providedFunctions, unknownName}
       reactiveFunction.activate(context)
       subj = @userFunctionSubjects[name]
       if subj

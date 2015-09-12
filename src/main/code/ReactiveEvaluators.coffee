@@ -220,8 +220,11 @@ class FunctionCallNoArgs extends Evaluator
   activate: (context) ->
     log = (x) => console.log 'Pass:', @toString(), x
     storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
-    if context.userFunctions[@name]
-      obs = context.userFunctions[@name]
+    if source = context.localNames[@name]
+      obs = source
+      @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
+    else if source = context.userFunctions[@name]
+      obs = source
       @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
     else if source = context.providedFunctions[@name]
       value = source()
@@ -231,8 +234,7 @@ class FunctionCallNoArgs extends Evaluator
       obs = context.unknownName(@name)
       @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
 
-  deactivate: ->
-    @funcSubscription?.dispose()
+  deactivate: -> @funcSubscription?.dispose()
 
   copy: -> new FunctionCallNoArgs @expr, @name
   currentValue: (argValues) -> @values[0]
@@ -315,6 +317,12 @@ class ArgRef extends Evaluator
 class Aggregation extends Evaluator
   constructor: (expr, @names, @items) ->
     super expr, items
+
+  _activateArgs: (context) ->
+    argObs = (arg.observable() for arg in @args)
+    localNames = _.zipObject @names, argObs
+    contextWithLocal = _.merge {}, context, {localNames}
+    super contextWithLocal
 
   copy: -> new Aggregation @expr, @names, (a.copy() for a in @items)
   currentValue: (argValues) -> _.zipObject @names, @_currentValues(argValues)

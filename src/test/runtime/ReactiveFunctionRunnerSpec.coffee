@@ -188,6 +188,11 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'x = 20; obj = {a: 10, b: "Fred", c: x, d: x + 30}'
       changes.should.eql [{x: 20}, {obj: {a: 10, b: "Fred", c: 20, d: 50}}]
 
+    it 'creates objects for aggregation expressions using local names from the aggregate', ->
+      parseUserFunctions 'time = 20'
+      parseUserFunctions 'obj = {basicTime: time, fullTime: basicTime + 2, maxTime: fullTime + 3}'
+      changes.should.eql [{time: 20}, {obj: {basicTime: 20, fullTime: 22, maxTime: 25}}]
+
     it 'creates arrays for sequence expressions using constants, function calls and operations', ->
       parseUserFunctions 'x = 20; seq = [10, "Fred", x, x + 30]'
       changes.should.eql [{x: 20}, {seq: [10, "Fred", 20, 50] }]
