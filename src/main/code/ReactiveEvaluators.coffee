@@ -220,9 +220,10 @@ class FunctionCallNoArgs extends Evaluator
   activate: (context) ->
     log = (x) => console.log 'Pass:', @toString(), x
     storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
-    if source = context.localNames[@name]
-      obs = source
+    if evaluator = context.localEvals[@name]
+      obs = evaluator.observable()
       @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
+      @funcEval = evaluator
     else if source = context.userFunctions[@name]
       obs = source
       @funcSubscription = obs.do(storeValue).do(log).subscribe @subject
@@ -237,7 +238,7 @@ class FunctionCallNoArgs extends Evaluator
   deactivate: -> @funcSubscription?.dispose()
 
   copy: -> new FunctionCallNoArgs @expr, @name
-  currentValue: (argValues) -> @values[0]
+  currentValue: (argValues) -> @funcEval?.currentValue(argValues) or @values[0]
 
   _calculateNextValue: -> @values[0]
 
@@ -317,17 +318,23 @@ class ArgRef extends Evaluator
 class Aggregation extends Evaluator
   constructor: (expr, @names, @items) ->
     super expr, items
+    @localValues = []
 
   _activateArgs: (context) ->
-    argObs = (arg.observable() for arg in @args)
-    localNames = _.zipObject @names, argObs
-    contextWithLocal = _.merge {}, context, {localNames}
+    thisEval = this
+    localEvals = _.zipObject @names, @args
+    contextWithLocal = _.merge {}, context, {localEvals}
     super contextWithLocal
 
   copy: -> new Aggregation @expr, @names, (a.copy() for a in @items)
-  currentValue: (argValues) -> _.zipObject @names, @_currentValues(argValues)
+  currentValue: (argValues) ->
+    currentValues = @_currentValues(argValues)
+    console.log 'Aggregation.currentValue', argValues, currentValues, @localValues
+    _.zipObject @names, currentValues
 
-  _calculateNextValue: -> _.zipObject @names, @values
+  _calculateNextValue: ->
+    console.log 'Aggregation._calculateNextValue',  @values
+    _.zipObject @names, @values
 
 class Sequence extends Evaluator
   constructor: (expr, @items) ->

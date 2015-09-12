@@ -454,7 +454,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
       changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]
 
-    it.skip 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
+    it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
       parseUserFunctions 'scores = fromEach( games, {basicTime: in.time, fullTime: basicTime + 2, maxTime: fullTime + 3} )'
 
