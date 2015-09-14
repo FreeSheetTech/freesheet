@@ -154,3 +154,4 @@ To Do
 - unpackLists: direct result has more changes than formula using it
 - More info on expr and value and evaluator reference in CalculationError
 - Ensure everything goes through error checking
+- Consider provided function implementation - transducers?

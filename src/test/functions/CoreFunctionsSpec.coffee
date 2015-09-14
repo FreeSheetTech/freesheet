@@ -165,44 +165,38 @@ describe 'CoreFunctions includes', ->
 
   describe 'with streams', ->
 
+    it 'all', ->
+      parseUserFunctions 'collected = all(theInput)'
+      inputs 11, 22, 44
+      changesFor('collected').should.eql [[null], [null, 11], [null, 11, 22], [null, 11, 22, 44]]     #TODO initial null
+
     it 'count - number of items', ->
-      parseUserFunctions 'itemCount = count( all_theInput )'
+      parseUserFunctions 'itemCount = count( all(theInput) )'
       inputs 11, 22, 33
-      changesFor('itemCount').should.eql [0, 1,2,3]
+      changesFor('itemCount').should.eql [ 1,2,3,4]    #TODO initial null
 
     it 'sum - add all items', ->
-      parseUserFunctions 'itemCount = sum( all_theInput )'
+      parseUserFunctions 'itemCount = sum( all(theInput) )'
       inputs 11, 22, 44
       changesFor('itemCount').should.eql [0, 11,33,77]
 
     it 'first - first of items', ->
-      parseUserFunctions 'firstOne = first( all_theInput )'
+      parseUserFunctions 'firstOne = first( all(theInput) )'
       inputs 11, 22, 44
-      changesFor('firstOne').should.eql [null, 11]
-
-    it 'collect', ->
-      parseUserFunctions 'collected = collect( all_theInput )'
-      inputs 11, 22, 44
-      changesFor('collected').should.eql [[], [11], [11, 22], [11, 22, 44]]
-
-    it 'collect is empty array with null initial value', ->
-      parseUserFunctions 'plus1 = theInput + 1'
-      parseUserFunctions 'collected = collect( all_plus1 )'
-      inputs 10, 21, 43
-      changesFor('collected').should.eql [[], [11], [11, 22], [11, 22, 44]]
+      changesFor('firstOne').should.eql [null]  #TODO initial null
 
     it 'sort', ->
-      parseUserFunctions 'sorted = sort( all_theInput )'
+      parseUserFunctions 'sorted = sort( all(theInput) )'
       inputs 33,11,44,22
       changesFor('sorted').should.eql [[], [33], [11, 33], [11, 33, 44], [11, 22, 33, 44]]
 
     it 'sortBy', ->
-      parseUserFunctions 'sorted = sortBy( all_theInput, in.a )'
+      parseUserFunctions 'sorted = sortBy( all(theInput), in.a )'
       inputs {a: 33, b: "a"}, {a: 11, b:"b"}, {a:22, b:"c"}
       changesFor('sorted').should.eql [[], [{a: 33, b: "a"}], [{a: 11, b:"b"}, {a: 33, b: "a"}], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
 
     it 'differentValues', ->
-      parseUserFunctions 'distinct = differentValues(all_theInput)'
+      parseUserFunctions 'distinct = differentValues(all(theInput))'
       inputs 11, 22, 44, 22, 11, 33, 11
       changesFor('distinct').should.eql [ [], [ 11 ], [ 11, 22 ], [ 11, 22, 44 ], [ 11, 22, 44, 33 ] ]
 

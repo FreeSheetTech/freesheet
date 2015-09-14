@@ -1,6 +1,7 @@
 Rx = require 'rx'
 _ = require 'lodash'
 FunctionTypes = require '../runtime/FunctionTypes'
+{EvaluationComplete} = require '../code/ReactiveEvaluators'
 
 transform = (fn) -> fn.kind = 'transform'; fn
 transformStream = (fn) -> fn.kind = FunctionTypes.TRANSFORM_STREAM; fn
@@ -37,7 +38,25 @@ module.exports = {
   sort: (s) -> _.sortBy s
   sortBy: transformStream (s, func) -> _.sortBy s, func
 
-  unpackLists: streamReturn (s) -> s.flatMap( (x) -> [].concat x)
+  all:   streamReturn (s) ->
+    items = []
+    subj = new Rx.Subject(items)
+    s.subscribe (x) ->
+      if x is EvaluationComplete
+        subj.onNext items
+        subj.onNext EvaluationComplete
+      else
+        items = items.concat x
+    subj
+
+  unpackLists: streamReturn (s) ->
+    subj = new Rx.Subject()
+    s.subscribe (x) ->
+      if _.isArray(x)
+        subj.onNext y for y in x
+      else
+        subj.onNext x
+    subj
 
   ifElse: (test, trueValue, falseValue) -> if test then trueValue else falseValue
   and: (a, b) -> a and b
