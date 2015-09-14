@@ -142,6 +142,7 @@ Using local names from an aggregate
 
 To Do
 -----
+- No null from Input when created
 - Turn off debugging prints
 - Refactor FCWA
 - Ensure all Evaluators deactivate correctly
@@ -150,6 +151,6 @@ To Do
 - TODOs in code
 - Rx v3
 - All values instead of distinct on value changes
-- No null from Input when created
+- unpackLists: direct result has more changes than formula using it
 - More info on expr and value and evaluator reference in CalculationError
 - Ensure everything goes through error checking
