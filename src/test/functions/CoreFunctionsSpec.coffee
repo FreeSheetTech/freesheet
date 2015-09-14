@@ -127,11 +127,6 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'firstItem = first( items )'
       changesFor('firstItem').should.eql [11]
 
-    it 'collect - although pointless with a list', ->
-      parseUserFunctions 'items = [ 33,11,44,22]'
-      parseUserFunctions 'collected = collect( items )'
-      changesFor('collected').should.eql [[33,11,44,22]]
-
     it 'differentValues', ->
       parseUserFunctions 'items = [ 11, 22, 44, 22, 11, 33, 11]'
       parseUserFunctions 'distinct = differentValues( items )'

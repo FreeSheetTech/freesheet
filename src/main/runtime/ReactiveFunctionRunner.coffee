@@ -25,16 +25,19 @@ module.exports = class ReactiveFunctionRunner
 
   withKind = (func, kind) -> func.kind = kind; func
 
-  asImmediateFunction = (func) -> (s, f) ->
-    results = []
-    if _.isArray s
-      seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
-      func(seq, f).subscribe (x) -> results.push x
-
-    switch
-      when func.returnKind == FunctionTypes.AGGREGATE_RETURN then _.last(results) ? null
-      when func.returnKind == FunctionTypes.STREAM_RETURN then {_multipleValues: results }
-      else results
+  asImmediateFunction = (func) ->
+    (s, f) ->
+      arr = s or []     #TODO initial null
+      func arr, f
+#      results = []
+#      if _.isArray s
+#        seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
+#        func(seq, f).subscribe (x) -> results.push x
+#
+#      switch
+#        when func.returnKind == FunctionTypes.AGGREGATE_RETURN then _.last(results) ? null
+#        when func.returnKind == FunctionTypes.STREAM_RETURN then {_multipleValues: results }
+#        else results
 
   bufferedValueChangeStream = (valueChanges, trigger) ->
     collectChanges = (changes) -> _.zipObject(changes)

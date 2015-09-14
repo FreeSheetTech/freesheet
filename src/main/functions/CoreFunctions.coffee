@@ -23,19 +23,19 @@ module.exports = {
   item: (index, list) -> list[index - 1]
   fromEach: transformStream (s, func) -> s.map (x) -> apply(func, x)
   select: transformStream (s, func) -> s.filter (x) -> apply(func, x)
-  differentValues: sequence (s) -> s.distinct()
+  differentValues: (s) -> _.uniq s
 
   merge: stream (s1, s2) -> Rx.Observable.merge s1, s2
   onChange: stream (s1, s2) -> s1.filter((x) -> !!x).combineLatest(s2, (a, b) -> [a, b]).distinctUntilChanged((pair) -> pair[0]).map((pair) -> pair[1])
 
   shuffle: (seq) -> _.shuffle seq
 
-  count: aggregate (seq) -> seq.scan 0, (acc, x) -> acc + 1
-  sum: aggregate (seq) -> seq.scan 0, (acc, x) -> acc + x
-  first: aggregate (seq) -> seq.scan null, (acc, x) -> acc ? x
+  count: (s) -> s.length
+  sum: (s) -> _.sum s
+  first: (s) -> _.first s
   collect: aggregate (seq) -> seq.scan [], (acc, x) -> if x? then acc.concat(x) else acc
-  sort: aggregate (seq) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x)
-  sortBy: aggregate transformStream (seq, func) -> seq.scan [], (acc, x) -> _.sortBy acc.concat(x), func
+  sort: (s) -> _.sortBy s
+  sortBy: transformStream (s, func) -> _.sortBy s, func
 
   unpackLists: streamReturn (s) -> s.flatMap( (x) -> [].concat x)
 
