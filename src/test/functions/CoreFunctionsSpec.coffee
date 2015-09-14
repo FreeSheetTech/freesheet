@@ -1,7 +1,7 @@
 should = require 'should'
 Rx = require 'rx'
 TextParser = require '../parser/TextParser'
-SheetRunner = require '../runtime/SheetRunner'
+ReactiveFunctionRunner = require '../runtime/ReactiveFunctionRunner'
 CoreFunctions = require './CoreFunctions'
 
 
@@ -28,7 +28,7 @@ describe 'CoreFunctions includes', ->
   inputs3 = (items...) -> runner.sendInput 'theInput3',  i for i in items
 
   beforeEach ->
-    runner = new SheetRunner()
+    runner = new ReactiveFunctionRunner()
     runner.addProvidedFunctions CoreFunctions
     changes = []
     runner.onValueChange callback

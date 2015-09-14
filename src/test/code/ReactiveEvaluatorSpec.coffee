@@ -43,7 +43,7 @@ describe 'ReactiveEvaluators', ->
         else
           evalCompletesReceived.push f
 
-      exprFunc.activate({userFunctions: { a: aSubject}, providedFunctions: {}, argSubjects: {}})
+      exprFunc.activate({userFunctions: { a: aSubject}, providedFunctions: {}, argSubjects: {}, localEvals: {}})
       latestFunction = -> _.last functionsReceived
 
       aSubject.onNext 2
