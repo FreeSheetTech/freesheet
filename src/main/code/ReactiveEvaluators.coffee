@@ -351,9 +351,12 @@ class AggregationSelector extends Evaluator
     super expr, [aggregation]
 
   copy: -> new AggregationSelector @expr, @aggregation.copy(), @elementName
-  currentValue: (argValues) -> @aggregation.currentValue(argValues)[@elementName]
+  currentValue: (argValues) ->
+    currVal = @aggregation.currentValue(argValues)
+    (currVal and currVal[@elementName]) or null
 
-  _calculateNextValue: -> @values[0][@elementName]
+  _calculateNextValue: ->
+    (@values[0] and @values[0][@elementName]) or null
 
 class ExpressionFunction extends Evaluator
   constructor: (@evaluator) ->

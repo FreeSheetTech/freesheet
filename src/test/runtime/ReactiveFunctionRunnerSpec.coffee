@@ -202,6 +202,21 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'aa = obj.a; dd = obj . d '
       changes.should.eql [{x: 20}, {obj: {a: 10, d: 50}}, {aa: 10}, {dd: 50}]
 
+    it 'selects null for non-existent member of aggregations', ->
+      parseUserFunctions 'obj = {a: 10, b: 20}'
+      parseUserFunctions 'c = obj.c'
+      changes.should.eql [{obj: {a: 10, b: 20}}, {c: null}]
+
+    it 'selects null for non-existent member of aggregations', ->
+      parseUserFunctions 'obj = {a: 10, b: 20}'
+      parseUserFunctions 'c = obj.c'
+      changes.should.eql [{obj: {a: 10, b: 20}}, {c: null}]
+
+    it 'selects null for member of null', ->        #TODO initial null
+      parseUserFunctions 'obj = none'
+      parseUserFunctions 'c = obj.c'
+      changes.should.eql [{obj: null}, {c: null}]
+
 
     it 'function with no args returning constant', ->
       runner.hasUserFunction('theAs').should.eql false

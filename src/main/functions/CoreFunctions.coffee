@@ -26,8 +26,21 @@ module.exports = {
   select: transformStream (s, func) -> s.filter (x) -> apply(func, x)
   differentValues: (s) -> _.uniq s
 
-  merge: stream (s1, s2) -> Rx.Observable.merge s1, s2
-  onChange: stream (s1, s2) -> s1.filter((x) -> !!x).combineLatest(s2, (a, b) -> [a, b]).distinctUntilChanged((pair) -> pair[0]).map((pair) -> pair[1])
+  merge: streamReturn (s1, s2) -> Rx.Observable.merge s1, s2
+
+  onChange: streamReturn (s1, s2) ->
+    subj = new Rx.Subject()
+    latestS1 = null
+    latestS2 = null
+    s2.subscribe (x) ->
+      console.log 's2 value', x
+      latestS2 = x
+    s1.distinctUntilChanged().subscribe (x) ->
+      console.log 's1 value', x
+      subj.onNext latestS2
+
+    subj
+
 
   shuffle: (seq) -> _.shuffle seq
 
