@@ -1,7 +1,7 @@
-# Facade for a TextLoader and an associated ReactiveRunner
+# Facade for a TextLoader and an associated ReactiveFunctionRunner
 
 Rx = require 'rx'
-ReactiveRunner = require '../runtime/ReactiveRunner'
+ReactiveFunctionRunner = require '../runtime/ReactiveFunctionRunner'
 TextLoader = require '../runtime/TextLoader'
 {FunctionDefinition} = require '../ast/FunctionDefinition'
 {FunctionError} = require '../error/Errors'
@@ -11,7 +11,7 @@ module.exports = class Sheet
   errorText = (error) -> "Error in formula on line #{error.line} at position #{error.columnInExpr}"
 
   constructor: (@name, @environment) ->
-    @runner = new ReactiveRunner()
+    @runner = new ReactiveFunctionRunner()
     @environment?.add @name, @runner
     @loader = new TextLoader(@runner)
     @functionChanges = new Rx.Subject()

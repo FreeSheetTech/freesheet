@@ -1,7 +1,7 @@
 should = require 'should'
 Rx = require 'rx'
 TextParser = require '../parser/TextParser'
-ReactiveRunner = require '../runtime/ReactiveRunner'
+ReactiveFunctionRunner = require '../runtime/ReactiveFunctionRunner'
 TimeFunctions = require './TimeFunctions'
 Period = require './Period'
 
@@ -24,7 +24,7 @@ describe 'TimeFunctions includes', ->
 
 
   beforeEach ->
-    runner = new ReactiveRunner()
+    runner = new ReactiveFunctionRunner()
     runner.addProvidedFunctions TimeFunctions
     changes = []
     runner.onValueChange callback

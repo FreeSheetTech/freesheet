@@ -8,7 +8,7 @@ trace = (onOff) -> tracing = onOff
 
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
-exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurrentEvent, argumentManager) ->
+exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurrentEvent) ->
 
   exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
     functionNames = []

@@ -466,6 +466,9 @@ Signals, inputs, events
 - Need to subscribe to sheet output in both ways
 - Current value would give null if no input yet
 - Event would give no output until an input event arrived
+- If subscribe to current value, always get immediate callback - null if no current value yet
+- If subscribe to current value, only get changed values
+- If subscribe to events, no callback until an event occurs, but every event
 
 
 

@@ -1,6 +1,6 @@
 should = require 'should'
 TextParser = require '../parser/TextParser'
-ReactiveRunner = require './ReactiveRunner'
+ReactiveFunctionRunner = require './ReactiveFunctionRunner'
 RunnerEnvironment = require './RunnerEnvironment'
 {CalculationError} = require '../error/Errors'
 
@@ -17,8 +17,8 @@ describe 'RunnerEnvironment', ->
     changes = []
 
   it 'allows references from one runner to another', ->
-    runnerA = new ReactiveRunner()
-    runnerB = new ReactiveRunner()
+    runnerA = new ReactiveFunctionRunner()
+    runnerB = new ReactiveFunctionRunner()
     runnerB.onValueChange callback
 
     runnerEnv = new RunnerEnvironment()
@@ -33,7 +33,7 @@ describe 'RunnerEnvironment', ->
     changes.should.eql [{z:20}, {z: 30}]
 
   it 'gives an error when sheet does not exist', ->
-    runnerB = new ReactiveRunner()
+    runnerB = new ReactiveFunctionRunner()
     runnerB.onValueChange callback
 
 
@@ -42,11 +42,11 @@ describe 'RunnerEnvironment', ->
 
     parseUserFunctions runnerB, 'z = fromSheet("runnerA", "y")'
 
-    changes.should.eql [{z:new CalculationError(null, 'Sheet runnerA could not be found')}]
+    changes.should.eql [{z:new CalculationError('z', 'Sheet runnerA could not be found')}]
 
   it 'gives an error when function does not exist', ->
-    runnerA = new ReactiveRunner()
-    runnerB = new ReactiveRunner()
+    runnerA = new ReactiveFunctionRunner()
+    runnerB = new ReactiveFunctionRunner()
     runnerB.onValueChange callback
 
     runnerEnv = new RunnerEnvironment()
@@ -56,13 +56,13 @@ describe 'RunnerEnvironment', ->
     parseUserFunctions runnerA, 'x = 10'
     parseUserFunctions runnerB, 'z = fromSheet("runnerA", "y")'
 
-    changes.should.eql [{z: new CalculationError(null, 'Name y could not be found in sheet runnerA')}]
+    changes.should.eql [{z: new CalculationError('z', 'Name y could not be found in sheet runnerA')}]
 
   describe 'renaming a sheet', ->
 
 #    it 'sends an error to existing references and lets it be found under the new name', ->
-#      runnerA = new ReactiveRunner()
-#      runnerB = new ReactiveRunner()
+#      runnerA = new ReactiveFunctionRunner()
+#      runnerB = new ReactiveFunctionRunner()
 #      runnerB.onValueChange callback
 #
 #      runnerEnv = new RunnerEnvironment()

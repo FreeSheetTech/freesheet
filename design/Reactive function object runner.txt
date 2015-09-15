@@ -142,6 +142,7 @@ Using local names from an aggregate
 
 To Do
 -----
+- All values instead of distinct on value changes
 - No null from Input when created
 - Turn off debugging prints
 - Refactor FCWA
@@ -150,8 +151,8 @@ To Do
 - When/which should evaluator send out Updated
 - TODOs in code
 - Rx v3
-- All values instead of distinct on value changes
 - unpackLists: direct result has more changes than formula using it
 - More info on expr and value and evaluator reference in CalculationError
 - Ensure everything goes through error checking
+- Use Rx functions in core functions
 - Consider provided function implementation - transducers?

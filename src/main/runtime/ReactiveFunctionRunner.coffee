@@ -7,20 +7,6 @@ Operations = require './Operations'
 FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
 
-class ArgumentManager
-  constructor: ->
-    @stack = []
-
-  getValue: (name) =>
-    throw new Error('Call stack is empty') if not @stack.length
-    currentArgs = @stack[0]
-    throw new Error("Unknown argument name: #{name}") if not _.has currentArgs, name
-    currentArgs[name]
-
-  pushValues: (argMap) -> @stack.unshift argMap
-  popValues: (argMap) -> @stack.shift
-
-
 module.exports = class ReactiveFunctionRunner
 
   withKind = (func, kind) -> func.kind = kind; func
@@ -29,15 +15,6 @@ module.exports = class ReactiveFunctionRunner
     (s, f) ->
       arr = s or []     #TODO initial null
       func arr, f
-#      results = []
-#      if _.isArray s
-#        seq = Rx.Observable.from s, null, null, Rx.Scheduler.immediate
-#        func(seq, f).subscribe (x) -> results.push x
-#
-#      switch
-#        when func.returnKind == FunctionTypes.AGGREGATE_RETURN then _.last(results) ? null
-#        when func.returnKind == FunctionTypes.STREAM_RETURN then {_multipleValues: results }
-#        else results
 
   bufferedValueChangeStream = (valueChanges, trigger) ->
     collectChanges = (changes) -> _.zipObject(changes)
@@ -56,14 +33,12 @@ module.exports = class ReactiveFunctionRunner
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
     @events = []
-    @argumentManager = new ArgumentManager()
     @sheet = _.assign {}, @providedFunctions
 
 
 # TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->
     @providedFunctions[name] = fn
-#    @sheet[name] = fn
 
   addProvidedFunction: (name, fn) ->
     switch
@@ -88,7 +63,7 @@ module.exports = class ReactiveFunctionRunner
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @userFunctionSubjects, @providedFunctions, @_getCurrentEvent, @argumentManager
+    functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @userFunctionSubjects, @providedFunctions, @_getCurrentEvent
     @userFunctionImpls[name] = functionImpl
     reactiveFunction = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, funcDef.expr, 'Formula uses itself'
@@ -97,7 +72,6 @@ module.exports = class ReactiveFunctionRunner
 
     if funcDef.expr instanceof Input then @inputs[name] = reactiveFunction
 
-#    @sheet[n] = unknownNameFunction(n) for n in functionImpl.functionNames when not @sheet[n]? and not @providedFunctions[n]?
     if funcDef.argDefs.length is 0
       unknownName = (name) =>
         unknownError = unknownNameFunction(name)
@@ -234,7 +208,6 @@ module.exports = class ReactiveFunctionRunner
       if (newVals.length) then subj.onNext @_sheetValue name
 
   _newValues: (name) ->
-#    console.log '_newValues', name, @sheet[name]
     ops = new Operations name
     try
       @sheet[name].newValues()
