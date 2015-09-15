@@ -458,6 +458,16 @@ Output events and output functions
 - Output views like additional reactive functions attached to main one
 - In a multi-user app the output view may just be for one user
 
+Signals, inputs, events
+-----------------
+- Events vs changes in values: two distinct needs for output subscriptions
+    - to see changes only and/or current value
+    - and to see every event
+- Need to subscribe to sheet output in both ways
+- Current value would give null if no input yet
+- Event would give no output until an input event arrived
+
+
 
 Worksheet instances
 -------------------

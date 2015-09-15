@@ -30,14 +30,19 @@ module.exports = {
 
   onChange: streamReturn (s1, s2) ->
     subj = new Rx.Subject()
-    latestS1 = null
+    pendingS2 = null
     latestS2 = null
     s2.subscribe (x) ->
       console.log 's2 value', x
-      latestS2 = x
-    s1.distinctUntilChanged().subscribe (x) ->
+      if x is EvaluationComplete
+        latestS2 = pendingS2
+      else
+        pendingS2 = x
+
+    s1.filter( (x) -> x is EvaluationComplete ).subscribe (x) ->
       console.log 's1 value', x
       subj.onNext latestS2
+      subj.onNext EvaluationComplete
 
     subj
 
@@ -47,7 +52,6 @@ module.exports = {
   count: (s) -> s.length
   sum: (s) -> _.sum s
   first: (s) -> _.first s
-  collect: aggregate (seq) -> seq.scan [], (acc, x) -> if x? then acc.concat(x) else acc
   sort: (s) -> _.sortBy s
   sortBy: transformStream (s, func) -> _.sortBy s, func
 

@@ -209,8 +209,9 @@ describe 'CoreFunctions includes', ->
 
       changesFor('merged').should.eql [null, 11, 22, 33, 44, 55, 66]
 
-    it.only 'onChange - when changed value from first stream take value of second', ->
+    it 'onChange - when new value from first stream take current value of second', ->
       parseUserFunctions 'snapshot = onChange(theInput, theInput2)'
+      parseUserFunctions 'eachSnapshot = all(snapshot)'
       inputs2 33, 44
       inputs 'a'
       inputs2 55
@@ -221,9 +222,10 @@ describe 'CoreFunctions includes', ->
       inputs 'd'
       inputs2 88
 
-      changesFor('snapshot').should.eql [null, 44, 55, 55, 77]
+      changesFor('snapshot').should.eql [null, 44, 55, 77]      #TODO initial null
+      changesFor('eachSnapshot').should.eql [[null], [null, 44], [null, 44, 55], [null, 44, 55, 55], [null, 44, 55, 55, 55], [null, 44, 55, 55, 55, 77]]   #TODO initial null
 
-    it 'onChange - when changed value from first stream take value of second stream from formula', ->
+    it 'onChange - when new value from first stream take current value of second stream from formula', ->
       parseUserFunctions 'combo = {a: theInput2, b: theInput3}'
       parseUserFunctions 'snapshot = onChange(theInput, combo)'
       inputs null, null
@@ -231,7 +233,7 @@ describe 'CoreFunctions includes', ->
       inputs3 77
       inputs 'a'
 
-      changesFor('snapshot').should.eql [null, {a:44, b:77}]
+      changesFor('snapshot').should.eql [null, {a:null, b:null}, {a:44, b:77}]
 
     it 'unpackLists - put each element separately into the output and report only last of each sequence', ->
       parseUserFunctions 'itemsIn = theInput'
