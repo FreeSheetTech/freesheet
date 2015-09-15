@@ -16,23 +16,15 @@ module.exports = class ReactiveFunctionRunner
       arr = s or []     #TODO initial null
       func arr, f
 
-  bufferedValueChangeStream = (valueChanges, trigger) ->
-    collectChanges = (changes) -> _.zipObject(changes)
-    valueChanges.buffer(-> trigger).map(collectChanges)
-
   calcError = (name, message) -> new CalculationError name, "#{message}: #{name}"
   errorFunction = (name, expr, message) -> new Eval.CalcError(expr, calcError(name, message))
   unknownNameFunction = (name) -> errorFunction name, null, 'Unknown name'
-
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
     @userFunctionSubjects = {}
     @userFunctionImpls = {}
     @inputs = {}
-    @inputCompleteSubject = new Rx.Subject()
-    @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
-
 
   _addProvidedFunction: (name, fn) ->
     @providedFunctions[name] = fn
@@ -120,12 +112,6 @@ module.exports = class ReactiveFunctionRunner
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
-  onBufferedValueChange: (callback) ->
-    @bufferedValueChanges.subscribe (nameValueMap) -> callback n, v for n, v of nameValueMap
-
-  onInputComplete: (callback) ->
-    @inputCompleteSubject.subscribe -> callback()
-
   getInputs: -> (k for k, v of @inputs)
 
   sendInput: (name, value) ->
@@ -136,10 +122,6 @@ module.exports = class ReactiveFunctionRunner
     throw new Error 'Unknown value name' unless @userFunctions[name]?.argDefs.length is 0
     @userFunctionSubjects[name].onNext value
     @userFunctionSubjects[name].onNext Eval.EvaluationComplete
-
-  inputComplete: ->
-    @_recalculate()
-    @inputCompleteSubject.onNext true
 
   hasUserFunction: (name) -> @userFunctions[name]?
 

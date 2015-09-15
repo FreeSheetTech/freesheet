@@ -12,7 +12,6 @@ describe 'ReactiveFunctionRunner runs', ->
 
   runner = null
   changes = null
-  bufferedChanges = null
   namedChanges = null
   inputSubj = null
 
@@ -53,7 +52,6 @@ describe 'ReactiveFunctionRunner runs', ->
   sendInput = (name, value) -> runner.sendInput name, value
 
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
-  bufferedCallback = (name, value) -> received = {}; received[name] = value; bufferedChanges.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
 
   inputs = (items...) -> sendInputs 'theInput', items...
@@ -69,10 +67,8 @@ describe 'ReactiveFunctionRunner runs', ->
     parseUserFunctions 'theInput = input'
 
     changes = []
-    bufferedChanges = []
     namedChanges = []
     runner.onValueChange callback
-    runner.onBufferedValueChange bufferedCallback
     inputSubj = new Rx.Subject()
 
     providedFunctions TimeFunctions

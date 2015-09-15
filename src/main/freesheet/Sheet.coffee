@@ -42,11 +42,8 @@ module.exports = class Sheet
   formulasAndValues: -> @loader.functionDefinitionsAndValues()
   inputs: -> @runner.getInputs()
   input: (name, value) -> @runner.sendInput name, value
-  partialInput: (name, value) -> @runner.sendPartialInput name, value
-  inputComplete:  -> @runner.inputComplete()
   addFunctions: (functionMap) -> @runner.addProvidedFunctions functionMap
-  onValueChange: (callback) -> @runner.onBufferedValueChange callback
+  onValueChange: (callback) -> @runner.onValueChange callback
   onEveryValueChange: (callback) -> @runner.onValueChange callback
-  onInputComplete: (callback) -> @runner.onInputComplete callback
   onFormulaChange: (callback) -> @functionChanges.subscribe (updateArgs) -> callback.apply(null, updateArgs)
 
