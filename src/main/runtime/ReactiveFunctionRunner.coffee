@@ -32,11 +32,8 @@ module.exports = class ReactiveFunctionRunner
     @inputs = {}
     @inputCompleteSubject = new Rx.Subject()
     @bufferedValueChanges = bufferedValueChangeStream @valueChanges, @inputCompleteSubject
-    @events = []
-    @sheet = _.assign {}, @providedFunctions
 
 
-# TODO  rationalise this zoo of add...Functions
   _addProvidedFunction: (name, fn) ->
     @providedFunctions[name] = fn
 
@@ -63,7 +60,7 @@ module.exports = class ReactiveFunctionRunner
   addUserFunction: (funcDef) ->
     name = funcDef.name
     @userFunctions[name] = funcDef
-    functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @userFunctionSubjects, @providedFunctions, @_getCurrentEvent
+    functionImpl = ReactiveFunctionGenerator.exprFunction funcDef, @_functionInfo(), @userFunctionSubjects, @providedFunctions
     @userFunctionImpls[name] = functionImpl
     reactiveFunction = switch
       when _.includes(functionImpl.functionNames, name) then errorFunction name, funcDef.expr, 'Formula uses itself'
@@ -93,8 +90,6 @@ module.exports = class ReactiveFunctionRunner
       evalFunctionDefinition = new Eval.FunctionDefinition(funcDef.argNames(), reactiveFunction)
       subj = @userFunctionSubjects[name] or @userFunctionSubjects[name] = new Rx.BehaviorSubject()
       subj.onNext evalFunctionDefinition
-
-#    @_recalculate()
 
   addUserFunctions: (funcDefList) -> @addUserFunction f for f in funcDefList
 
@@ -165,8 +160,6 @@ module.exports = class ReactiveFunctionRunner
 
   #  private functions
 
-  _queueEvents: (name, values) -> @events.push [name, v] for v in values
-
   _newUserFunctionSubject: (name, reactiveFunction) ->
     source = reactiveFunction.observable()
     subj = new Rx.ReplaySubject(2)
@@ -175,52 +168,11 @@ module.exports = class ReactiveFunctionRunner
     subj
 
   _subscribeValueChanges: (name, subj) ->
-    logValueChange = (x)-> console.log 'value change', name, x
+    logValueChange = (x)-> # console.log 'value change', name, x
     notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
     compareValue = (x, y) -> _.isEqual x, y
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
     subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).map(fillErrorName).subscribe (value) =>
         @valueChanges.onNext [name, value]
 
-  _processEvents: -> @_processEvent @events.shift() while @events.length
-
-  _processEvent: (event) ->
-    [name, value] = event
-    @_reset()
-    @currentEvent = {name, value}
-    @_invalidateDependents name  #TODO only if value has changed?
-    @_recalculate()
-    @currentEvent = null
-
-  _invalidateDependents: (name) -> # ??? for n in @_functionsUsing name
-
-  _functionsUsing: (name) ->
-    result = (n for n, f of @userFunctions when _.includes(@functionsUsedBy(n), name) )
-    result
-
-  _reset: ->
-    for n, f of @userFunctionImpls
-      f.theFunction.reset()
-
-  _recalculate: ->
-    for name, subj of @userFunctionSubjects
-      newVals = @_newValues name
-      if (newVals.length) then subj.onNext @_sheetValue name
-
-  _newValues: (name) ->
-    ops = new Operations name
-    try
-      @sheet[name].newValues()
-    catch e
-      ops._error e
-
-  _sheetValue: (name) ->
-    ops = new Operations name
-    try
-      @sheet[name].latestValue()
-    catch e
-      ops._error e
-
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
-
-  _getCurrentEvent: => @currentEvent

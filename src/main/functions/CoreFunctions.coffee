@@ -33,14 +33,12 @@ module.exports = {
     pendingS2 = null
     latestS2 = null
     s2.subscribe (x) ->
-      console.log 's2 value', x
       if x is EvaluationComplete
         latestS2 = pendingS2
       else
         pendingS2 = x
 
     s1.filter( (x) -> x is EvaluationComplete ).subscribe (x) ->
-      console.log 's1 value', x
       subj.onNext latestS2
       subj.onNext EvaluationComplete
 

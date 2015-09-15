@@ -27,7 +27,7 @@ class Evaluator
     @_activateArgs context
 
   deactivate: ->
-    console.log 'deactivate:', @expr.text
+#    console.log 'deactivate:', @expr.text
     s.dispose() for s in @argSubscriptions
     arg.deactivate() for arg in @args
 
@@ -46,7 +46,7 @@ class Evaluator
         when errorInValues then errorInValues
         when @isTemplate then Updated
         else @_calculateCheckNextValue()
-      console.log 'Send:', @toString(), nextValue
+#      console.log 'Send:', @toString(), nextValue
       @subject.onNext nextValue
       @subject.onNext EvaluationComplete
 
@@ -70,12 +70,12 @@ class Evaluator
       if value is EvaluationComplete
         eventsWereInProgress = _.some thisEval.eventsInProgress
         thisEval.eventsInProgress[i] = false
-        console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress, ' -- values', thisEval.values
+#        console.log 'Comp:', thisEval.toString(), value, ' -- events', thisEval.eventsInProgress, ' -- values', thisEval.values
         eventsAreNowInProgress = _.some thisEval.eventsInProgress
         if eventsWereInProgress and not eventsAreNowInProgress then thisEval._evaluateIfReady()
       else
         thisEval.eventsInProgress[i] = true
-        console.log 'Rcvd:', thisEval.toString(), value, '-- events', thisEval.eventsInProgress
+#        console.log 'Rcvd:', thisEval.toString(), value, '-- events', thisEval.eventsInProgress
         thisEval.values[i] = value
 
     @argSubscriptions.push subscription
@@ -218,7 +218,7 @@ class FunctionCallNoArgs extends Evaluator
     super expr, [null]
 
   activate: (context) ->
-    log = (x) => console.log 'Pass:', @toString(), x
+    log = (x) => # console.log 'Pass:', @toString(), x
     storeValue = (x) => if x isnt EvaluationComplete then @values[0] = x
     if evaluator = context.localEvals[@name]
       obs = evaluator.observable()
@@ -292,7 +292,7 @@ class FunctionCallWithArgs extends Evaluator
     outputObs.subscribe @subject
 
   _calculateNextValue: ->
-    console.log @toString(), '_calculateNextValue', @values
+#    console.log @toString(), '_calculateNextValue', @values
     if @isUserFunction
       @values[0]
     else
@@ -329,11 +329,11 @@ class Aggregation extends Evaluator
   copy: -> new Aggregation @expr, @names, (a.copy() for a in @items)
   currentValue: (argValues) ->
     currentValues = @_currentValues(argValues)
-    console.log 'Aggregation.currentValue', argValues, currentValues, @localValues
+#    console.log 'Aggregation.currentValue', argValues, currentValues, @localValues
     _.zipObject @names, currentValues
 
   _calculateNextValue: ->
-    console.log 'Aggregation._calculateNextValue',  @values
+#    console.log 'Aggregation._calculateNextValue',  @values
     _.zipObject @names, @values
 
 class Sequence extends Evaluator

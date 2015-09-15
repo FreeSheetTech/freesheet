@@ -8,7 +8,7 @@ trace = (onOff) -> tracing = onOff
 
 callArgList = (items) -> '(' + items.join(', ') + ')'
 
-exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurrentEvent) ->
+exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions) ->
 
   exprCode = (expr, functionInfo, argNames = [], incomingLocalNames = []) ->
     functionNames = []
@@ -61,7 +61,7 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions, getCurr
       when expr instanceof FunctionCall and _.includes(argNames, expr.functionName) then new Eval.ArgRef expr.functionName
 
       when expr instanceof Input
-        new Eval.Input expr, expr.inputName, getCurrentEvent
+        new Eval.Input expr, expr.inputName
 
       when expr instanceof FunctionCall
         functionName = expr.functionName

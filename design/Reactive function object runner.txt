@@ -144,7 +144,7 @@ To Do
 -----
 - All values instead of distinct on value changes
 - No null from Input when created
-- Turn off debugging prints
+    - Turn off debugging prints
 - Refactor FCWA
 - Ensure all Evaluators deactivate correctly
 - Refactor dummyArgs
