@@ -3,7 +3,6 @@ Rx = require 'rx'
 ReactiveFunctionGenerator = require '../code/ReactiveFunctionGenerator'
 {CalculationError, FunctionError} = require '../error/Errors'
 Eval = require '../code/ReactiveEvaluators'
-Operations = require './Operations'
 FunctionTypes = require './FunctionTypes'
 _ = require 'lodash'
 
