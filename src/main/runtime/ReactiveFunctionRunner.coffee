@@ -162,9 +162,12 @@ module.exports = class ReactiveFunctionRunner
     notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
     compareValue = (x, y) -> _.isEqual x, y
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
-    subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).map(fillErrorName).subscribe (value) =>
+    subj.currentValueSubj = new Rx.BehaviorSubject(null)
+    allValues = subj.do(logValueChange).filter(notEvalComplete).map(fillErrorName)
+    allValues.subscribe subj.currentValueSubj
+    subj.valueChangesSub = subj.currentValueSubj.distinctUntilChanged(null, compareValue).subscribe (value) =>
         @valueChanges.onNext [name, value]
-    subj.newValuesSub = subj.do(logValueChange).filter(notEvalComplete).map(fillErrorName).subscribe (value) =>
+    subj.newValuesSub = allValues.subscribe (value) =>
         @newValues.onNext [name, value]
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))

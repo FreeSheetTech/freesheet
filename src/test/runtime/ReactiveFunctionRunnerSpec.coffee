@@ -304,7 +304,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'a = input'
       parseUserFunctions 'aPlus(p) = a + p; result = aPlus(9)'
       sendInput 'a', 10
-      changesFor('result').should.eql [9, 19]
+      valuesFor('result').should.eql [19]
 
     it 'can use provided functions in the definition', ->
       providedFunctions
@@ -358,9 +358,10 @@ describe 'ReactiveFunctionRunner runs', ->
       sendInput 'materials', 100
       sendInput 'labour', 200
 
-      changes.should.eql [{materials: null}, {labour:null}, {taxRate: 0.2}, {total: 0}, {materials: 100}, {total: 120}, {labour: 200}, {total: 360}]
+      values.should.eql [{taxRate: 0.2}, {materials: 100}, {labour: 200}, {total: 360}]
+      changes.should.eql [{materials: null}, {labour:null}, {taxRate: 0.2}, {total: null}, {materials: 100}, {labour: 200}, {total: 360}]
 
-    it 'send a null when a formula is updated to an input', ->
+    it.skip 'send a null when a formula is updated to an input', ->
       parseUserFunctions 'in1 = 20'
       parseUserFunctions 'in1 = input'
 
@@ -472,7 +473,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
       inputs 20, 30
 
-      changesFor("scores").should.eql [[7, 10], [27, 30], [37, 40]]
+      valuesFor("scores").should.eql [[27, 30], [37, 40]]
 
     it 'transforms all elements of a sequence to an aggregate using input values and names from the output aggregate', ->
       parseUserFunctions 'games = [ { time: 21, score: 7 }, { time: 25, score: 10} ]'
@@ -668,7 +669,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
     describe 'to current values', ->
 
-      it 'after each input with a different value to previous', ->
+      it 'with initial null and after each input with a different value to previous', ->
         parseUserFunctions 'x = input'
         parseUserFunctions 'y = 2 * x'
         changes.should.eql [{x: null}, {y: null}]
@@ -688,7 +689,7 @@ describe 'ReactiveFunctionRunner runs', ->
         parseUserFunctions 'y = 2 * x'
         values.should.eql []
         sendInputs 'x', 2, 2, 3, 2
-        values.should.eql [{x: 2}, {y: 4}, {x: 2}, {y: 4}, {x: 3}, {y: 4}, {x: 2}, {y: 4}]
+        values.should.eql [{x: 2}, {y: 4}, {x: 2}, {y: 4}, {x: 3}, {y: 6}, {x: 2}, {y: 4}]
 
       it 'once for input used multiple times in one formula', ->
         parseUserFunctions 'x = input'

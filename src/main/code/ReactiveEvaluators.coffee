@@ -122,8 +122,6 @@ class Input extends Evaluator
     dummyArg =
       observable: -> inputStream
       activate: ->
-        inputStream.onNext null
-        inputStream.onNext EvaluationComplete
       deactivate: ->
 
     super expr, [dummyArg]
