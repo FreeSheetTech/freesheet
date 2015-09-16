@@ -104,6 +104,9 @@ Use cases
 - elfworker.com
 - Embed script in larger app
 - Compile to standalone JS app
+- Take actions when conditions are true
+- Chron job style:  input time events at long intervals and selects data for that interval and act on it eg send periodic emails - very much event, not current value
+- As configuration glue for high-level functions of an app
 
 How people could make use of it
 -------------------------------
