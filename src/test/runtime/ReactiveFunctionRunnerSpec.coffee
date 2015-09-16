@@ -12,7 +12,9 @@ describe 'ReactiveFunctionRunner runs', ->
 
   runner = null
   changes = null
+  values = null
   namedChanges = null
+  namedValues = null
   inputSubj = null
 
   apply = (funcOrValue, x) -> if typeof funcOrValue == 'function' then funcOrValue(x) else funcOrValue
@@ -54,9 +56,13 @@ describe 'ReactiveFunctionRunner runs', ->
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
   namedCallback = (name, value) -> received = {}; received[name] = value; namedChanges.push received
 
+  valuesCallback = (name, value) -> received = {}; received[name] = value; values.push received
+  valuesNamedCallback = (name, value) -> received = {}; received[name] = value; namedValues.push received
+
   inputs = (items...) -> sendInputs 'theInput', items...
   sendInputs = (name, items...) -> runner.sendInput name, i for i in items
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
+  valuesFor = (name) -> values.filter( (value) -> value.hasOwnProperty(name)).map (value) -> value[name]
 
   observeNamedChanges = (name) -> runner.onValueChange namedCallback, name
   unknown = (name) -> error(name, 'Unknown name: ' + name)
@@ -68,7 +74,10 @@ describe 'ReactiveFunctionRunner runs', ->
 
     changes = []
     namedChanges = []
+    values = []
+    namedValues = []
     runner.onValueChange callback
+    runner.onNewValue valuesCallback
     inputSubj = new Rx.Subject()
 
     providedFunctions TimeFunctions
@@ -655,13 +664,38 @@ describe 'ReactiveFunctionRunner runs', ->
 
       namedChanges.should.eql [{aaa: 10}, {xxx: unknown 'xxx'}, {bbb: unknown 'bbb'}, {bbb: null}, {bbb: 'value of bbb'}]
 
-  describe 'buffers value changes', ->
+  describe 'notifies changes', ->
 
-    it 'for input used multiple times in one formula', ->
-      parseUserFunctions 'x = input'
-      parseUserFunctions 'y = 2 * (x * x) + (5 * x) + 7'
-      sendInputs 'x', 2, 3
-      changesFor('y').should.eql [7, 25, 40]
+    describe 'to current values', ->
+
+      it 'after each input with a different value to previous', ->
+        parseUserFunctions 'x = input'
+        parseUserFunctions 'y = 2 * x'
+        changes.should.eql [{x: null}, {y: null}]
+        sendInputs 'x', 2, 2, 3, 3, 2
+        changes.should.eql [{x: null}, {y: null}, {x: 2}, {y: 4}, {x: 3}, {y: 6}, {x: 2}, {y: 4}]
+
+      it 'once for input used multiple times in one formula', ->
+        parseUserFunctions 'x = input'
+        parseUserFunctions 'y = 2 * (x * x) + (5 * x) + 7'
+        sendInputs 'x', 2, 3
+        changesFor('y').should.eql [null, 25, 40]
+
+    describe 'for each new value', ->
+
+      it 'after each input', ->
+        parseUserFunctions 'x = input'
+        parseUserFunctions 'y = 2 * x'
+        values.should.eql []
+        sendInputs 'x', 2, 2, 3, 2
+        values.should.eql [{x: 2}, {y: 4}, {x: 2}, {y: 4}, {x: 3}, {y: 4}, {x: 2}, {y: 4}]
+
+      it 'once for input used multiple times in one formula', ->
+        parseUserFunctions 'x = input'
+        parseUserFunctions 'y = 2 * (x * x) + (5 * x) + 7'
+        sendInputs 'x', 2, 3
+        valuesFor('y').should.eql [25, 40]
+
 
   describe 'removes named functions so that', ->
 

@@ -21,6 +21,7 @@ module.exports = class ReactiveFunctionRunner
 
   constructor: (@providedFunctions = {}, @userFunctions = {}) ->
     @valueChanges = new Rx.Subject()
+    @newValues = new Rx.Subject()
     @userFunctionSubjects = {}
     @userFunctionImpls = {}
     @inputs = {}
@@ -94,6 +95,8 @@ module.exports = class ReactiveFunctionRunner
       subj.sourceSub?.dispose()
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
+      subj.newValuesSub?.dispose()
+      subj.newValuesSub = null
       for subjName, s of @userFunctionSubjects
         if not s.hasObservers()
           delete @userFunctionSubjects[subjName]
@@ -110,6 +113,12 @@ module.exports = class ReactiveFunctionRunner
         subj = @userFunctionSubjects[name] = @_newUserFunctionSubject name, unknown
     else
       @valueChanges.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
+
+  onNewValue: (callback, name) ->
+    if name
+      @newValues.filter( (nv) -> nv[0] == name).subscribe (nameValue) -> callback nameValue[0], nameValue[1]
+    else
+      @newValues.subscribe (nameValue) -> callback nameValue[0], nameValue[1]
 
   getInputs: -> (k for k, v of @inputs)
 
@@ -155,5 +164,7 @@ module.exports = class ReactiveFunctionRunner
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
     subj.valueChangesSub = subj.do(logValueChange).filter(notEvalComplete).distinctUntilChanged(null, compareValue).map(fillErrorName).subscribe (value) =>
         @valueChanges.onNext [name, value]
+    subj.newValuesSub = subj.do(logValueChange).filter(notEvalComplete).map(fillErrorName).subscribe (value) =>
+        @newValues.onNext [name, value]
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))

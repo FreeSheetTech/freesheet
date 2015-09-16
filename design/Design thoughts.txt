@@ -468,7 +468,13 @@ Signals, inputs, events
 - Event would give no output until an input event arrived
 - If subscribe to current value, always get immediate callback - null if no current value yet
 - If subscribe to current value, only get changed values
-- If subscribe to events, no callback until an event occurs, but every event
+- If subscribe to events, no callback until an event occurs, but every event even if same value
+- If a value depends on one or more inputs, no event until all inputs arrive
+- If a value can be calculated immediately without inputs, immediate event
+- If a function is updated, immediate event
+- If no current value yet, callback with null
+- All formulas that depend on an input that has received no values should be undefined - no current value
+- What about stream functions that return sequence eg all - should it be an empty sequence until a value arrives?
 
 
 
