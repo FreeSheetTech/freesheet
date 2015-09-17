@@ -88,16 +88,20 @@ module.exports = class ReactiveFunctionRunner
   removeUserFunction: (functionName) ->
     delete @userFunctions[functionName]
     @userFunctionImpls[functionName]?.theFunction.deactivate()
-
+    console.log 'removeUserFunction', functionName
     if subj = @userFunctionSubjects[functionName]
-      subj.onNext calcError functionName, 'Unknown name'   #TODO handle this with a CalcError
+      subj.onNext calcError functionName, 'Unknown name'
       subj.onNext Eval.EvaluationComplete
       subj.sourceSub?.dispose()
       subj.valueChangesSub?.dispose()
       subj.valueChangesSub = null
       subj.newValuesSub?.dispose()
       subj.newValuesSub = null
+      subj.currentValueSubscription?.dispose()
+      subj.currentValueSubscription = null
       for subjName, s of @userFunctionSubjects
+        console.log subjName, 'observers:', s.observers.length
+        console.log subjName, 'current value observers:', s.currentValueSubj.observers.length
         if not s.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
@@ -106,7 +110,7 @@ module.exports = class ReactiveFunctionRunner
     if name
       @valueChanges.subscribe (nameValue) -> if nameValue[0] == name then callback nameValue[0], nameValue[1]
       if subj = @userFunctionSubjects[name]
-        callback name, subj.q[0].value   #TODO hack - relies on internal implementation of ReplySubject
+        callback name, subj.currentValueSubj.value   #TODO hack - relies on internal implementation of BehaviorSubject
       else
         unknown = unknownNameFunction(name)
         unknown.activate {}
@@ -164,10 +168,11 @@ module.exports = class ReactiveFunctionRunner
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
     subj.currentValueSubj = new Rx.BehaviorSubject(null)
     allValues = subj.do(logValueChange).filter(notEvalComplete).map(fillErrorName)
-    allValues.subscribe subj.currentValueSubj
+    subj.currentValueSubscription = allValues.subscribe subj.currentValueSubj
     subj.valueChangesSub = subj.currentValueSubj.distinctUntilChanged(null, compareValue).subscribe (value) =>
         @valueChanges.onNext [name, value]
     subj.newValuesSub = allValues.subscribe (value) =>
         @newValues.onNext [name, value]
+    console.log '_subscribeValueChanges', name, 'observers:', subj.observers.length
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))

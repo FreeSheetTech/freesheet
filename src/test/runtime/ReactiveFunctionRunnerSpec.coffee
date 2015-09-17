@@ -647,7 +647,7 @@ describe 'ReactiveFunctionRunner runs', ->
       changes.should.eql [{materials: 35}, {labour:null}, {total: null}, {theInput: 25}, {labour:25}, {total: 60}, {materials: 50}, {total: 75}]
 
 
-    it.skip 'adds two changing values in function set in between', ->
+    it 'adds two changing values in function set in between', ->
       parseUserFunctions 'materials = 35'
       parseUserFunctions 'total = materials + labour'
       parseUserFunctions 'labour = theInput()'
@@ -749,8 +749,8 @@ describe 'ReactiveFunctionRunner runs', ->
       removeUserFunction 'aliens'
       inputs 'Zorgon'
 
-      namedChanges.should.eql [{greetings: 'Hi null'}, {greetings:'Hi Aarhon'}, {greetings: unknown 'aliens'}]
-      changes.should.eql [{aliens:null}, {greetings: 'Hi null'}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens: unknown 'aliens'}, {greetings: unknown 'aliens'}, {"theInput": "Zorgon"}]
+      namedChanges.should.eql [{greetings: null}, {greetings:'Hi Aarhon'}, {greetings: unknown 'aliens'}]
+      changes.should.eql [{aliens:null}, {greetings: null}, {"theInput": "Aarhon"}, {aliens:'Aarhon'}, {greetings:'Hi Aarhon'}, {aliens: unknown 'aliens'}, {greetings: unknown 'aliens'}, {"theInput": "Zorgon"}]
 
     it 'can add a function with the same name as one removed', ->
       parseUserFunctions 'a = 10; b = 20; c = a * b'
