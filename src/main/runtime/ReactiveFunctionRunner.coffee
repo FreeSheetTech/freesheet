@@ -75,6 +75,9 @@ module.exports = class ReactiveFunctionRunner
         subj.sourceSub = source.subscribe subj
         if not subj.valueChangesSub
           @_subscribeValueChanges name, subj
+        if reactiveFunction instanceof Eval.Input
+          subj.onNext null
+          subj.onNext Eval.EvaluationComplete
 
       else
         @userFunctionSubjects[name] = @_newUserFunctionSubject(name, reactiveFunction)

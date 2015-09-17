@@ -143,7 +143,8 @@ Using local names from an aggregate
 To Do
 -----
 - All values instead of distinct on value changes
-- No null from Input when created
+    - No null from Input when created
+- Null replaces unknown function downstream when unknown function is added
 - unpackLists: direct result has more changes than formula using it
     - Turn off debugging prints
 - Refactor FCWA
