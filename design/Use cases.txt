@@ -75,6 +75,7 @@ Use cases
 - Programmer uses to generate JS and use in another program
 - End user customises an application
 - Embedded rules eg posting wizards in accounting system
+- Embedded programming eg Journey Builder in Exact Target
 - ETL
 - Daemon that can be set up with rules and accept input messages, pub/sub outputs
 - Public service like lambda
@@ -88,6 +89,7 @@ Use cases
 - Desktop app that produces active documents - PDF?
 - Handy calculator page eg for diet - could also do lookups
 - Tool for processing text inputs
+- Processing UI inputs in page, validating, showing errors etc
 - Add own JS/CS functions, lodash available, store with worksheet - trusted cases only
 - Modular application with many scripts referencing each other
 - Accounting system with some fixed parts and some user-modifiable parts
@@ -107,6 +109,7 @@ Use cases
 - Take actions when conditions are true
 - Chron job style:  input time events at long intervals and selects data for that interval and act on it eg send periodic emails - very much event, not current value
 - As configuration glue for high-level functions of an app
+- Run a standalone app with multiple sheets as a Heroku app, use all their add-ons etc
 
 How people could make use of it
 -------------------------------

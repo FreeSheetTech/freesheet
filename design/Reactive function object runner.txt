@@ -146,6 +146,7 @@ To Do
     - No null from Input when created
 - Null replaces unknown function downstream when unknown function is added
 - unpackLists: direct result has more changes than formula using it
+- Ensure calculations ony done after all complete
     - Turn off debugging prints
 - Refactor FCWA
 - Ensure all Evaluators deactivate correctly

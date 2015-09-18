@@ -9,10 +9,7 @@ describe 'CoreFunctions includes', ->
 
   runner = null
   changes = null
-  inputSubj = null
-  input2Subj = null
-  input3Subj = null
-
+  values = null
 
   parse = (text) ->
     map = new TextParser(text).functionDefinitionMap()
@@ -20,8 +17,10 @@ describe 'CoreFunctions includes', ->
   parseUserFunctions = (text) -> runner.addUserFunctions parse(text)
 
   callback = (name, value) -> received = {}; received[name] = value; changes.push received
+  valueCallback = (name, value) -> received = {}; received[name] = value; values.push received
 
   changesFor = (name) -> changes.filter( (change) -> change.hasOwnProperty(name)).map (change) -> change[name]
+  valuesFor = (name) -> values.filter( (value) -> value.hasOwnProperty(name)).map (value) -> value[name]
 
   inputs = (items...) -> runner.sendInput 'theInput', i for i in items
   inputs2 = (items...) -> runner.sendInput 'theInput2',  i for i in items
@@ -31,7 +30,9 @@ describe 'CoreFunctions includes', ->
     runner = new ReactiveFunctionRunner()
     runner.addProvidedFunctions CoreFunctions
     changes = []
+    values = []
     runner.onValueChange callback
+    runner.onNewValue valueCallback
     parseUserFunctions 'theInput = input; theInput2 = input; theInput3 = input;'
 
   describe 'withValues', ->
@@ -47,7 +48,7 @@ describe 'CoreFunctions includes', ->
 
              '''
       inputs null
-      changesFor('theLines').should.eql [[], ['', 'First line', 'Second line', '', 'Line 3', ''], []]
+      changesFor('theLines').should.eql [null, ['', 'First line', 'Second line', '', 'Line 3', ''], []]
 
     it 'nonEmptyLines - split text into lines, ignore empty lines, trim whitespace from others', ->
       parseUserFunctions 'theLines = nonEmptyLines(theInput)'
@@ -59,12 +60,12 @@ describe 'CoreFunctions includes', ->
               Line 3
 
              '''
-      changesFor('theLines').should.eql [[], ['First line', 'Second line', 'Line 3']]
+      changesFor('theLines').should.eql [null, ['First line', 'Second line', 'Line 3']]
 
     it 'nonEmptyLines - empty list for null input', ->
       parseUserFunctions 'theLines = nonEmptyLines(theInput)'
       inputs null
-      changesFor('theLines').should.eql [[]]
+      changesFor('theLines').should.eql [null, []]
 
     it 'fromCsvLine - comma or tab-separated text line to trimmed strings or numbers', ->
       parseUserFunctions 'theWords = fromCsvLine("these,are the , 4, words")'
@@ -168,37 +169,37 @@ describe 'CoreFunctions includes', ->
     it 'all', ->
       parseUserFunctions 'collected = all(theInput)'
       inputs 11, 22, 44
-      changesFor('collected').should.eql [[null], [null, 11], [null, 11, 22], [null, 11, 22, 44]]     #TODO initial null
+      changesFor('collected').should.eql [null, [11], [11, 22], [11, 22, 44]]
 
     it 'count - number of items', ->
       parseUserFunctions 'itemCount = count( all(theInput) )'
       inputs 11, 22, 33
-      changesFor('itemCount').should.eql [ 1,2,3,4]    #TODO initial null
+      changesFor('itemCount').should.eql [ null, 1,2,3]
 
     it 'sum - add all items', ->
       parseUserFunctions 'itemCount = sum( all(theInput) )'
       inputs 11, 22, 44
-      changesFor('itemCount').should.eql [0, 11,33,77]
+      changesFor('itemCount').should.eql [null, 11,33,77]
 
     it 'first - first of items', ->
       parseUserFunctions 'firstOne = first( all(theInput) )'
       inputs 11, 22, 44
-      changesFor('firstOne').should.eql [null]  #TODO initial null
+      changesFor('firstOne').should.eql [null, 11]
 
     it 'sort', ->
       parseUserFunctions 'sorted = sort( all(theInput) )'
       inputs 33,11,44,22
-      changesFor('sorted').should.eql [[null], [33, null], [11, 33, null], [11, 33, 44, null], [11, 22, 33, 44, null]]    #TODO initial null
+      changesFor('sorted').should.eql [null, [33], [11, 33], [11, 33, 44], [11, 22, 33, 44]]
 
     it 'sortBy', ->
       parseUserFunctions 'sorted = sortBy( all(theInput), in.a )'
       inputs {a: 33, b: "a"}, {a: 11, b:"b"}, {a:22, b:"c"}
-      changesFor('sorted').should.eql [[null], [{a: 33, b: "a"}, null], [{a: 11, b:"b"}, {a: 33, b: "a"}, null], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}, null]]  #TODO initial null
+      changesFor('sorted').should.eql [null, [{a: 33, b: "a"}], [{a: 11, b:"b"}, {a: 33, b: "a"}], [{a: 11, b:"b"}, {a:22, b:"c"}, {a: 33, b: "a"}]]
 
     it 'differentValues', ->
       parseUserFunctions 'distinct = differentValues(all(theInput))'
       inputs 11, 22, 44, 22, 11, 33, 11
-      changesFor('distinct').should.eql [ [null], [ null, 11 ], [ null, 11, 22 ], [ null, 11, 22, 44 ], [ null, 11, 22, 44, 33 ] ]   #TODO initial null
+      changesFor('distinct').should.eql [ null, [ 11 ], [ 11, 22 ], [ 11, 22, 44 ], [ 11, 22, 44, 33 ] ]
 
     it 'merge', ->
       parseUserFunctions 'merged = merge(theInput, theInput2)'
@@ -208,6 +209,7 @@ describe 'CoreFunctions includes', ->
       inputs2 66
 
       changesFor('merged').should.eql [null, 11, 22, 33, 44, 55, 66]
+      valuesFor('merged').should.eql [11, 22, 33, 44, 55, 66]
 
     it 'onChange - when new value from first stream take current value of second', ->
       parseUserFunctions 'snapshot = onChange(theInput, theInput2)'
@@ -222,8 +224,10 @@ describe 'CoreFunctions includes', ->
       inputs 'd'
       inputs2 88
 
-      changesFor('snapshot').should.eql [null, 44, 55, 77]      #TODO initial null
-      changesFor('eachSnapshot').should.eql [[null], [null, 44], [null, 44, 55], [null, 44, 55, 55], [null, 44, 55, 55, 55], [null, 44, 55, 55, 55, 77]]   #TODO initial null
+      valuesFor('snapshot').should.eql [44, 55, 55, 55, 77]
+      changesFor('snapshot').should.eql [null, 44, 55, 77]
+      valuesFor('eachSnapshot').should.eql [[44], [44, 55], [44, 55, 55], [44, 55, 55, 55], [44, 55, 55, 55, 77]]
+      changesFor('eachSnapshot').should.eql [null, [44], [44, 55], [44, 55, 55], [44, 55, 55, 55], [44, 55, 55, 55, 77]]
 
     it 'onChange - when new value from first stream take current value of second stream from formula', ->
       parseUserFunctions 'combo = {a: theInput2, b: theInput3}'
@@ -233,13 +237,13 @@ describe 'CoreFunctions includes', ->
       inputs3 77
       inputs 'a'
 
-      changesFor('snapshot').should.eql [null, {a:null, b:null}, {a:44, b:77}]
+      valuesFor('snapshot').should.eql [null, null, {a:44, b:77}]
+      changesFor('snapshot').should.eql [null, {a:44, b:77}]
 
-    it 'unpackLists - put each element separately into the output and report only last of each sequence', ->
+    it 'unpackLists - put each element separately into the output', ->
       parseUserFunctions 'itemsIn = theInput'
       parseUserFunctions 'items = unpackLists(itemsIn)'
       parseUserFunctions 'plusOne = items + 1'
       inputs [33, 44, 66], [77], [], [88]
 
-      changesFor('plusOne').should.eql [1, 67, 78, 89]              #TODO initial null
-      changesFor('items').should.eql [null, 33, 44, 66, 77, 88]             #TODO initial null  #TODO why get all values?
+      valuesFor('items').should.eql [33, 44, 66, 77, 88]

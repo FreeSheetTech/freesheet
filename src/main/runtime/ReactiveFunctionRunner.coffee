@@ -8,6 +8,8 @@ _ = require 'lodash'
 
 module.exports = class ReactiveFunctionRunner
 
+  trace = (x...) -> #console.log x...
+
   withKind = (func, kind) -> func.kind = kind; func
 
   asImmediateFunction = (func) ->
@@ -91,7 +93,7 @@ module.exports = class ReactiveFunctionRunner
   removeUserFunction: (functionName) ->
     delete @userFunctions[functionName]
     @userFunctionImpls[functionName]?.theFunction.deactivate()
-    console.log 'removeUserFunction', functionName
+    trace 'removeUserFunction', functionName
     if subj = @userFunctionSubjects[functionName]
       subj.onNext calcError functionName, 'Unknown name'
       subj.onNext Eval.EvaluationComplete
@@ -103,8 +105,8 @@ module.exports = class ReactiveFunctionRunner
       subj.currentValueSubscription?.dispose()
       subj.currentValueSubscription = null
       for subjName, s of @userFunctionSubjects
-        console.log subjName, 'observers:', s.observers.length
-        console.log subjName, 'current value observers:', s.currentValueSubj.observers.length
+        trace subjName, 'observers:', s.observers.length
+        trace subjName, 'current value observers:', s.currentValueSubj.observers.length
         if not s.hasObservers()
           delete @userFunctionSubjects[subjName]
           delete @userFunctionImpls[subjName]
@@ -165,7 +167,7 @@ module.exports = class ReactiveFunctionRunner
     subj
 
   _subscribeValueChanges: (name, subj) ->
-    logValueChange = (x)-> # console.log 'value change', name, x
+    logValueChange = (x)-> trace 'value change', name, x
     notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
     compareValue = (x, y) -> _.isEqual x, y
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
@@ -176,6 +178,6 @@ module.exports = class ReactiveFunctionRunner
         @valueChanges.onNext [name, value]
     subj.newValuesSub = allValues.subscribe (value) =>
         @newValues.onNext [name, value]
-    console.log '_subscribeValueChanges', name, 'observers:', subj.observers.length
+    trace '_subscribeValueChanges', name, 'observers:', subj.observers.length
 
   _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))

@@ -672,6 +672,7 @@ describe 'ReactiveFunctionRunner runs', ->
 
   describe 'notifies changes', ->
 
+
     describe 'to current values', ->
 
       it 'with initial null and after each input with a different value to previous', ->
@@ -687,6 +688,19 @@ describe 'ReactiveFunctionRunner runs', ->
         sendInputs 'x', 2, 3
         changesFor('y').should.eql [null, 25, 40]
 
+      it 'with one input giving multiple values only when all values received', ->
+        providedStreamReturnFunctions
+          unpackLists: unpackListsFunction
+
+        parseUserFunctions 'itemsIn = theInput'
+        parseUserFunctions 'items = unpackLists(itemsIn)'
+        parseUserFunctions 'plusOne = items + 1'
+        inputs [33, 44, 66], [77], [], [88]
+
+        changesFor('plusOne').should.eql [null, 67, 78, 89]
+        changesFor('items').should.eql [null, 66, 77, 88]
+
+
     describe 'for each new value', ->
 
       it 'after each input', ->
@@ -701,6 +715,18 @@ describe 'ReactiveFunctionRunner runs', ->
         parseUserFunctions 'y = 2 * (x * x) + (5 * x) + 7'
         sendInputs 'x', 2, 3
         valuesFor('y').should.eql [25, 40]
+
+      it 'with one input giving multiple values', ->
+        providedStreamReturnFunctions
+          unpackLists: unpackListsFunction
+
+        parseUserFunctions 'itemsIn = theInput'
+        parseUserFunctions 'items = unpackLists(itemsIn)'
+        parseUserFunctions 'plusOne = items + 1'
+        inputs [33, 44, 66], [77], [], [88]
+
+        valuesFor('plusOne').should.eql [34, 45, 67, 78, 89]
+        valuesFor('items').should.eql [33, 44, 66, 77, 88]
 
 
   describe 'removes named functions so that', ->

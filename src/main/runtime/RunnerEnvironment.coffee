@@ -18,7 +18,7 @@ module.exports = class RunnerEnvironment
 
   #TODO better implementation
   _fromSheetFn: (sheetNameObs, functionNameObs) =>
-    stream = new Rx.BehaviorSubject()
+    stream = new Rx.ReplaySubject(2)
     sheetName = null
     functionName = null
     names = sheetNameObs.filter( notEvaluationComplete ).combineLatest functionNameObs.filter( notEvaluationComplete ), (sheetName, functionName) -> [sheetName, functionName]
