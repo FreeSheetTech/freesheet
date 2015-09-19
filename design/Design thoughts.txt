@@ -484,6 +484,7 @@ Requests with async replies
 - BUT don't want to make request until have the correct args and/or trigger with event like a button press
 - AND functions will have to handle async in their implementation, so need to feed value back into sheet when it arrives
 - Need simple way of wrapping functions that return promises and/or streams
+- Need to re-run function when input args change
 
 Worksheet instances
 -------------------

@@ -8,8 +8,8 @@ _ = require 'lodash'
 
 module.exports = class ReactiveFunctionRunner
 
-  trace = (x...) -> console.log x...
-  traceFn = (name) -> (x...) -> console.log name, x...
+  trace = (x...) -> #console.log x...
+  traceFn = (name) -> (x...) -> #console.log name, x...
 
   withKind = (func, kind) -> func.kind = kind; func
 
@@ -173,16 +173,13 @@ module.exports = class ReactiveFunctionRunner
     compareValue = (x, y) -> _.isEqual x, y
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
     finalValue = (pair) -> pair.length is 2 and pair[0] isnt Eval.EvaluationComplete and pair[1] is Eval.EvaluationComplete
+    toFinalValue = (source) -> source.map(fillErrorName).bufferWithCount(2, 1).filter(finalValue).map((p) -> p[0])
     subj.currentValueSubj = new Rx.BehaviorSubject(null)
-    currentValues = subj.do(logValueChange).map(fillErrorName) #.do(traceFn '- fill error')
-                          .bufferWithCount(2, 1) #.do(traceFn '- window')
-                          .filter(finalValue) #.do(traceFn '- filter final')
-                          .map((p) -> p[0]) #.do(traceFn '- map [0]')
-                          .distinctUntilChanged(null, compareValue) #.do(traceFn '- distinct')
+    currentValues = toFinalValue(subj.do(logValueChange)).distinctUntilChanged(null, compareValue)
     subj.currentValueSubscription = currentValues.subscribe subj.currentValueSubj
     subj.valueChangesSub = subj.currentValueSubj.subscribe (value) =>
         @valueChanges.onNext [name, value]
-    subj.newValuesSub = subj.map(fillErrorName).bufferWithCount(2, 1).filter(finalValue).map((p) -> p[0]).subscribe (value) =>
+    subj.newValuesSub = toFinalValue(subj).subscribe (value) =>
         @newValues.onNext [name, value]
     trace '_subscribeValueChanges', name, 'observers:', subj.observers.length
 

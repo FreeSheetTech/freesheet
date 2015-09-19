@@ -4,6 +4,10 @@ Rx = require 'rx'
 
 
 notEvaluationComplete = (x) -> x isnt EvaluationComplete
+sendError = (stream, message) ->
+  stream.onNext new CalculationError(null, message)
+  stream.onNext EvaluationComplete
+
 
 module.exports = class RunnerEnvironment
 
@@ -26,10 +30,8 @@ module.exports = class RunnerEnvironment
       [sheetName, functionName] = pair
       runner = @runners[sheetName]
       switch
-        when not runner
-          new Rx.Observable.from([new CalculationError(null, "Sheet #{sheetName} could not be found"), EvaluationComplete]).subscribe stream
-        when not runner.hasUserFunction(functionName)
-          new Rx.Observable.from([new CalculationError(null, "Name #{functionName} could not be found in sheet #{sheetName}"), EvaluationComplete]).subscribe stream
+        when not runner then sendError stream, "Sheet #{sheetName} could not be found"
+        when not runner.hasUserFunction(functionName) then sendError stream, "Name #{functionName} could not be found in sheet #{sheetName}"
         else
           callback = (name, value) ->
             stream.onNext value
