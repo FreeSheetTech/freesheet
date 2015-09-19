@@ -10,7 +10,7 @@ EvaluationComplete = 'EVALUATION_COMPLETE'
 
 nextId = 1
 
-trace = (x...) -> #console.log x...
+trace = (x...) -> console.log x...
 
 
 class Evaluator

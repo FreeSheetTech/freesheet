@@ -232,18 +232,19 @@ describe 'CoreFunctions includes', ->
     it 'onChange - when new value from first stream take current value of second stream from formula', ->
       parseUserFunctions 'combo = {a: theInput2, b: theInput3}'
       parseUserFunctions 'snapshot = onChange(theInput, combo)'
-      inputs null, null
+      inputs null, null, null
       inputs2 33, 44
       inputs3 77
       inputs 'a'
 
-      valuesFor('snapshot').should.eql [null, null, {a:44, b:77}]
-      changesFor('snapshot').should.eql [null, {a:44, b:77}]
+      valuesFor('snapshot').should.eql [null, null, null, {a:44, b:77}]
+      changesFor('snapshot').should.eql [null, null, {a:44, b:77}]
 
     it 'unpackLists - put each element separately into the output', ->
       parseUserFunctions 'itemsIn = theInput'
       parseUserFunctions 'items = unpackLists(itemsIn)'
+      parseUserFunctions 'allItems = all(items)'
       parseUserFunctions 'plusOne = items + 1'
       inputs [33, 44, 66], [77], [], [88]
 
-      valuesFor('items').should.eql [33, 44, 66, 77, 88]
+      valuesFor('items').should.eql [66, 77, 88]

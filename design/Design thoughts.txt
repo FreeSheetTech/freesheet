@@ -476,7 +476,14 @@ Signals, inputs, events
 - All formulas that depend on an input that has received no values should be undefined - no current value
 - What about stream functions that return sequence eg all - should it be an empty sequence until a value arrives?
 
-
+Requests with async replies
+---------------------------
+- eg network calls where need to send parameters and get replies - do you make a blocking call, or return a stream, or a stream of streams?
+- may want to have stream from latest of streams like in the autocomplete examples
+- BUT should not have to worry about async requests at this level - make it look like a function
+- BUT don't want to make request until have the correct args and/or trigger with event like a button press
+- AND functions will have to handle async in their implementation, so need to feed value back into sheet when it arrives
+- Need simple way of wrapping functions that return promises and/or streams
 
 Worksheet instances
 -------------------
