@@ -7,7 +7,7 @@ notEvaluationComplete = (x) -> x isnt EvaluationComplete
 
 pageLoadTime = new Date()
 
-streamReturn = (fn) -> fn.returnKind = FunctionTypes.STREAM_RETURN; fn
+streamReturn = (fn) -> fn.kind = FunctionTypes.STREAM_RETURN; fn
 
 module.exports = {
   seconds: (n) -> Period.seconds n

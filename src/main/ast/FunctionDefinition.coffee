@@ -1,20 +1,8 @@
 class FunctionDefinition
-  constructor: (@name, @argDefs, @returnKind) ->
-  argNames: -> (a.name for a in @argDefs)
+  constructor: (@name, @argNames) ->
 
 class UserFunction extends FunctionDefinition
   constructor: (name, argNames, @expr) ->
-    super name, streamArgDefs(argNames), 'stream'
+    super name, argNames
 
-class BuiltInFunction extends FunctionDefinition
-  constructor: (name, argDefs, returnKind, @implementation) ->
-    super name, argDefs, returnKind
-
-class ArgumentDefinition
-  constructor: (@name, @kind) ->
-
-
-
-streamArgDefs = (names) -> (new ArgumentDefinition(n, 'stream') for n in names)
-
-module.exports = {FunctionDefinition, UserFunction, BuiltInFunction, ArgumentDefinition}
+module.exports = {FunctionDefinition, UserFunction}

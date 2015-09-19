@@ -85,7 +85,7 @@ exprFunction = (funcDef, functionInfo, userFunctions, providedFunctions) ->
 
     {code: code, functionNames}
 
-  {code, functionNames} = exprCode funcDef.expr, functionInfo, funcDef.argNames()
+  {code, functionNames} = exprCode funcDef.expr, functionInfo, funcDef.argNames
   {theFunction: code, functionNames}
 
 

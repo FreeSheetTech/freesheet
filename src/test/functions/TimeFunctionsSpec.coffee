@@ -35,9 +35,9 @@ describe 'TimeFunctions includes', ->
       ticks = changesFor('theTime')
       ticks.length.should.eql(3)
       latestTickMillis = ticks[2].getTime()
-      (Date.now() - latestTickMillis).should.be.lessThan(40)
+      (Date.now() - latestTickMillis).should.be.lessThan(30)
       done()
-    setTimeout checkResults, 30
+    setTimeout checkResults, 28
 
   it 'dateValue - produces Date from ISO format', ->
     parseUserFunctions 'gameEnd = dateValue("2010-03-04 15:16:17")'

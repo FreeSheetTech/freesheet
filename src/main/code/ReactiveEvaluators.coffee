@@ -240,7 +240,7 @@ class FunctionCallWithArgs extends Evaluator
       @func.subscribe @_updateFunction
     else if @func = context.providedFunctions[@name]
       @isUserFunction = false
-      if @func.returnKind == FunctionTypes.STREAM_RETURN
+      if @func.kind == FunctionTypes.STREAM_RETURN
         @_subscribeStreamFunction @func
       else
         @_subscribeTo arg.observable(), i for arg, i in @args
@@ -253,7 +253,7 @@ class FunctionCallWithArgs extends Evaluator
   copy: -> new FunctionCallWithArgs @expr, @name, (a.copy() for a in @args)
   currentValue: (argValues) ->
     if @isUserFunction then throw new Error("Unexpected call to currentValue for user function in #{@toString()}")
-    if @func.returnKind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
+    if @func.kind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
     @func.apply null, @_currentValues(argValues)
 
   _updateFunction: (funcDef) =>

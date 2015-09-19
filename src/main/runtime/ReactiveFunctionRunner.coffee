@@ -11,13 +11,6 @@ module.exports = class ReactiveFunctionRunner
   trace = (x...) -> #console.log x...
   traceFn = (name) -> (x...) -> #console.log name, x...
 
-  withKind = (func, kind) -> func.kind = kind; func
-
-  asImmediateFunction = (func) ->
-    (s, f) ->
-      arr = s or []     #TODO initial null
-      func arr, f
-
   calcError = (name, message) -> new CalculationError name, "#{message}: #{name}"
   errorFunction = (name, expr, message) -> new Eval.CalcError(expr, calcError(name, message))
   unknownNameFunction = (name) -> errorFunction name, null, 'Unknown name'
@@ -29,26 +22,25 @@ module.exports = class ReactiveFunctionRunner
     @userFunctionImpls = {}
     @inputs = {}
 
-  _addProvidedFunction: (name, fn) ->
-    @providedFunctions[name] = fn
+  _addProvidedFunction: (name, fn) -> @providedFunctions[name] = fn
 
   addProvidedFunction: (name, fn) ->
     switch
-      when fn.kind is FunctionTypes.TRANSFORM_STREAM then @addProvidedTransformFunction name, fn
-      when fn.returnKind is FunctionTypes.STREAM_RETURN then @addProvidedStreamReturnFunction name, fn
+      when fn.kind is FunctionTypes.TRANSFORM then @addProvidedTransformFunction name, fn
+      when fn.kind is FunctionTypes.STREAM_RETURN then @addProvidedStreamReturnFunction name, fn
       else @_addProvidedFunction name, fn
 
   addProvidedFunctions: (functionMap) -> @addProvidedFunction n, f for n, f of functionMap
 
   addProvidedTransformFunction: (name, fn) ->
-    @_addProvidedFunction name, withKind(asImmediateFunction(fn), FunctionTypes.TRANSFORM)
-    fn.kind = FunctionTypes.TRANSFORM_STREAM
+    fn.kind = FunctionTypes.TRANSFORM
+    @_addProvidedFunction name, fn
 
   addProvidedTransformFunctions: (functionMap) -> @addProvidedTransformFunction n, f for n, f of functionMap
 
   addProvidedStreamReturnFunction: (name, fn) ->
+    fn.kind = FunctionTypes.STREAM_RETURN
     @_addProvidedFunction name, fn
-    fn.returnKind = FunctionTypes.STREAM_RETURN
 
   addProvidedStreamReturnFunctions: (functionMap) -> @addProvidedStreamReturnFunction n, f for n, f of functionMap
 
@@ -64,7 +56,7 @@ module.exports = class ReactiveFunctionRunner
 
     if funcDef.expr instanceof Input then @inputs[name] = reactiveFunction
 
-    if funcDef.argDefs.length is 0
+    if funcDef.argNames.length is 0
       unknownName = (name) =>
         unknownError = unknownNameFunction(name)
         unknownError.activate({})
@@ -85,7 +77,7 @@ module.exports = class ReactiveFunctionRunner
       else
         @userFunctionSubjects[name] = @_newUserFunctionSubject(name, reactiveFunction)
     else
-      evalFunctionDefinition = new Eval.FunctionDefinition(funcDef.argNames(), reactiveFunction)
+      evalFunctionDefinition = new Eval.FunctionDefinition(funcDef.argNames, reactiveFunction)
       subj = @userFunctionSubjects[name] or @userFunctionSubjects[name] = new Rx.BehaviorSubject()
       subj.onNext evalFunctionDefinition
 
@@ -137,7 +129,7 @@ module.exports = class ReactiveFunctionRunner
     @inputs[name].sendInput value
 
   sendDebugInput: (name, value) ->
-    throw new Error 'Unknown value name' unless @userFunctions[name]?.argDefs.length is 0
+    throw new Error 'Unknown value name' unless @userFunctions[name]?.argNames.length is 0
     @userFunctionSubjects[name].onNext value
     @userFunctionSubjects[name].onNext Eval.EvaluationComplete
 
@@ -183,4 +175,4 @@ module.exports = class ReactiveFunctionRunner
         @newValues.onNext [name, value]
     trace '_subscribeValueChanges', name, 'observers:', subj.observers.length
 
-  _functionInfo: -> _.zipObject (([name, {kind: fn.kind, returnKind: fn.returnKind}] for name, fn of @providedFunctions when fn.kind or fn.returnKind))
+  _functionInfo: -> _.zipObject (([name, {kind: fn.kind}] for name, fn of @providedFunctions when fn.kind))

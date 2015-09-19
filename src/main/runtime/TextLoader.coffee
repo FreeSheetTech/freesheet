@@ -4,7 +4,7 @@ TextParser = require '../parser/TextParser'
 
 module.exports = class TextLoader
 
-  argList = (funcDef) -> if funcDef.argDefs?.length then "(#{(a.name for a in funcDef.argDefs).join ', '})" else ""
+  argList = (funcDef) -> if funcDef.argNames?.length then "(#{funcDef.argNames.join ', '})" else ""
 
   constructor: (@runner) ->
     @_defs = []
