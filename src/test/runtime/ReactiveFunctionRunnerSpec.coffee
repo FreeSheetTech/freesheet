@@ -217,7 +217,7 @@ describe 'ReactiveFunctionRunner runs', ->
       parseUserFunctions 'c = obj.c'
       changes.should.eql [{obj: {a: 10, b: 20}}, {c: null}]
 
-    it 'selects null for member of null', ->        #TODO initial null
+    it 'selects null for member of null', ->
       parseUserFunctions 'obj = none'
       parseUserFunctions 'c = obj.c'
       changes.should.eql [{obj: null}, {c: null}]
@@ -529,7 +529,6 @@ describe 'ReactiveFunctionRunner runs', ->
       changesFor("sq").should.eql [null, [400], [400, 900], [400, 900, 1600]]
 
 
-      #TODO this should not have a zero at start
     it 'applies a transform function to an input stream using all function', ->
       parseUserFunctions 'sq = fromEach(all(theInput), in * in)'
       inputs 20, 30, 40
@@ -538,7 +537,7 @@ describe 'ReactiveFunctionRunner runs', ->
     it 'applies a transform function to the sequence values in a stream using plain value', ->
       parseUserFunctions 'sq = fromEach(theInput, in * in)'
       inputs [2, 3, 4], [5, 6], [7]
-      changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]       # TODO should first be null or []?
+      changesFor("sq").should.eql [null, [4, 9, 16], [25, 36], [49]]
 
     it 'finds the squares of the sequence values in a stream using plain version', ->
       providedFunctions
