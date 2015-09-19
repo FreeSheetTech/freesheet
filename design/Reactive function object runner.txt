@@ -142,16 +142,16 @@ Using local names from an aggregate
 
 To Do
 -----
-- All values instead of distinct on value changes
+    - All values instead of distinct on value changes
     - No null from Input when created
 - Null replaces unknown function downstream when unknown function is added
-- unpackLists: direct result has more changes than formula using it
-- Ensure calculations ony done after all complete
+    - unpackLists: direct result has more changes than formula using it
+    - Ensure calculations only done after all complete
     - Turn off debugging prints
-- How many code generators needed?
+    - How many code generators needed?
 - Refactor FCWA
 - Ensure all Evaluators deactivate correctly
-- Refactor dummyArgs
+    - Refactor dummyArgs
 - When/which should evaluator send out Updated
 - TODOs in code
 - Rx v3

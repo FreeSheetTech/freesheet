@@ -12,6 +12,16 @@ nextId = 1
 
 trace = (x...) -> #console.log x...
 
+internalSource = (initialValue) ->
+  subj = new Rx.Subject()
+  subject: subj
+  observable: -> subj
+  activate: ->
+    if initialValue isnt undefined
+      subj.onNext initialValue
+      subj.onNext EvaluationComplete
+  deactivate: ->
+
 
 class Evaluator
   constructor: (@expr, @args, subj) ->
@@ -86,16 +96,7 @@ class Evaluator
   toString: -> "#{@constructor.name} #{@expr?.text} #{@id}"
 
 class Literal extends Evaluator
-  constructor: (expr, @value) ->
-    @inputStream = inputStream = new Rx.Subject()
-    dummyArg =
-      observable: -> inputStream
-      activate: ->
-        inputStream.onNext value
-        inputStream.onNext EvaluationComplete
-      deactivate: ->
-
-    super expr, [dummyArg]
+  constructor: (expr, @value) -> super expr, [internalSource value]
 
   copy: -> new Literal @expr, @value
   currentValue: (argValues) -> @value
@@ -103,16 +104,7 @@ class Literal extends Evaluator
   _calculateNextValue: -> @value
 
 class CalcError extends Evaluator
-  constructor: (expr, @error) ->
-    @inputStream = inputStream = new Rx.Subject()
-    dummyArg =
-      observable: -> inputStream
-      activate: ->
-        inputStream.onNext error
-        inputStream.onNext EvaluationComplete
-      deactivate: ->
-
-    super expr, [dummyArg]
+  constructor: (expr, @error) -> super expr, [internalSource error]
 
   copy: -> new CalcError @expr, @error
   currentValue: (argValues) -> @error
@@ -120,24 +112,16 @@ class CalcError extends Evaluator
   _calculateNextValue: -> @error
 
 class Input extends Evaluator
-  constructor: (expr, @inputName) ->
-    @inputStream = inputStream = new Rx.Subject()
-    dummyArg =
-      observable: -> inputStream
-      activate: ->
-      deactivate: ->
-
-    super expr, [dummyArg]
+  constructor: (expr, @inputName) -> super expr, [@inputSource = internalSource()]
 
   copy: -> new Input @expr, @inputName
   currentValue: (argValues) -> @values[0]
 
-  _calculateNextValue: ->
-    @values[0]
+  _calculateNextValue: -> @values[0]
 
   sendInput: (value) ->
-    @inputStream.onNext value
-    @inputStream.onNext EvaluationComplete
+    @inputSource.subject.onNext value
+    @inputSource.subject.onNext EvaluationComplete
 
   toString: -> "#{@constructor.name} #{@inputName}"
 
