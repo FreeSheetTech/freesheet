@@ -144,6 +144,10 @@ Separation of concerns
 - How do you link sheets to each other?
 - How do you keep DRY by defaulting inputs with expected name?
 
+Linking sheets to inputs
+------------------------
+- Could link an input on a sheet to a source of a known type eg a stream or a callback that sends values
+- Could link all inputs to a stream or callback that supplied name+value
 
 Linksheets
 ----------
