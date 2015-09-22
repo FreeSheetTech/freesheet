@@ -79,7 +79,7 @@ Transform expressions
   - Activate the evaluator with the context
   - Make a function with one arg that sends arg to subject's onNext, then returns the value of the variable
   - Must all be on an immediate scheduler
-- If any input to function changes, need to re-evaluate where it is used, so need a stream of functions or evaluators
+- If any input to function changes, need to re-evaluate expressions where it is used, so need a stream of functions or evaluators
 - Need to re-evaluate the expression it is used in each time anything changes
 - So really need a stream of events with the function as their value
 - Fits with everything else, because the function is the argument passed to the next expression
@@ -116,12 +116,23 @@ Callable function from evaluators
 - Poss: generate different kinds of evaluators that do own synchronous observer management
 - Poss: go more low-level in Rx
 - Poss: evaluators responsible for returning a function that does what they would do
-- Could be achieved with a getCurrentValue call on Evaluator, pass in named argument map
+- Could be achieved with a currentValue call on Evaluator, pass in named argument map
 - Some evaluators may not be able to do that, like stream functions, but ok not to allow those in transform functions
 - Maybe optimise later for values that cannot change
 - SO evaluators can act in two modes - pull and push
 - Probably don't need to copy the Evaluator tree, so may be able to remove that code
 - Can't use _calculateNextValue as this doesn't work in template Evaluator trees
+
+FunctionCallWithArgs in a transform expression
+----------------------------------------------
+- Need to implement currentValue
+- Function may contain changing values
+- Other function args (apart from in) may have changing values
+- The sequence the transform expression is applied to may have changing values
+- If any of these changes, the expression needs to be re-evaluated
+- Should happen if can implement currentValue for FCWA
+- What does that mean?
+- Concept: transform expression is a function curried to have all arguments supplied except one
 
 Using local names from an aggregate
 ------------------------------------
