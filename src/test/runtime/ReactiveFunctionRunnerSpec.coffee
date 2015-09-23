@@ -444,6 +444,20 @@ describe 'ReactiveFunctionRunner runs', ->
       changes.should.eql [{games: [ { time: 21, score: 70 }, { time: 25, score: 130} ]}, {pointsFactor: 15}, {points: [15, 15]},
                             {pointsFactor: 17}, {points: [17, 17]}]
 
+    it 'transforms all elements of a sequence to a formula with literals', ->
+      parseUserFunctions 'games = [ "a", "b" ]'
+      parseUserFunctions 'points = fromEach( games, 3 * 2 )'
+
+      changes.should.eql [{games: [ "a", "b" ]}, {points: [6, 6]}]
+
+    it 'transforms all elements of a sequence to a formula including a named value', ->
+      parseUserFunctions 'games = [ { a: 1 }, { a: 2} ]'
+      parseUserFunctions 'pointsFactor = 15'
+      parseUserFunctions 'points = fromEach( games, pointsFactor * 2 )'
+
+      changes.should.eql [{games: [ { a: 1 }, { a: 2} ]},
+                            {pointsFactor: 15}, {points: [30, 30]}]
+
     it 'transforms all elements of a sequence to a formula including two named values', ->
       parseUserFunctions 'games = [ { time: 21, score: 70 }, { time: 25, score: 130} ]'
       parseUserFunctions 'pointsFactor = 15; wowFactor = 5'
@@ -489,6 +503,15 @@ describe 'ReactiveFunctionRunner runs', ->
       changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]},
                           {pointsFactor: 6}, {fudgeFactor: 4},
                           {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
+
+    it 'filters elements of a sequence using a formula including a function call with arguments', ->
+      parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]'
+      parseUserFunctions 'highScore(game) = game.score >= 10'
+      parseUserFunctions 'highScores = select( games, highScore(in) )'
+
+      changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]},
+                          {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
+
 
   describe 'sequence and stream functions', ->
 

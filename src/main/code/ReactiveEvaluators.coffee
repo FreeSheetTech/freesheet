@@ -252,15 +252,20 @@ class FunctionCallWithArgs extends Evaluator
 
   copy: -> new FunctionCallWithArgs @expr, @name, (a.copy() for a in @args)
   currentValue: (argValues) ->
-    if @isUserFunction then throw new Error("Unexpected call to currentValue for user function in #{@toString()}")
-    if @func.kind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
-    @func.apply null, @_currentValues(argValues)
+    if @isUserFunction
+      functionArgs = @_currentValues(argValues)
+      funcArgValues = _.zipObject @funcDef.argNames, functionArgs
+      @evaluator.currentValue(funcArgValues)
+    else
+      if @func.kind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
+      @func.apply null, @_currentValues(argValues)
 
   _updateFunction: (funcDef) =>
     argSubject = (arg) ->
       subj = new Rx.Subject()
       arg.observable().subscribe subj
       subj
+    @funcDef = funcDef
     subjects = (argSubject arg for arg in @args)
     argSubjects = _.zipObject funcDef.argNames, subjects
     @evaluator = funcDef.evaluatorTemplate.copy()

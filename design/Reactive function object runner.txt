@@ -133,6 +133,9 @@ FunctionCallWithArgs in a transform expression
 - Should happen if can implement currentValue for FCWA
 - What does that mean?
 - Concept: transform expression is a function curried to have all arguments supplied except one
+- Need to get current values coming into the FCWA, then feed them to the evaluator copy
+- Need to have the args as a list, because they map to different names in the evaluator copy
+- Need to have the list of function argument names from the FuncDef available in the FCWA
 
 Using local names from an aggregate
 ------------------------------------
