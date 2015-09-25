@@ -161,7 +161,6 @@ module.exports = class ReactiveFunctionRunner
 
   _subscribeValueChanges: (name, subj) ->
     logValueChange = traceFn "value change #{name}"
-    notEvalComplete = (x)-> x isnt Eval.EvaluationComplete
     compareValue = (x, y) -> _.isEqual x, y
     fillErrorName = (x) -> if x instanceof CalculationError then x.fillName(name) else x
     finalValue = (pair) -> pair.length is 2 and pair[0] isnt Eval.EvaluationComplete and pair[1] is Eval.EvaluationComplete

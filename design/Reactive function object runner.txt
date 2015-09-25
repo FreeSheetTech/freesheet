@@ -173,3 +173,5 @@ To Do
 - Ensure everything goes through error checking
 - Use Rx functions in core functions
 - Consider provided function implementation - transducers?
+- CalcError for incorrect number of args
+- Sequence selector operator

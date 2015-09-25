@@ -512,6 +512,15 @@ describe 'ReactiveFunctionRunner runs', ->
       changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11} ]},
                           {highScores: [{ time: 21, score: 10 }, { time: 28, score: 11}]}]
 
+    it 'filters elements of a sequence using a formula including a function call with multiple arguments', ->
+      parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11}, { time: 31, score: 9} ]'
+      parseUserFunctions 'midScore(game, from, to) = game.score >= from and game.score <= to'
+      parseUserFunctions 'midScores(lower, upper) = select(games, midScore(in, lower, upper))'
+      parseUserFunctions 'theMidScores = midScores(9, 10)'
+
+      changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11}, { time: 31, score: 9} ]},
+                          {theMidScores: [{ time: 21, score: 10 }, { time: 31, score: 9}]}]
+
 
   describe 'sequence and stream functions', ->
 

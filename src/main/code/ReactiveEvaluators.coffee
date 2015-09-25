@@ -358,12 +358,29 @@ class ExpressionFunction extends Evaluator
     @evaluator.activate exprContext
     @_subscribeTo @evaluator.observable(), 0
 
+    @outerArgValues = outerArgValues = {}
+    notEvalComplete = (x)-> x isnt EvaluationComplete
+    captureArgValue = (name) -> (x) =>
+      # console.log 'got outer arg value', name, x
+      outerArgValues[name] = x
+
+    for name, subj of context.argSubjects
+      subj.filter(notEvalComplete).subscribe captureArgValue(name)
+
+
   copy: -> new ExpressionFunction @evaluator.copy()
 
   _calculateNextValue: ->
+    exprFn = this
     evaluator = @evaluator
-    (_in) -> evaluator.currentValue {'in': _in}
-
+    (_in) ->
+#      console.log evaluator.toString()
+#      console.log 'outerArgValues', exprFn.outerArgValues
+      argValues = _.merge {'in': _in}, exprFn.outerArgValues
+#      console.log 'argValues', argValues
+      result  = evaluator.currentValue argValues   # need to pass in outer args at this point
+#      console.log "result", result
+      result
 
 module.exports = {Literal, CalcError, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,
   FunctionCallNoArgs, FunctionCallWithArgs, Input, Aggregation, Sequence, AggregationSelector, ArgRef,
