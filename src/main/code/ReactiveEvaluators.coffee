@@ -260,7 +260,7 @@ class FunctionCallWithArgs extends Evaluator
       if @func.kind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
       result = @func.apply null, functionArgs
 
-    console.log @toString(), argValues, functionArgs, result
+#    console.log @toString(), argValues, functionArgs, result
     result
 
   _updateFunction: (funcDef) =>
@@ -368,21 +368,21 @@ class ExpressionFunction extends Evaluator
   currentValue: (argValues) ->
     evaluator = @evaluator
     currentArgValues = _.merge {}, argValues
-    console.log 'EF currentValue', evaluator.toString(), 'values', @values, 'argValues', argValues
+#    console.log 'EF currentValue', evaluator.toString(), 'values', @values, 'argValues', argValues
 
     (_in) ->
       functionArgValues = _.merge {'in': _in}, currentArgValues
       result  = evaluator.currentValue functionArgValues
-      console.log 'EF currentValue function', evaluator.toString(), "functionArgValues", functionArgValues, "result", result
+#      console.log 'EF currentValue function', evaluator.toString(), "functionArgValues", functionArgValues, "result", result
       result
 
   _calculateNextValue: ->
     evaluator = @evaluator
-    console.log 'EF _calculateNextValue', evaluator.toString(), 'values', @values
+#    console.log 'EF _calculateNextValue', evaluator.toString(), 'values', @values
 
     (_in) ->
       result  = evaluator.currentValue {'in': _in}
-      console.log 'EF function', evaluator.toString(), "in", _in, "result", result
+#      console.log 'EF function', evaluator.toString(), "in", _in, "result", result
       result
 
 module.exports = {Literal, CalcError, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,

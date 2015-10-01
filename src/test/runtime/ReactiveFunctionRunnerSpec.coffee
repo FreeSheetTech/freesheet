@@ -537,7 +537,7 @@ describe 'ReactiveFunctionRunner runs', ->
                           {theMidScores: [{ time: 21, score: 10 }, { time: 28, score: 11}, { time: 31, score: 9}]}
                           ]
 
-    it.only 'applies multiple transform functions', ->
+    it 'applies multiple transform functions', ->
       runner.addProvidedFunctions require '../functions/CoreFunctions'
 #      providedTransformFunctions
 #        fromEach: (s, func) -> s.map (x) -> func(x)
