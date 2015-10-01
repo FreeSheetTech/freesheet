@@ -521,6 +521,52 @@ describe 'ReactiveFunctionRunner runs', ->
       changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11}, { time: 31, score: 9} ]},
                           {theMidScores: [{ time: 21, score: 10 }, { time: 31, score: 9}]}]
 
+    it 'filters elements of a sequence using a formula including a function call with multiple arguments whose values change', ->
+      parseUserFunctions 'games = [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11}, { time: 31, score: 9} ]'
+      parseUserFunctions 'midScore(game, from, to) = game.score >= from and game.score <= to'
+      parseUserFunctions 'midScores(lower, upper) = select(games, midScore(in, lower, upper))'
+      parseUserFunctions 'theMidScores = midScores(9, theInput)'
+
+      inputs 10, 11
+
+      changes.should.eql [{games: [ { time: 21, score: 10 }, { time: 25, score: 7}, { time: 28, score: 11}, { time: 31, score: 9} ]}
+                          {theMidScores: null}
+                          {theInput: 10}
+                          {theMidScores: [{ time: 21, score: 10 }, { time: 31, score: 9}]}
+                          {theInput: 11}
+                          {theMidScores: [{ time: 21, score: 10 }, { time: 28, score: 11}, { time: 31, score: 9}]}
+                          ]
+
+    it.only 'applies multiple transform functions', ->
+      runner.addProvidedFunctions require '../functions/CoreFunctions'
+#      providedTransformFunctions
+#        fromEach: (s, func) -> s.map (x) -> func(x)
+#        select: (s, func) -> s.filter (x) -> func(x)
+#      providedFunctions
+#        sum: (s) -> _.sum s
+#        ifElse: (test, trueValue, falseValue) -> if test then trueValue else falseValue
+
+
+      parseUserFunctions '''
+        allResults = ["Hull", "Leeds", "Hull"];
+        resultPoints(result) = ifElse("Hull" == result, 3, 1);
+        teamResults(team) = select(allResults, team == in);
+        totalPoints(t) = sum(fromEach(teamResults(t), resultPoints(in)));
+        teamPoints(t) = {team: t, points: totalPoints(t)};
+
+        teamPointsHullLeeds = fromEach(["Hull", "Leeds"], teamPoints(in) );
+      '''
+#      teamPointsHull = teamPoints("Hull");
+#      teamPointsLeeds = teamPoints("Leeds");
+
+
+      changes.should.eql [
+        {allResults: ["Hull", "Leeds", "Hull"]}
+#        {teamPointsHull: { team: 'Hull', points: 6 }}
+#        {teamPointsLeeds: { team: 'Leeds', points: 1 }}
+        {teamPointsHullLeeds: [{ team: 'Hull', points: 6 }, { team: 'Leeds', points: 1 }]}
+      ]
+
 
   describe 'sequence and stream functions', ->
 

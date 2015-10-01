@@ -93,7 +93,7 @@ class Evaluator
 
     @argSubscriptions.push subscription
 
-  toString: -> "#{@constructor.name} #{@expr?.text} #{@id}"
+  toString: -> "#{@constructor.name} #{@expr?.text} #{@id}#{if @isTemplate then ' T' else ''}"
 
 class Literal extends Evaluator
   constructor: (expr, @value) -> super expr, [internalSource value]
@@ -252,13 +252,16 @@ class FunctionCallWithArgs extends Evaluator
 
   copy: -> new FunctionCallWithArgs @expr, @name, (a.copy() for a in @args)
   currentValue: (argValues) ->
+    functionArgs = @_currentValues(argValues)
     if @isUserFunction
-      functionArgs = @_currentValues(argValues)
       funcArgValues = _.zipObject @funcDef.argNames, functionArgs
-      @evaluator.currentValue(funcArgValues)
+      result = @evaluator.currentValue(funcArgValues)
     else
       if @func.kind == FunctionTypes.STREAM_RETURN then throw new Error("Unexpected call to currentValue for stream return function in #{@toString()}")
-      @func.apply null, @_currentValues(argValues)
+      result = @func.apply null, functionArgs
+
+    console.log @toString(), argValues, functionArgs, result
+    result
 
   _updateFunction: (funcDef) =>
     argSubject = (arg) ->
@@ -297,11 +300,11 @@ class ArgRef extends Evaluator
     super {text: name}, [null]
 
   activate: (context) ->
-    obs = context.argSubjects[@name] or context.argSubjects.__anyArg
+    obs = context.argSubjects[@name]
     @_subscribeTo obs, 0
 
   copy: -> new ArgRef @name
-  currentValue: (argValues) -> argValues[@name]
+  currentValue: (argValues) -> if _.has(argValues, @name) then argValues[@name] else @values[0]
 
   _calculateNextValue: -> @values[0]
 
@@ -354,32 +357,32 @@ class ExpressionFunction extends Evaluator
 
   activate: (context) ->
     @context = context
-    exprContext = _.merge {}, context, {argSubjects: {__anyArg: Rx.Observable.from([null, EvaluationComplete])}, isTemplate: true }
-    @evaluator.activate exprContext
+    exprContext = _.merge {}, context, {argSubjects: {'in': Rx.Observable.from([null, EvaluationComplete])} }
     @_subscribeTo @evaluator.observable(), 0
 
-    @outerArgValues = outerArgValues = {}
-    notEvalComplete = (x)-> x isnt EvaluationComplete
-    captureArgValue = (name) -> (x) =>
-      # console.log 'got outer arg value', name, x
-      outerArgValues[name] = x
-
-    for name, subj of context.argSubjects
-      subj.filter(notEvalComplete).subscribe captureArgValue(name)
+    @evaluator.activate exprContext
 
 
   copy: -> new ExpressionFunction @evaluator.copy()
 
-  _calculateNextValue: ->
-    exprFn = this
+  currentValue: (argValues) ->
     evaluator = @evaluator
+    currentArgValues = _.merge {}, argValues
+    console.log 'EF currentValue', evaluator.toString(), 'values', @values, 'argValues', argValues
+
     (_in) ->
-#      console.log evaluator.toString()
-#      console.log 'outerArgValues', exprFn.outerArgValues
-      argValues = _.merge {'in': _in}, exprFn.outerArgValues
-#      console.log 'argValues', argValues
-      result  = evaluator.currentValue argValues   # need to pass in outer args at this point
-#      console.log "result", result
+      functionArgValues = _.merge {'in': _in}, currentArgValues
+      result  = evaluator.currentValue functionArgValues
+      console.log 'EF currentValue function', evaluator.toString(), "functionArgValues", functionArgValues, "result", result
+      result
+
+  _calculateNextValue: ->
+    evaluator = @evaluator
+    console.log 'EF _calculateNextValue', evaluator.toString(), 'values', @values
+
+    (_in) ->
+      result  = evaluator.currentValue {'in': _in}
+      console.log 'EF function', evaluator.toString(), "in", _in, "result", result
       result
 
 module.exports = {Literal, CalcError, Add, Subtract,Multiply, Divide, Eq, NotEq, Gt, Lt, GtEq, LtEq, And, Or,

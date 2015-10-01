@@ -71,7 +71,7 @@ Transform expressions
 - Similar to FunctionCallWith Args, 1 argument
 - Argument is fed in one at a time from array
 - Most convenient if had a callable function to use with normal functions like map, filter, etc
-- To make a callable function from an evaluator:
+- To make a callable function from an evaluator (first attempt - didn't work):
   - Instantiate copy of evaluator
   - Get the ArgRef for in
   - Subscribe to evaluator observable and save to local variable
@@ -123,6 +123,19 @@ Callable function from evaluators
 - Probably don't need to copy the Evaluator tree, so may be able to remove that code
 - Can't use _calculateNextValue as this doesn't work in template Evaluator trees
 
+Even more transform expressions
+-------------------------------
+- Difficulty 1: you need a callable function, not a stream operation
+- Difficulty 2: if used inside a function with args, need a kind of closure where the callable function has access by name to the current arg values
+- Create function and its closure values when function updated, not when used
+- Should the closure values used in the expression be treated like (implicit) arguments?
+- Does the expression function need to subscribe to them?
+- In a FCWA, all the ArgRefs correspond to args supplied to the FCWA
+- In an Expression function, the ArgRefs are not attached to it, but the 'in' argument should not be
+- View of an Expression Function: a FCWA whose args are any ArgRefs used in the expression, which produces a function with one argument when they change
+- Only the arg values for the callable function should go into the currentValue call - so 'in' for a transform expression
+- Values for args of the containing function should be obtained from subscriptions
+
 FunctionCallWithArgs in a transform expression
 ----------------------------------------------
 - Need to implement currentValue
@@ -136,6 +149,10 @@ FunctionCallWithArgs in a transform expression
 - Need to get current values coming into the FCWA, then feed them to the evaluator copy
 - Need to have the args as a list, because they map to different names in the evaluator copy
 - Need to have the list of function argument names from the FuncDef available in the FCWA
+- AND it has to work in pull mode, via currentValue()
+
+EF bug:
+- EF shoud have a function in values[0] but has true - how?
 
 Using local names from an aggregate
 ------------------------------------
