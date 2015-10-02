@@ -151,8 +151,6 @@ FunctionCallWithArgs in a transform expression
 - Need to have the list of function argument names from the FuncDef available in the FCWA
 - AND it has to work in pull mode, via currentValue()
 
-EF bug:
-- EF shoud have a function in values[0] but has true - how?
 
 Using local names from an aggregate
 ------------------------------------
@@ -170,6 +168,11 @@ Using local names from an aggregate
 - FCNA needs to be attached to local names as well as wider context
 - Local names should be searched before global names, and before local names in containing expressions
 - Maybe move to general concept of name reference instead of ArgRef and FCNA
+
+Performance
+-----------
+- League Spec full season, separate inputs: 19s
+- With different numbers of inputs: approx O(n2) performance
 
 To Do
 -----

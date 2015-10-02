@@ -50,11 +50,16 @@ describe 'League Table calculation', ->
     csvText = fs.readFileSync 'src/test/acceptance/premierleague-2013-14.csv', 'utf8'
     results = (fromCsvLine(l) for l in csvText.split '\n' when l.trim().length > 0)
 #    console.log results
-    for r in results
+
+    startTime = Date.now()
+    for r in results[0..85]
       [ht, hg, at, ag] = r
       addResult ht, hg, at, ag
+    endTime = Date.now()
+    elapsedTime = endTime - startTime
 
     table = outputs.values.leagueTable
+    console.log 'Time (ms)', elapsedTime
     console.log table
     table.length.should.eql 20
     table[0].should.eql { team: 'Man City', points: 86 }
