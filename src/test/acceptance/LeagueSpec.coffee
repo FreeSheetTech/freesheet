@@ -1,8 +1,11 @@
 should = require 'should'
 _ = require 'lodash'
 Freesheet = require '../freesheet/Freesheet'
+fs = require 'fs'
 
 describe 'League Table calculation', ->
+
+  @timeout 30000
 
   class SheetOutputs
     constructor: (@sheet, @outputNames...) ->
@@ -14,15 +17,27 @@ describe 'League Table calculation', ->
       @all = {}
       @sheet.onValueChange (name, value) => @all[name] = value
 
-  it 'has sorted team positions after three inputs', ->
+  freesheet = null
+  sheet = null
+  outputs = null
+
+  addResult = (homeTeam, homeGoals, awayTeam, awayGoals) ->   sheet.input 'singleResult', {homeTeam: homeTeam, homeGoals: homeGoals, awayTeam: awayTeam, awayGoals: awayGoals}
+  isNumber = (text) -> text and text.match(/^\d*\.?\d+$|^\d+.?\d*$/)
+  fromText = (text) -> if isNumber(text) then parseFloat(text) else text
+  fromCsvLine = (text) -> (fromText(l.trim()) for l in text.split(','))
+
+
+  beforeEach ->
     freesheet = new Freesheet()
     sheet = freesheet.createSheet('league')
     outputs = new SheetOutputs sheet, ['leagueTable']
     sheet.load code
 
-    sheet.input 'singleResult', {homeTeam: 'Leeds', homeGoals: 2, awayTeam: 'Hull', awayGoals: 3}
-    sheet.input 'singleResult', {homeTeam: 'Hull', homeGoals: 3, awayTeam: 'Liverpool', awayGoals: 0}
-    sheet.input 'singleResult', {homeTeam: 'Leeds', homeGoals: 4, awayTeam: 'Liverpool', awayGoals: 1}
+
+  it 'has sorted team positions after three inputs', ->
+    addResult 'Leeds', 2, 'Hull', 3
+    addResult 'Hull',  3, 'Liverpool', 0
+    addResult 'Leeds', 4, 'Liverpool', 1
 
 #    console.log 'all', outputs.all
     outputs.values.leagueTable.should.eql [
@@ -31,9 +46,23 @@ describe 'League Table calculation', ->
       {team: 'Liverpool', points: 0}
     ]
 
+  it 'has sorted team positions after full season separate inputs', ->
+    csvText = fs.readFileSync 'src/test/acceptance/premierleague-2013-14.csv', 'utf8'
+    results = (fromCsvLine(l) for l in csvText.split '\n' when l.trim().length > 0)
+#    console.log results
+    for r in results
+      [ht, hg, at, ag] = r
+      addResult ht, hg, at, ag
+
+    table = outputs.values.leagueTable
+    console.log table
+    table.length.should.eql 20
+    table[0].should.eql { team: 'Man City', points: 86 }
+    table[19].should.eql { team: 'Cardiff', points: 30 }
+
+
   code = '''
-      resultPoints(t, result) = {team: t,
-        points: pointsFromMatch(team, result) };
+      resultPoints(t, result) = {team: t, points: pointsFromMatch(team, result) };
       pointsFromMatch(team, result) = ifElse(winner(team, result), 3, ifElse(draw(result), 1, 0));
       winner(team, result) = team == result.homeTeam and result.homeGoals > result.awayGoals
           or team == result.awayTeam and result.awayGoals > result.homeGoals;
