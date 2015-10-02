@@ -25,6 +25,14 @@ describe 'League Table calculation', ->
   isNumber = (text) -> text and text.match(/^\d*\.?\d+$|^\d+.?\d*$/)
   fromText = (text) -> if isNumber(text) then parseFloat(text) else text
   fromCsvLine = (text) -> (fromText(l.trim()) for l in text.split(','))
+  resultFromCsvLine = (text) ->
+    [homeTeam, homeGoals, awayTeam, awayGoals] = fromCsvLine text
+    {homeTeam, homeGoals, awayTeam, awayGoals}
+
+  resultsFromFile = ->
+    csvText = fs.readFileSync 'src/test/acceptance/premierleague-2013-14.csv', 'utf8'
+    resultLines = (l for l in csvText.split '\n' when l.trim().length > 0)
+    resultFromCsvLine(l) for l in resultLines
 
 
   beforeEach ->
@@ -46,21 +54,34 @@ describe 'League Table calculation', ->
       {team: 'Liverpool', points: 0}
     ]
 
-  it 'has sorted team positions after full season separate inputs', ->
-    csvText = fs.readFileSync 'src/test/acceptance/premierleague-2013-14.csv', 'utf8'
-    results = (fromCsvLine(l) for l in csvText.split '\n' when l.trim().length > 0)
-#    console.log results
+#  it 'has sorted team positions after full season separate inputs', ->
+#    results = resultsFromFile()
+##    console.log results
+#
+#    startTime = Date.now()
+#    for r in results
+#      sheet.input 'singleResult', r
+#
+#    endTime = Date.now()
+#    elapsedTime = endTime - startTime
+#
+#    table = outputs.values.leagueTable
+#    console.log 'Time (ms)', elapsedTime
+#    table.length.should.eql 20
+#    table[0].should.eql { team: 'Man City', points: 86 }
+#    table[19].should.eql { team: 'Cardiff', points: 30 }
+
+  it 'has sorted team positions after full season inputs in one list', ->
+    results = resultsFromFile()
 
     startTime = Date.now()
-    for r in results[0..85]
-      [ht, hg, at, ag] = r
-      addResult ht, hg, at, ag
+    sheet.input 'resultList', results
     endTime = Date.now()
     elapsedTime = endTime - startTime
 
     table = outputs.values.leagueTable
-    console.log 'Time (ms)', elapsedTime
-    console.log table
+    console.log 'League Table Time (ms)', elapsedTime
+    elapsedTime.should.lessThan 300
     table.length.should.eql 20
     table[0].should.eql { team: 'Man City', points: 86 }
     table[19].should.eql { team: 'Cardiff', points: 30 }
@@ -78,7 +99,9 @@ describe 'League Table calculation', ->
       teamPoints(t) = {team: t, points: totalPoints(t)};
 
       singleResult = input;
-      allResults = all(singleResult);
+      resultList = input;
+      combinedResults = merge(singleResult, unpackLists(resultList));
+      allResults = all(combinedResults);
       awayTeams = fromEach(allResults, in.awayTeam);
       homeTeams = fromEach(allResults, in.homeTeam);
       teams = differentValues(homeTeams + awayTeams);
