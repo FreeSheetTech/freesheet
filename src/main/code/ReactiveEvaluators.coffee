@@ -10,7 +10,7 @@ EvaluationComplete = 'EVALUATION_COMPLETE'
 
 nextId = 1
 
-trace = (x...) -> #console.log x...
+trace = (x...) -> # console.log x...
 
 internalSource = (initialValue) ->
   subj = new Rx.Subject()
@@ -42,7 +42,7 @@ class Evaluator
   deactivate: ->
     trace 'deactivate:', @expr.text
     s.dispose() for s in @argSubscriptions
-    arg.deactivate() for arg in @args
+    arg?.deactivate() for arg in @args
 
   copy: -> throw new Error("copy must be defined in #{@toString()}")
   currentValue: (argValues) ->
@@ -245,8 +245,10 @@ class FunctionCallWithArgs extends Evaluator
       else
         @_subscribeTo arg.observable(), i for arg, i in @args
     else
-      @subject.onNext new CalculationError(@name, 'Unknown name: ' + @name)
-      @subject.onNext EvaluationComplete
+      @isUserFunction = true
+      @func = context.unknownName(@name)
+      @context = context
+      @func.subscribe @_updateFunction
 
     @_activateArgs context
 
@@ -263,20 +265,28 @@ class FunctionCallWithArgs extends Evaluator
 #    console.log @toString(), argValues, functionArgs, result
     result
 
-  _updateFunction: (funcDef) =>
-    argSubject = (arg) ->
-      subj = new Rx.Subject()
-      arg.observable().subscribe subj
-      subj
-    @funcDef = funcDef
-    subjects = (argSubject arg for arg in @args)
-    argSubjects = _.zipObject funcDef.argNames, subjects
-    @evaluator = funcDef.evaluatorTemplate.copy()
-    contextWithArgs = _.merge {}, @context, {argSubjects}
-    @evaluator.activate(contextWithArgs)
-    @_subscribeTo @evaluator.observable(), 0
-    #TODO hack
-    @values = (null for i in [1...@args.length])
+  _updateFunction: (update) =>
+    if (update instanceof FunctionDefinition)
+      funcDef = update
+      @funcDef = funcDef
+      s.dispose() for s in @argSubscriptions
+      @argSubscriptions = []
+      @evaluator?.deactivate()
+
+      subjects = (arg.observable() for arg in @args)
+      argSubjects = _.zipObject funcDef.argNames, subjects
+      @evaluator = funcDef.evaluatorTemplate.copy()
+      contextWithArgs = _.merge {}, @context, {argSubjects}
+      @evaluator.activate(contextWithArgs)
+      @_subscribeTo @evaluator.observable(), 0
+      #TODO hack
+      @values[i] = null for i in [1...@args.length]
+    else
+      if update isnt EvaluationComplete then @values[0] = update
+      @values[i] = null for i in [1...@args.length]
+      @_evaluateIfReady()
+
+
 
   _subscribeStreamFunction: (fn) ->
     #TODO requires function to handle EvaluationComplete
@@ -357,8 +367,13 @@ class ExpressionFunction extends Evaluator
 
   activate: (context) ->
     @context = context
-    exprContext = _.merge {}, context, {argSubjects: {'in': Rx.Observable.from([null, EvaluationComplete])} }
     @_subscribeTo @evaluator.observable(), 0
+    exprContext =
+      localEvals: context.localEvals
+      userFunctions: context.userFunctions
+      providedFunctions: context.providedFunctions
+      unknownName: context.unknownName
+      argSubjects: _.merge {'in': Rx.Observable.from([null, EvaluationComplete])}, context.argSubjects
 
     @evaluator.activate exprContext
 

@@ -342,6 +342,28 @@ describe 'ReactiveFunctionRunner runs', ->
 
       changesFor('result').should.eql [24, 25]
 
+    it 'can be redefined and update values using it', ->
+      parseUserFunctions 'increased(x) = x + 10'
+      parseUserFunctions 'a = increased(5)'
+      parseUserFunctions 'increased(x) = x + 20'
+
+      changesFor('a').should.eql [15, 25]
+
+    it 'can be defined after use and update values using it', ->
+      parseUserFunctions 'a = increased(5)'
+      parseUserFunctions 'increased(x) = x + 20'
+
+      changesFor('a').should.eql [unknown('increased'), 25]
+
+    it 'can be defined after functions that call it and update values using it', ->
+      parseUserFunctions 'a = increased(5)'
+      parseUserFunctions 'increased(x) = augmented(x + 1)'
+      parseUserFunctions 'augmented(x) = x + 20'
+
+      changesFor('a').should.eql [unknown('increased'), unknown('augmented'), 26]
+
+
+
   describe 'inputs', ->
 
     it 'create a named input when add user function with input expr', ->
@@ -394,7 +416,7 @@ describe 'ReactiveFunctionRunner runs', ->
     it 'calling unknown function', ->
       parseUserFunctions 'a = 10'
       parseUserFunctions 'num = a + ddd(5)'
-      changes.should.eql [{a: 10}, {num: unknown 'ddd'}]
+      changes.should.eql [{a: 10}, {ddd: unknown 'ddd'}, {num: unknown 'ddd'}]
 
     it 'divide by zero', ->
       parseUserFunctions 'a = 10'
@@ -556,15 +578,27 @@ describe 'ReactiveFunctionRunner runs', ->
 
         teamPointsHullLeeds = fromEach(["Hull", "Leeds"], teamPoints(in) );
       '''
-#      teamPointsHull = teamPoints("Hull");
-#      teamPointsLeeds = teamPoints("Leeds");
-
 
       changes.should.eql [
         {allResults: ["Hull", "Leeds", "Hull"]}
-#        {teamPointsHull: { team: 'Hull', points: 6 }}
-#        {teamPointsLeeds: { team: 'Leeds', points: 1 }}
         {teamPointsHullLeeds: [{ team: 'Hull', points: 6 }, { team: 'Leeds', points: 1 }]}
+      ]
+
+    it 'applies function called from transform functions even if functions defined later', ->
+      runner.addProvidedFunctions require '../functions/CoreFunctions'
+
+      parseUserFunctions '''
+        teamPointsHullLeeds = fromEach(["Hull", "Leeds"], teamPoints(in) );
+
+        totalPoints(t) = 25;
+        teamPoints(t) = {team: t, points: totalPoints(t)};
+
+      '''
+
+      changes.should.eql [
+        {teamPoints: unknown 'teamPoints'}
+        {teamPointsHullLeeds: unknown 'teamPoints'}
+        {teamPointsHullLeeds: [{ team: 'Hull', points: 25 }, { team: 'Leeds', points: 25 }]}
       ]
 
 

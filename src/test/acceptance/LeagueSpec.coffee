@@ -88,6 +88,16 @@ describe 'League Table calculation', ->
 
 
   code = '''
+      singleResult = input;
+      resultList = input;
+      combinedResults = merge(singleResult, unpackLists(resultList));
+      allResults = all(combinedResults);
+      awayTeams = fromEach(allResults, in.awayTeam);
+      homeTeams = fromEach(allResults, in.homeTeam);
+      teams = differentValues(homeTeams + awayTeams);
+      competitionResults = fromEach(teams, teamPoints(in));
+      leagueTable = sortBy(competitionResults, 0-in.points);
+
       resultPoints(t, result) = {team: t, points: pointsFromMatch(team, result) };
       pointsFromMatch(team, result) = ifElse(winner(team, result), 3, ifElse(draw(result), 1, 0));
       winner(team, result) = team == result.homeTeam and result.homeGoals > result.awayGoals
@@ -98,13 +108,4 @@ describe 'League Table calculation', ->
       totalPoints(t) = sum(fromEach(teamResults(t), resultPoints(t, in).points));
       teamPoints(t) = {team: t, points: totalPoints(t)};
 
-      singleResult = input;
-      resultList = input;
-      combinedResults = merge(singleResult, unpackLists(resultList));
-      allResults = all(combinedResults);
-      awayTeams = fromEach(allResults, in.awayTeam);
-      homeTeams = fromEach(allResults, in.homeTeam);
-      teams = differentValues(homeTeams + awayTeams);
-      competitionResults = fromEach(teams, teamPoints(in));
-      leagueTable = sortBy(competitionResults, 0-in.points);
 '''
