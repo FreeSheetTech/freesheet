@@ -71,6 +71,10 @@ describe 'CoreFunctions includes', ->
       parseUserFunctions 'theWords = fromCsvLine("these,are the , 4, words")'
       changesFor('theWords').should.eql [['these', 'are the', 4, 'words']]
 
+    it 'fromCsvLine - null gives empty array', ->
+      parseUserFunctions 'noWords = fromCsvLine(none)'
+      changesFor('noWords').should.eql [[]]
+
   describe 'with lists', ->
     it 'item - picks an item at a one-based index', ->
       parseUserFunctions 'theItem = item(2, [30, 40, 50])'

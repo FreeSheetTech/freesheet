@@ -14,7 +14,11 @@ lines = (text) -> if text? then text.split '\n' else []
 module.exports = {
   lines
   nonEmptyLines: (text) -> (l.trim() for l in lines(text) when l.trim())
-  fromCsvLine: (text) -> (fromText(l.trim()) for l in text.split(','))
+  fromCsvLine: (text) ->
+    if not text?.trim()
+      []
+    else
+      (fromText(l.trim()) for l in text.split(','))
 
   item: (index, list) -> list[index - 1]
   fromEach: transform (s, func) -> s.map (x) -> apply(func, x)
