@@ -43,7 +43,7 @@ module.exports = class Sheet
   inputs: -> @runner.getInputs()
   input: (name, value) -> @runner.sendInput name, value
   addFunctions: (functionMap) -> @runner.addProvidedFunctions functionMap
-  onValueChange: (callback) -> @runner.onValueChange callback
+  onValueChange: (callbackOrName, callback) -> if callback? then @runner.onValueChange(callback, callbackOrName) else @runner.onValueChange callbackOrName
   onEveryValueChange: (callback) -> @runner.onValueChange callback
   onFormulaChange: (callback) -> @functionChanges.subscribe (updateArgs) -> callback.apply(null, updateArgs)
 

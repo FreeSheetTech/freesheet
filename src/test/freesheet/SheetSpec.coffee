@@ -44,6 +44,25 @@ describe 'Sheet', ->
       sheet.update 'fn1', '10('
       functionChanges.should.eql [['error', 'fn1', '10(', 'Error in formula on line 1 at position 3' ]]
 
+  describe 'notifies value changes', ->
+    it 'to one named value', ->
+      outputReceived = null
+      sheet.update 'inputA', 'input'
+      sheet.update 'inputB', 'input'
+      sheet.update 'outputA', 'inputA + 10'
+      sheet.onValueChange 'outputA', (name, v) -> outputReceived = v
+      sheet.input 'inputA', 20
+      sheet.input 'inputB', 50
+      outputReceived.should.eql 30
+
+    it 'to any named value', ->
+      outputReceived = null
+      sheet.update 'inputA', 'input'
+      sheet.update 'outputA', 'inputA + 10'
+      sheet.onValueChange (name, v) -> outputReceived = v
+      sheet.input 'inputA', 20
+      outputReceived.should.eql 30
+
   describe 'Freesheet facade', ->
     it 'creates sheets and connects them to environment', ->
       freesheet = new Freesheet()

@@ -209,3 +209,17 @@ UI Inputs and actions
 - How generate default UI from specification of input required by main sheet as an aggregate with input types?
 - Parameterised worksheets as components?
 - Learn from web components?  Content? Nested components?
+
+Links 3
+-------
+- Any sheet can be a datasource for another
+- Datasources don't have to be sheets - could be other objects
+- A web component could be a datasource for the inputs on the page
+- If sheets are web components, start to get a unified view
+- Active output components could be linked to sheet components
+- Need a convention for linking sheets - just id on each and data-source or data-sources to refer to others
+- Maybe links by default just match names, but can adjust names
+- Each component configured with its inputs - output destinations never specified, no link sheets
+- A component can also be given an input directly in attributes - good for configuration
+- When re-using a Freesheet component, inputs wired directly to attributes
+- If it gets complicated, have option of introducing a sheet just to define wiring between components

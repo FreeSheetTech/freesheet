@@ -12,6 +12,7 @@ fromText = (text) -> if isNumber(text) then parseFloat(text) else text
 lines = (text) -> if text? then text.split '\n' else []
 
 module.exports = {
+  asNumber: (text) -> parseFloat(text)
   lines
   nonEmptyLines: (text) -> (l.trim() for l in lines(text) when l.trim())
   fromCsvLine: (text) ->

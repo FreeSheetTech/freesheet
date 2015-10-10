@@ -37,6 +37,11 @@ describe 'CoreFunctions includes', ->
 
   describe 'withValues', ->
 
+    it 'asNumber - converts text into number', ->
+      parseUserFunctions 'num = asNumber("44.5")'
+      changesFor('num').should.eql [44.5]
+
+
     it 'lines - split text into lines', ->
       parseUserFunctions 'theLines = lines(theInput)'
       inputs '''
