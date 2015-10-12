@@ -2,6 +2,8 @@
 
 set -e
 
+echo Building freesheet core
+npm install
 ./compileParser.sh
 ./compile.sh
 ./test.sh

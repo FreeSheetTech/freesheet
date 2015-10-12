@@ -12,7 +12,7 @@ describe 'League Table calculation', ->
       @values = {}
       for n in @outputNames
         callback = (name, value) => @values[name] = value
-        @sheet.onValueChange callback, n
+        @sheet.onValueChange n, callback
 
       @all = {}
       @sheet.onValueChange (name, value) => @all[name] = value

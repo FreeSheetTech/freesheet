@@ -1,4 +1,4 @@
-# freesheet
+# FreeSheet Core
 
 ## Technical Overview
 
