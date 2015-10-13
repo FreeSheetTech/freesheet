@@ -2,6 +2,8 @@
 
 echo Compiling coffeescript
 
+mkdir -p target/coffeejs
+
 for d in $(ls src/main)
 do
  echo "Compiling main/$d"
