@@ -151,6 +151,10 @@ FunctionCallWithArgs in a transform expression
 - Need to have the list of function argument names from the FuncDef available in the FCWA
 - AND it has to work in pull mode, via currentValue()
 
+Transform expressions revisited
+-------------------------------
+- If move to everything is a stream view, then maybe the output of the transform is a stream, and could just feed into output stream when ready
+
 
 Using local names from an aggregate
 ------------------------------------

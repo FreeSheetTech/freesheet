@@ -223,3 +223,6 @@ Links 3
 - A component can also be given an input directly in attributes - good for configuration
 - When re-using a Freesheet component, inputs wired directly to attributes
 - If it gets complicated, have option of introducing a sheet just to define wiring between components
+- Could use events as inputs
+- If event names are outputs, can use those just like onValueChange
+- Specify another component as an input source - listen for events and sendInput

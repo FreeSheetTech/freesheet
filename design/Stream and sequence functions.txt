@@ -25,6 +25,17 @@ Sequences and objects
 - May want to define a literal sequence but have it treated like a stream
 - In general may want to have a list value treated as separate values, which leads to unpackLists
 
+Everything is a stream view
+---------------------------
+- All functions return a stream
+- Immediate 1 event (value), delayed 0 or 1 event (promise), delayed 0 to n events (stream)
+- Like xmas gifts
+- When input to a function call changes, need to call the function again, get a new stream, and use that instead
+  - different to point of view of having one stream and getting many different values down it
+- BUT those different streams should be switched into the output stream so consumer doesn't know whether it is a new stream or not
+- Fixed streams need to be cold, probably also promises - may already be fulfilled
+- Can provided functions that do not output a stream, and wrap them
+
 Transform functions for sequences and objects
 ---------------------------------------------
 - Easily pass through individual parts or all input values so can add properties
@@ -122,7 +133,7 @@ Another view?
 -------------
 - Is the difference whether you apply the function to just the latest item, forgetting all previous, or to all the items that have arrived so far?
 - This applies even if you are applying something to the result of unpackLists, where obviously you intend to have many items
-- Normal expectation is just to apply to latest item, sya if want to apply to all values
+- Normal expectation is just to apply to latest item, say if want to apply to all values
 - Getting all values should be a function in its own right,
 - So all() gives a value which is an ever-growing sequence
 - If treating an unpacked list as one event, may sometimes want unpacked items to be treated as own events - could have a separate() function
@@ -134,6 +145,7 @@ Efficiency
 - Need to give functions the chance to handle items one at a time
 - Also need to be able to use the same functions on sequences
 - Need a stream function with an all() as input to use stream directly if it can
+- Functions should be objects that just need one input stream, hold accumulator internally
 
 In domain modelling
 -------------------

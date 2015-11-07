@@ -187,6 +187,7 @@ Streams and sequences
 - itemsOf - could be just a marker to say 'generate different code'
 - Really just getting a different stream either way
 - Maybe generating code for overall exprs so don't have separate stream for each expr now makes this more difficult
+- Can we use Generators
 
 Most local scope implementation
 -------------------------------

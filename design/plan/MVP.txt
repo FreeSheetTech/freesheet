@@ -1,0 +1,39 @@
+MVP
+===
+
+Aims
+----
+- Get an MVP live and well-used so we can learn from what people do with it
+
+
+Requirements (descending priority)
+----------------------------------
+- Easily build FreeSheet apps
+- Easily *learn* to build the apps
+
+- Store data persistently
+- Use the apps offline and online
+- Use the apps on desktop and mobile
+- Share the apps -> Get people to know about it
+- Apps usable in the future
+
+
+Possible Design Solutions
+-------------------------
+- Google Docs style website
+- Local and/or server data storage
+- Web components
+
+
+Development areas
+-----------------
+- CMS backend updated only via REST
+- CMS frontend
+- Page serving
+- Page building components
+- Worksheet component
+- Tutorial for page building
+- Tutorial for FreeSheet
+- Local storage
+- Server storage - as CMS doc?
+- Promotion plan

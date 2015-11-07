@@ -26,6 +26,7 @@ Thoughts
 - Multiple outputs: should we allow multiple named outputs as a shorthand for/alternative to an output map?
 - Multiple outputs: what people expect in a worksheet
 - Multiple outputs: they may not all change at once, could be separate streams
+- In wired component view, separate outputs are different connections on the component
 - Defining named functions then combining them again into an output that just repeated the names would be confusing and non-DRY
 - Should you have reusable functions with just one output and worksheet object with multiple values?
 - Unified view: functions can have several named outputs, and internal functions, so overall program is one outer function with several named outputs
@@ -75,7 +76,7 @@ Thoughts
 - Or keep worksheets in script form
 - Could publish pages of library functions - just put documentation and examples on the page with them
 - Consider saving all inputs in dev mode to replay when a formula changes
-- Maybe all function streams should have distinct on them
+- Maybe all function streams should have distinct on them - but prob not, as individual events important
 - Testing facilities important - eg table with input event rows at top and output events below, with columns at particular times
 - Must be easy to think *how* to test
 - Maybe record events and times to create the table
@@ -130,7 +131,7 @@ Thoughts
 - Function params auto taken from CLI arguments
 - Return kind - can we just say everything takes and returns streams, and if provide a built-in that uses plain values, need to wrap it before adding?
 - Arg list - some functions need to take values as args, not streams eg for use in combineLatest
-- Can UserFunctions always use streams, built-in need to specify?
+- Can UserFunctions always use streams, provided need to specify?  Or always wrap provided in a stream?
 - Can we/should we call no-arg functions without brackets - optional or not?
 - Recursive functions: allowed? how handle them?
 - Will need stack overflow protection - maybe time of last input and how many times been through a function for same input
@@ -146,6 +147,101 @@ Thoughts
 - Emphasises steady values (signal) over changes (event) - different to most FRP systems
 - Could view sheet/program as a function from a sequence of events (on many streams) to an output.  Then don't need to worry about individual events.
 - Should inputs be regarded as events or collections of events or just a signal ie do you need to say collect() or latest()?
+
+Programming style
+-----------------
+- Wiring components together like electronic circuits
+- Setting value triggers behaviour
+- No concept of function call - just data/signals flowing between components
+- Instead of explicit event handling, just link an input to another component's output
+- Concept: properties can be set multiple times, and each set matters
+- Concept: write-only properties that are not meant to be read - just for event inputs
+- *Need* components to organise the spaghetti of dataflows - either in Rx or FS
+- May have glue sheets with 2 or 3 formulas just to link components
+
+Components
+----------
+- Build components with FreeSheet in same way as you build pages - they are just html files!
+- FreeSheet runner is just another component
+- Or could you define a FS component as a prototype and construct new instances?
+- It's UI presents the grid when asked but saves the text back to the tag content in the source
+- Could build a component with a FS component in it
+- Can create components at run-time
+- Maybe: Can template with components, not just values
+- Maybe: sheet formulas can construct components
+- Table component that repeats its inner row component, has header component - get separately from <content> by selector
+- Components that display elsewhere eg canvas drawing for game objects
+- Component mix-and-match between FS in page, components written with JS, components written with FS
+- How would you make an invoice with variable number of line items?
+  - introduce/remove new components?
+  - have a model that is templated with view components
+- Save as PDF component - inc button
+- Save as text component - inc button
+- Save to CMS component
+- Components include a button for convenience but don't have to show and can trigger separately?
+- Easy fill-in-the-blanks way to create components (like Word doc templates)
+- Components to pull in other pages or fragments
+
+Creating pages with components
+------------------------------
+- Need to find them
+- Need to see what they can do
+- Need to see how to use them
+- Need to put them into pages really easily
+- Need to include the import automatically
+- Need a config UI that can be turned on and off - like Word fields
+- Need a debugging UI for some cases
+- Some components will be meant to be seen, others meant to be invisible
+- May want to put invisible ones at the end - or not
+- Big community catalogue will be important
+- Loading speed - need to pull in a single file (or request) with all components?
+- Could auto-generate import call on page that listed all names
+- Need version in name to make cacheable
+
+Server-side components
+----------------------
+- Build server-side arrangements in same way as pages
+- If server page could provide auto admin/inspection GUI, v useful
+- If could build server-side "page" and run on server but get to its display remotely, v useful
+- Run/test page locally in browser, or in browser extension, or in local page-runner server
+- Best way to do this? Simulate browser on server?  Transform page to back-end and remote front-end? View with VNC?
+- Will want components that connect from browser to back-end sheets - but they are definitely client components, not the same thing
+
+Remote request-reply dataflows
+------------------------------
+- Where need to look up data that takes time to return - any network call to db or web service
+- Could make synchronous, but not good either in browser or server
+- Web service client component would have input of the request data, and an output of the reply
+- Like a worksheet, but output not immediate
+- Compare with the Rx autocomplete example
+- Outputs may be returned in different order to inputs
+- Even if in same order, no natural link between output and input that caused it
+- Often want a request-reply service to work like a local function, but it can't
+- Problem comes when need to use the output in a formula along with the input that triggered it
+- Example: get additional info to add to combine with input and pass on to another component - payment data flow
+- Maybe outputs come out in order of the inputs that caused them
+- Outputs have id from or all of the input that caused them
+- Simple getById function on event stream so can link reply back to input that needed it
+- BUT this is all bypassed if the source of the request reply is just a function object (component) that outputs a stream with values depending on the inputs
+- Stream function that takes input and gets the async data, outputs it when ready
+- Filter replies to ones that match id of other input
+- Do by a function that returns a stream
+- Async decorator functions
+- Flatmap - function produces wrapper stream, not value (cf promises)
+- If outputs came out in same order as input changes, this should work
+- Could get intermediate results that were not what you expected while the request was in progress
+
+Processing all inputs
+---------------------
+- Some processes must deal with every input and produce a reply for it to original requester
+- Can't just forget each input as a new one arrives
+- Not like the autocomplete problem
+- Can you create a different function call instance for each request?
+- What about long-running subscriptions?  Requests are special cases of subscriptions with one event
+- Is calling a function actually getting a new function object instance, feeding in inputs and waiting for answer?
+- So a web service could just get a worksheet function and do that for each http request?
+
+
 
 Local values within expressions
 -------------------------------
@@ -430,6 +526,11 @@ Domain modelling
 - EFs can substitute their cached value when needed
 - Some inputs may become EFs directly eg Transactions
 - May have a worksheet for each entity (large granularity)
+
+Structured data
+---------------
+- Ways to define data structures
+- Ways to edit structured data files and store in CMS
 
 Output events and output functions
 ----------------------------------

@@ -1,0 +1,36 @@
+Reactive component runner
+=========================
+
+Aims
+----
+- To fit in with a component view of objects wired together with streams
+- To make all functions have stream outputs
+- To make user-defined and provided functions, no args and with args, all work the same way
+- To use same evaluation for transforming lists and streams
+- To allow integration of promise-based components into worksheets
+- To allow long-running transformations of input streams without instantiating whole stream as a list
+
+Approaches
+----------
+- Evaluators constructed as standalone components without wiring up
+- Activation phase of wiring up to things in the context like named functions
+- Connection phase of wiring up to explicit arguments
+- Wrap provided functions in streams if they don't return a stream
+- Create instances of provided functions (in stream wrappers) and subscribe to them like user-defined
+- Replace currentValue with stream-based iteration over lists
+- Reconsider language distinction between transform whole stream and transform list items in the stream
+- All provided functions will have to be written as stream processing - or can wrap plain functions
+
+Ideas
+-----
+- Expand list, process as stream, repack - stream would end, unlike normal input
+- fromEach over stream overlaps with whole idea of worksheet functions acting on streams - but a bit more functional?
+- fromEach(score, pointsFor(it)) [where score is an input of ints] is equivalent to just pointsFor(score)
+- select(score, it > 10) cannot be expressed otherwise - so fromEach is a special case
+- To do select(scores, it > 10) or fromEach(scores, pointsFor(it)) [where scores is an input of lists of ints] need to distinguish it
+  - a different function name would be reasonable
+- Use presence of 'it' to show an expression is a function to be applied
+- Possible function suffix - xxxFromEach, xxxFromEachItem, xxxEach, xxxEachItem, xxxItems, xxxItem, xxxFromItems, xxxOfItems
+- Item might be a good word to use for the values arriving in a stream - links with it
+- Some functions will not make sense for stream or list
+- Some functions acting on stream need to produce list of everything so far - all, sort, shuffle

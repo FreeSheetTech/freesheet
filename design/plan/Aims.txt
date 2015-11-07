@@ -1,0 +1,147 @@
+Aims
+====
+
+- Make Freesheet useful to people
+- Showcase
+- Produce own apps
+
+
+Make something useful for the world
+-----------------------------------
+- Make it do things that people want to do
+- Make it useful for many applications
+- Make it easy to use
+- Make it easy to learn
+- Make it easily available
+- Get people to know about it
+
+
+Showcase
+--------
+- Well-organised project
+- High quality code and tests
+- Good technical documentation
+- Successful hosting site
+- Successful apps
+- Speak at conferences
+- Write articles
+
+
+Produce own apps
+----------------
+- LinguaMondo
+- Educational apps
+
+
+Solutions
+=========
+
+- Learn what people would want to use it for
+- Website
+- Features overview
+- Five-minute pitch
+- Engaging live demo examples
+- Programmer-level documentation
+- Easy get started
+- Freesheet-web tests
+
+
+Learn what people would want to use it for
+------------------------------------------
+- Get an MVP live
+- Get people using it
+- See what people do with it
+- Find out what else they would like
+
+
+Five-minute pitch
+-----------------
+- Use web pages
+- What FS is for
+- What it looks like - text - hello world
+- Functional-ish
+- Language features
+- IO
+- Running the example
+- What it looks like in a worksheet
+- Invoice example
+- Update the worksheet
+- So far, so Excel-lent
+- Embedding in a page
+- Linking to inputs
+- Linking to outputs
+- Sequences of inputs
+- Invoice totals
+- League table
+- Where this is heading
+- Further info
+
+Engaging live demo examples
+---------------------------
+- Working examples you can try out
+- Can play with the FS code
+- Can see how it is integrated into the page
+- Index so you can see what is there even while looking at each one
+
+Programmer-level documentation
+------------------------------
+- Getting started
+- Features overview
+- Freesheet User Guide
+- Embedding User Guide
+- API
+- Embedding User Guide includes:
+  - Including FS in page
+  - Adding provided functions
+  - Core functions, removing functions
+  - Creating a sheet
+  - Sending inputs
+  - Getting outputs
+  - Showing worksheet
+  - Linking inputs
+  - Linking outputs
+  - Multiple sheets
+  - Auto-loading scripts
+
+- Freesheet User Guide includes:
+  - Simple language
+  - Text and worksheet views
+  - Input and output
+  - Depends on application
+  - Provided functions
+  - User functions
+  - Core functions
+  - Infix operators
+  - Defining own functions
+
+Easy get started
+----------------
+
+- npm install ?
+- git clone, build
+- bower install
+- download dist files
+- includes needed in web page
+- sample code
+- freesheet git account
+
+Freesheet web tests
+-------------------
+- Browser based
+
+
+To Do
+=====
+  - Fix bugs - function params
+  - Finish programmer's introduction
+  - FreeSheet Github account
+  - Overview page
+- Examples and editable page on website
+- Reference page
+  - Website on www.freesheet.tech - s3?, github io?
+  - Getting started
+
+- Prep talk
+- Play with worksheet
+- Logo and styling
+- Wiki and issues
